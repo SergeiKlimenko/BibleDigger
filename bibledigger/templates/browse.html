@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block head %}
+
+{% endblock %}
+
+{% block form %}
+
+  <form method="POST">
+    {{form.csrf_token}}
+    {{form.language1.label}}
+    <br>
+    {{form.language1}}
+    <br>
+    {{form.translation1.label}}
+    <br>
+    {{form.translation1}}
+    <br>
+    {{form.submit}}
+    <br>
+    {{form.anotherTranslation.label}}
+    {{form.anotherTranslation}}
+    <br>
+    <div id="second">
+    {{form.language2.label}}
+    <br>
+    {{form.language2}}
+    <br>
+    {{form.translation2.label}}
+    <br>
+    {{form.translation2}}
+    </div>
+  </form>
+
+  {{ super() }}
+  <script>
+    jQuery(document).ready(function() {
+      $('#anotherTranslation').change(function() {
+        if (this.checked) {
+          $('#second').show();
+        } else {
+          $('#second').hide();
+        }
+      });
+    });
+  </script>
+  <script>
+        var lang_select = document.getElementById("language1");
+        var tran_select = document.getElementById("translation1");
+
+        lang_select.onchange = function()  {
+
+            language1 = lang_select.value;
+
+            fetch('/translation1/' + language1).then(function(response) {
+
+                response.json().then(function(data) {
+                    var optionHTML = '';
+
+                    for (var translation of data.translations) {
+                        optionHTML += '<option value="' + translation.id + '">' + translation.translation + '</option>';
+                    }
+
+                    tran_select.innerHTML = optionHTML;
+                })
+
+            });
+        }
+    </script>
+    <script>
+          var lang_select2 = document.getElementById("language2");
+          var tran_select2 = document.getElementById("translation2");
+
+          lang_select2.onchange = function()  {
+
+              language2 = lang_select2.value;
+
+              fetch('/translation1/' + language2).then(function(response) {
+
+                  response.json().then(function(data) {
+                      var optionHTML = '';
+
+                      for (var translation of data.translations) {
+                          optionHTML += '<option value="' + translation.id + '">' + translation.translation + '</option>';
+                      }
+
+                      tran_select2.innerHTML = optionHTML;
+                  })
+
+              });
+          }
+      </script>
+
+
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  {% for verse in tran1Text %}
+  <div class="row">
+    <div class="col-2">
+      <p>{{verse.title + " " + verse.chapter + ":" + verse.verse|string}}</p>
+    </div>
+    <div class="col">
+      <p>{{verse.text}}</p>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}
