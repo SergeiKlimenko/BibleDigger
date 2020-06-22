@@ -44,6 +44,7 @@ def browse():
 
     return render_template('browse.html', form=form)
 
+###OLOLO ALALA
 
 @functions.route('/translation1/<language1>')
 def translation(language1):
