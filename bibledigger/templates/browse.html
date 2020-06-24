@@ -2,6 +2,14 @@
 {% extends "base.html" %}
 
 {% block form %}
+<ul class="nav nav-tabs">
+  <li class="nav-item">
+    <a class="nav-link active" href="{{url_for('functions.browse')}}">single</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" href="{{url_for('functions.parallel')}}">parallel</a>
+  </li>
+</ul>
 
   <form method="POST">
     {{form.csrf_token}}
