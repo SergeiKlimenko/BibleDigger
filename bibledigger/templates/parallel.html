@@ -16,6 +16,14 @@
     <br>
     {{form.translation1}}
     <br>
+    {{form.language2.label}}
+    <br>
+    {{form.language2}}
+    <br>
+    {{form.translation2.label}}
+    <br>
+    {{form.translation2}}
+    <br>
     {{form.book.label}}
     <br>
     {{form.book}}
@@ -46,22 +54,46 @@
             });
         }
     </script>
+    <script>
+          var lang_select2 = document.getElementById("language2");
+          var tran_select2 = document.getElementById("translation2");
 
+          lang_select2.onchange = function()  {
+
+              language2 = lang_select2.value;
+
+              fetch('/translation1/' + language2).then(function(response) {
+
+                  response.json().then(function(data) {
+                      var optionHTML = '';
+
+                      for (var translation of data.translations) {
+                          optionHTML += '<option value="' + translation.id + '">' + translation.translation + '</option>';
+                      }
+
+                      tran_select2.innerHTML = optionHTML;
+                  })
+
+              });
+          }
+      </script>
 {% endblock %}
 
 {% block content %}
-
 <div class="container">
   {% if textLength == 0 %}
   <h1>The book you are looking for is not included in this translation</h1>
   {% else %}
-  {% for verse in tran1Text %}
+  {% for verse in bothTranslations %}
   <div class="row">
     <div class="col-2">
-      <p>{{verse.title + " " + verse.chapter + ":" + verse.verse|string}}</p>
+      <p>{{verse[1] + " " + verse[2] + ":" + verse[3]|string}}</p>
     </div>
     <div class="col">
-      <p>{{verse.text}}</p>
+      <p>{{verse[4]}}</p>
+    </div>
+    <div class="col">
+      <p>{{verse[5]}}</p>
     </div>
   </div>
   {% endfor %}
