@@ -1,26 +1,11 @@
+{% import "bootstrap/wtf.html" as wtf %}
 {% extends "base.html" %}
-
-{% block head %}
-
-{% endblock %}
 
 {% block form %}
 
   <form method="POST">
     {{form.csrf_token}}
-    {{form.language1.label}}
-    <br>
-    {{form.language1}}
-    <br>
-    {{form.translation1.label}}
-    <br>
-    {{form.translation1}}
-    <br>
-    {{form.book.label}}
-    <br>
-    {{form.book}}
-    <br>
-    {{form.submit}}
+    {{wtf.quick_form(form)}}
   </form>
 
   <script>

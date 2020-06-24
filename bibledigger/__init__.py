@@ -2,7 +2,7 @@ import os
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-
+from flask_bootstrap import Bootstrap
 
 app = Flask(__name__)
 
@@ -21,6 +21,7 @@ db = SQLAlchemy(app)
 Migrate(app, db)
 ####################
 
+bootstrap = Bootstrap(app)
 
 ###BLUEPRINT CONFIG###
 from bibledigger.core.views import core
