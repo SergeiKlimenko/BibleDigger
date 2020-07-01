@@ -40,6 +40,30 @@
         }
     </script>
 
+    <script>
+          var tran_select = document.getElementById("translation1");
+          var book_select = document.getElementById("book");
+
+          tran_select.onchange = function()  {
+
+              translation1 = tran_select.value;
+
+              fetch('/book/' + translation1).then(function(response) {
+
+                  response.json().then(function(data) {
+                      var optionHTML = '';
+
+                      for (var book of data.books) {
+                          optionHTML += '<option value="' + book.id + '">' + book.book + '</option>';
+                      }
+
+                      book_select.innerHTML = optionHTML;
+                  })
+
+              });
+          }
+      </script>
+
 {% endblock %}
 
 {% block content %}
