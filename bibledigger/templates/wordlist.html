@@ -1,0 +1,96 @@
+{% import "bootstrap/wtf.html" as wtf %}
+{% extends "base.html" %}
+
+
+{% block form %}
+  <form method="POST">
+  {{form.csrf_token}}
+  <div class="form-group">
+    <p>Select a translation</p>
+    <div class="form-row">
+      <div class="col">
+        {{ wtf.form_field(form.language1, class="form-control form-control-sm") }}
+      </div>
+      <div class="col">
+        {{ wtf.form_field(form.translation1, class="form-control form-control-sm") }}
+      </div>
+    </div>
+  </div>
+  <div class="form-group">
+    {{ wtf.form_field(form.search, class="form-control form-control-sm") }}
+    {{ wtf.form_field(form.caseSensitive)}}
+    {{ wtf.form_field(form.searchOptions)}}
+  </div>
+  <div class="form-group">
+    <div class="form-row">
+      <div class="col">
+        {{ wtf.form_field(form.freqMin, class="form-control form-control-sm") }}
+      </div>
+      <div class="col">
+        {{ wtf.form_field(form.freqMax, class="form-control form-control-sm") }}
+      </div>
+    </div>
+  </div>
+  <div class="form-group">
+    {{ wtf.form_field(form.submit, class="form-control form-control-sm") }}
+  </div>
+  </form>
+
+  <script>
+        var lang_select = document.getElementById("language1");
+        var tran_select = document.getElementById("translation1");
+
+        lang_select.onchange = function()  {
+
+            language1 = lang_select.value;
+
+            fetch('/translation1/' + language1).then(function(response) {
+
+                response.json().then(function(data) {
+                    var optionHTML = '';
+
+                    for (var translation of data.translations) {
+                        optionHTML += '<option value="' + translation.id + '">' + translation.translation + '</option>';
+                    }
+
+                    tran_select.innerHTML = optionHTML;
+                })
+
+            });
+        }
+    </script>
+
+{% endblock %}
+
+
+{% block content %}
+  {% if wordsLength == 0 %}
+    <h3>Nothing found</h3>
+    <p>Please, try to change search criteria</p>
+  {% elif wordsLength != 0 %}
+    <div class="row">
+      <div class="col-1">
+        <p>rank</p>
+      </div>
+      <div class="col-2">
+        <p>word</p>
+      </div>
+      <div class="col-2">
+        <p>frequency</p>
+      </div>
+    </div>
+    {% for frequency, word in words %}
+      <div class="row">
+        <div class="col-1">
+          <p>{{ words.index((frequency, word)) + 1 }}</p>
+        </div>
+        <div class="col-2">
+          <p>{{ word }}</p>
+        </div>
+        <div class="col-2">
+          <p>{{ frequency }}</p>
+        </div>
+      </div>
+    {% endfor %}
+  {% endif %}
+{% endblock %}

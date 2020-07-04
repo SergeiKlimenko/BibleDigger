@@ -1,6 +1,7 @@
 from flask_wtf import FlaskForm
-from wtforms import SelectField, SubmitField, BooleanField
-from wtforms.validators import DataRequired
+from wtforms import SelectField, SubmitField, BooleanField, RadioField, \
+                    StringField, IntegerField
+from wtforms.validators import DataRequired, optional
 from  ..models import Book, Language, Translation, Text
 
 
@@ -10,8 +11,8 @@ languageChoices = [(lang.id, lang.language) for lang in Language.query.all()]
 
 class browseForm(FlaskForm):
 
-    language1 = SelectField('Select a language', choices=languageChoices, coerce=int, validators=[DataRequired()])
-    translation1 = SelectField('Select a translation', coerce=int, validators=[DataRequired()], validate_choice=False)
+    language1 = SelectField('language', choices=languageChoices, coerce=int, validators=[DataRequired()])
+    translation1 = SelectField('translation', coerce=int, validators=[DataRequired()], validate_choice=False)
 
     book = SelectField('Select a book', validators=[DataRequired()])
 
@@ -20,11 +21,11 @@ class browseForm(FlaskForm):
 
 class parallelForm(FlaskForm):
 
-    language1 = SelectField('Select a language', choices=languageChoices, coerce=int, validators=[DataRequired()])
-    translation1 = SelectField('Select a translation', coerce=int, validators=[DataRequired()], validate_choice=False)
+    language1 = SelectField('language', choices=languageChoices, coerce=int, validators=[DataRequired()])
+    translation1 = SelectField('translation', coerce=int, validators=[DataRequired()], validate_choice=False)
 
-    language2 = SelectField('Select a language', choices=languageChoices, coerce=int)
-    translation2 = SelectField('Select a translation', coerce=int, validate_choice=False)
+    language2 = SelectField('language', choices=languageChoices, coerce=int)
+    translation2 = SelectField('translation', coerce=int, validate_choice=False)
 
     book = SelectField('Select a book', validators=[DataRequired()])
 
@@ -58,5 +59,23 @@ class parallelVerseSearchForm(FlaskForm):
     verse = SelectField('verse', coerce=int, validate_choice=False)
 
     anotherVerse = BooleanField('Add another verse?')
+
+    submit = SubmitField('OK')
+
+
+class wordListForm(FlaskForm):
+
+    language1 = SelectField('language', choices=languageChoices, coerce=int, validators=[DataRequired()])
+    translation1 = SelectField('translation', coerce=int, validators=[DataRequired()], validate_choice=False)
+
+    search = StringField('What are you looking for?')
+
+    caseSensitive = BooleanField('Case sensitive')
+
+    searchOptions = RadioField('Search options', choices=[('all', 'all'), ('start', 'starting with'),
+        ('end', 'ending with'), ('cont', 'containing'), ('regex', 'matching regex')])
+
+    freqMin = IntegerField('freq min', validators=[optional(strip_whitespace=True)])
+    freqMax = IntegerField('freq max', validators=[optional(strip_whitespace=True)])
 
     submit = SubmitField('OK')

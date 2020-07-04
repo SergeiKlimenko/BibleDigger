@@ -1,6 +1,6 @@
 from flask import render_template, url_for, flash, redirect, request, Blueprint, jsonify, session
 from bibledigger import db
-from .forms import browseForm, parallelForm, verseSearchForm, parallelVerseSearchForm
+from .forms import browseForm, parallelForm, verseSearchForm, parallelVerseSearchForm, wordListForm
 from bibledigger.models import Book, Language, Translation, Text
 
 
@@ -342,3 +342,88 @@ def verse(translation_id, book, chapter):
         verseArray.append(verseObj)
 
     return jsonify({'verses': verseArray})
+
+
+@functions.route('/wordlist', methods=['GET', 'POST'])
+def wordList():
+
+    form = wordListForm()
+
+    if form.language1.data == None:
+        form.translation1.choices = [(tran.id, tran.translation) for tran
+            in Translation.query.filter_by(language_id=1).all()]
+    else:
+        form.translation1.choices = [(tran.id, tran.translation) for tran
+            in Translation.query.filter_by(language_id=form.language1.data).all()]
+
+    if form.validate_on_submit():
+
+        fullText = Text.query.filter_by(translation_id=form.translation1.data).with_entities(Text.text).all()
+
+        verseList = []
+
+        for verse in fullText:
+
+            verse = verse[0].replace('—', ' ').split()
+            strippedVerse = []
+            for word in verse:
+                if form.caseSensitive.data == True:
+                    strippedVerse.append(word.strip(',.()[];:""“”?!—/\\-+=_<>').
+                        strip(",.()[];:''‘’‛“”?!—/\\-+=_<>"))
+                elif form.caseSensitive.data == False:
+                    strippedVerse.append(word.lower().strip(',.()[];:""“”?!—/\\-+=_<>').
+                        strip(",.()[];:''‘’‛“”?!—/\\-+=_<>"))
+            verseList += strippedVerse
+            #verseList.append(verse)
+
+        from collections import Counter
+        wordList = Counter(verseList)
+
+        sortedWordList = []
+
+        for k, v in wordList.items():
+            if k == '':
+                continue
+            if form.freqMin.data != None:
+                if v < form.freqMin.data:
+                    continue
+            if form.freqMax.data != None:
+                if v > form.freqMax.data:
+                    continue
+            sortedWordList.append((v, k))
+
+        sortedWordList.sort(key=lambda tup: tup[1])
+        sortedWordList.sort(key=lambda tup: tup[0], reverse=True)
+
+        words = []
+
+        if form.searchOptions.data == 'all':
+            words = sortedWordList
+        elif form.searchOptions.data == 'start':
+            for word in sortedWordList:
+                if word[1].startswith(form.search.data):
+                    words.append(word)
+        elif form.searchOptions.data == 'end':
+            for word in sortedWordList:
+                if word[1].endswith(form.search.data):
+                    words.append(word)
+        elif form.searchOptions.data == 'cont':
+            for word in sortedWordList:
+                if form.search.data in word[1]:
+                    words.append(word)
+        elif form.searchOptions.data == 'regex':
+            import re
+            regex = re.compile(form.search.data)
+            for word in sortedWordList:
+                if re.search(regex, word[1]):
+                    words.append(word)
+
+        wordsLength = len(words)
+
+        return render_template('wordlist.html', form=form, words=words, wordsLength=wordsLength)
+
+    else:
+        print(form.errors)
+
+
+    return render_template('wordlist.html', form=form)

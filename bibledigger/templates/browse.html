@@ -13,7 +13,25 @@
 
   <form method="POST">
     {{form.csrf_token}}
-    {{wtf.quick_form(form)}}
+    <p>Select a translation</p>
+    <div class="form-group">
+      <div class="form-row">
+        <div class="col">
+          {{ wtf.form_field(form.language1, class="form-control form-control-sm") }}
+        </div>
+        <div class="col">
+          {{ wtf.form_field(form.translation1, class="form-control form-control-sm") }}
+        </div>
+      </div>
+    </div>
+      <hr>
+      <div class="form-group">
+        {{ wtf.form_field(form.book, class="form-control form-control-sm") }}
+      </div>
+      <hr>
+    <div class="form-group">
+      {{ wtf.form_field(form.submit, class="form-control form-control-sm") }}
+    </div>
   </form>
 
   <script>
