@@ -6,7 +6,6 @@
   <form method="POST">
   {{form.csrf_token}}
   <div class="form-group">
-    <p>Select a translation</p>
     <div class="form-row">
       <div class="col">
         {{ wtf.form_field(form.language1, class="form-control form-control-sm") }}
@@ -18,8 +17,8 @@
   </div>
   <div class="form-group">
     {{ wtf.form_field(form.search, class="form-control form-control-sm") }}
-    {{ wtf.form_field(form.caseSensitive)}}
-    {{ wtf.form_field(form.searchOptions)}}
+    {{ wtf.form_field(form.caseSensitive, class="form-control form-control-sm")}}
+    {{ wtf.form_field(form.searchOptions, class="form-control form-control-sm")}}
   </div>
   <div class="form-group">
     <div class="form-row">
@@ -30,6 +29,9 @@
         {{ wtf.form_field(form.freqMax, class="form-control form-control-sm") }}
       </div>
     </div>
+  </div>
+  <div class="form-group">
+    {{ wtf.form_field(form.orderOptions, class="form-control form-control-sm")}}
   </div>
   <div class="form-group">
     {{ wtf.form_field(form.submit, class="form-control form-control-sm") }}
@@ -67,7 +69,7 @@
   {% if wordsLength == 0 %}
     <h3>Nothing found</h3>
     <p>Please, try to change search criteria</p>
-  {% elif wordsLength != 0 %}
+  {% elif wordsLength > 0 %}
     <div class="row">
       <div class="col-1">
         <p>rank</p>

@@ -78,4 +78,6 @@ class wordListForm(FlaskForm):
     freqMin = IntegerField('freq min', validators=[optional(strip_whitespace=True)])
     freqMax = IntegerField('freq max', validators=[optional(strip_whitespace=True)])
 
+    orderOptions = RadioField('Order by', choices=[('word', 'order by word'), ('freq', 'order by frequency')])
+
     submit = SubmitField('OK')

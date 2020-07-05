@@ -392,8 +392,12 @@ def wordList():
                     continue
             sortedWordList.append((v, k))
 
-        sortedWordList.sort(key=lambda tup: tup[1])
-        sortedWordList.sort(key=lambda tup: tup[0], reverse=True)
+        if form.orderOptions.data == 'freq':
+            sortedWordList.sort(key=lambda tup: tup[1])
+            sortedWordList.sort(key=lambda tup: tup[0], reverse=True)
+        elif form.orderOptions.data == 'word':
+            sortedWordList.sort(key=lambda tup: tup[0], reverse=True)
+            sortedWordList.sort(key=lambda tup: tup[1])
 
         words = []
 
@@ -425,5 +429,6 @@ def wordList():
     else:
         print(form.errors)
 
+    wordsLength = -1
 
-    return render_template('wordlist.html', form=form)
+    return render_template('wordlist.html', form=form, wordsLength=wordsLength)
