@@ -1,0 +1,49 @@
+{% import "bootstrap/wtf.html" as wtf %}
+{% extends "base.html" %}
+
+{% block form %}
+  <form method="POST">
+  {{form.csrf_token}}
+  <div class="form-group">
+    {{ wtf.form_field(form.search, class="form-control form-control-sm") }}
+  </div>
+  <div class="form-group">
+    {{ wtf.form_field(form.searchOptions, class="form-control form-control-sm")}}
+  </div>
+  <div class="form-group">
+    {{ wtf.form_field(form.submit, class="form-control form-control-sm")}}
+  </div>
+{% endblock %}
+
+{% block content %}
+  {% if errorMessage %}
+  <h1>{{ errorMessage[:5] }}</h1>
+  <h3>{{ errorMessage[6:] }}</h3>
+  {% endif %}
+
+  {% if concLength == 0 %}
+  <h1>Sorry</h1>
+  <h3>Nothing found. Please, try to change your search criteria.</h3>
+  {% elif concLength == 1 %}
+    <p>Found: 1 result</p>
+  {% else %}
+    <p>Found: {{ concLength }} results</p>
+  {% endif %}
+  {% for line in conc %}
+    <div class="row">
+      <div class="col-2">
+        <p>{{ line[0] }}</p>
+      </div>
+      <div class="col">
+        <p style="text-align: right">{{ line[1] }}</p>
+      </div>
+      <div class="col-1">
+        <p style="text-align: center">{{ line[2] }}</p>
+      </div>
+      <div class="col">
+        <p>{{ line[3] }}</p>
+      </div>
+    </div>
+  {% endfor %}
+
+{% endblock %}

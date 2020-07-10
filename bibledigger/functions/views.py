@@ -1,6 +1,6 @@
 from flask import render_template, url_for, flash, redirect, request, Blueprint, jsonify, session
 from bibledigger import db
-from .forms import browseForm, parallelForm, verseSearchForm, parallelVerseSearchForm, wordListForm
+from .forms import browseForm, parallelForm, verseSearchForm, parallelVerseSearchForm, wordListForm, concordanceForm
 from bibledigger.models import Book, Language, Translation, Text
 
 
@@ -432,3 +432,150 @@ def wordList():
     wordsLength = -1
 
     return render_template('wordlist.html', form=form, wordsLength=wordsLength)
+
+
+@functions.route('/concordance', methods=['GET', 'POST'])
+def concordance():
+
+    form = concordanceForm()
+
+    if form.validate_on_submit():
+
+        text = list(db.engine.execute('SELECT b.title, a.chapter, a.verse, a.text \
+            FROM texts a LEFT JOIN books b ON a.book_code = b.code WHERE \
+            translation_id = 86'))
+
+        ###The concordance holder to be filled with search results
+        concordanceList = []
+
+        searchItem = form.search.data
+        ###Strip the search item to avoid searching just for whitespaces
+        searchItem = searchItem.strip()
+
+        import re
+
+        reSpecialSymbols = r'\\.^$*+?{}[]|()'
+
+        ###Check if search item is regex to compile it accordingly
+        if form.searchOptions.data == 'regex':
+            ###Skip the search if it consists only of dots -- Takes too long to process and not informative
+            skip = True
+            for character in searchItem:
+                if character != '.':
+                    skip = False
+                    break
+            if skip == True:
+                return render_template('concordance.html', form=form, concLength=0)
+
+            ###Catch incorrect regex
+            try:
+                searchRegex = re.compile(searchItem)
+            except:
+                errorMessage = 'Sorry It seems that your regular expression is incorrect. Try again. '
+                return render_template('concordance.html', form=form, errorMessage=errorMessage)
+
+        else:
+            for symbol in reSpecialSymbols:
+                searchItem = searchItem.replace(symbol, '\\' + symbol)
+            print(searchItem) ###delete
+            searchRegex = re.compile(searchItem)
+
+        ###Add space between non-alphanumeric symbols and words
+        leftSymbols = '(["“<\'‘‛'
+        rightSymbols = ',.)];:"”?!>\'’'
+        middleSymbols = '—/\\+=_'
+
+        for verse in text:
+            verseText = verse[3]
+            ###Add space between non-alphanumeric symbols and words
+            for symbol in leftSymbols:
+                verseText = verseText.replace(symbol, symbol + ' ')
+            for symbol in rightSymbols:
+                ###Skip adding spaces to numbers with ',' and '.'
+                if symbol == ',':
+                    listRE = list(re.finditer(',', verseText))
+                    for item in listRE:
+                        start = item.start() + listRE.index(item)
+                        end = item.end() + listRE.index(item)
+                        if start != 0 and end != len(verseText) and \
+                            verseText[start-1].isnumeric() and verseText[end].isnumeric():
+                            continue
+                        else:
+                            verseText = verseText[:start] + ' ' + verseText[start:]
+                elif symbol == '.':
+                    listRE = list(re.finditer('\.', verseText))
+                    for item in listRE:
+                        start = item.start() + listRE.index(item)
+                        end = item.end() + listRE.index(item)
+                        if start != 0 and end != len(verseText) and \
+                            verseText[start-1].isnumeric() and verseText[end].isnumeric():
+                            continue
+                        else:
+                            verseText = verseText[:start] + ' ' + verseText[start:]
+                #################################################
+                else:
+                    verseText = verseText.replace(symbol, ' ' + symbol)
+            for symbol in middleSymbols:
+                verseText = verseText.replace(symbol, ' ' + symbol + ' ')
+
+            found = re.findall(searchRegex, verseText)
+            ###Skip processing verses without any search results
+            if len(found) == 0:
+                continue
+
+            ###Make a verse copy to modify it in the if statements below
+            verseCopy = verseText
+
+            for item in found:
+
+                ###Skip empty searches consisting only of whitespace or regex only with dots
+                if item.strip() == '':
+                    continue
+
+                item = re.search(searchRegex, verseCopy)
+
+                ###Set the edges of the concordance item context
+                start = item.start()-50
+                end = item.end() + 50
+                itemStart = item.start()
+                itemEnd = item.end()
+
+                ###Skip if item does not start or end with the search item
+                if form.searchOptions.data == 'start' and not (itemStart == 0 or verseText[itemStart-1] == ' '):
+                    continue
+                elif form.searchOptions.data == 'end' and not (itemEnd == len(verseText) or verseText[itemEnd] == ' '):
+                    continue
+
+                ###Adjust the edges of the concordance item context re the start and end of the verse
+                if start < 0:
+                    start = 0
+                if end > len(verseText)-1:
+                    end = None
+                ###Grab the adjacent letters of the word that was found
+                if form.searchOptions.data == 'cont' or \
+                    form.searchOptions.data == 'regex' or \
+                    form.searchOptions.data == 'end':
+                    while itemStart != 0 and verseText[itemStart-1] != ' ':
+                        itemStart -= 1
+                if form.searchOptions.data == 'cont' or \
+                    form.searchOptions.data == 'regex' or \
+                    form.searchOptions.data == 'start':
+                    while itemEnd != len(verseText) and verseText[itemEnd] != ' ':
+                        itemEnd += 1
+
+                toAdd = (verse[0] + ' ' + verse[1] + ':' + str(verse[2]),
+                    verseText[start:itemStart], verseText[itemStart:itemEnd],
+                    verseText[itemEnd:end])
+
+                if not toAdd in concordanceList:
+                    concordanceList.append(toAdd)
+
+                verseCopy = verseCopy[:item.start()] + '$' * len(item.group()) + verseCopy[item.end():]
+
+        ###Get the concordance length to display the 'Nothing found' message
+        concLength = len(concordanceList)
+
+        return render_template('concordance.html', form=form,
+                                conc=concordanceList, concLength=concLength)
+
+    return render_template('concordance.html', form=form)

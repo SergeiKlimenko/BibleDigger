@@ -68,8 +68,8 @@ class wordListForm(FlaskForm):
     language1 = SelectField('language', choices=languageChoices, coerce=int, validators=[DataRequired()])
     translation1 = SelectField('translation', coerce=int, validators=[DataRequired()], validate_choice=False)
 
-    search = StringField('What are you looking for?')
 
+    search = StringField('What are you looking for?')
     caseSensitive = BooleanField('Case sensitive')
 
     searchOptions = RadioField('Search options', choices=[('all', 'all'), ('start', 'starting with'),
@@ -79,5 +79,15 @@ class wordListForm(FlaskForm):
     freqMax = IntegerField('freq max', validators=[optional(strip_whitespace=True)])
 
     orderOptions = RadioField('Order by', choices=[('word', 'order by word'), ('freq', 'order by frequency')])
+
+    submit = SubmitField('OK')
+
+
+class concordanceForm(FlaskForm):
+
+    search = StringField('What are you looking for?')
+
+    searchOptions = RadioField('Search options', choices=[('start', 'starting with'),
+         ('end', 'ending with'), ('cont', 'containing'), ('regex', 'matching regex')])
 
     submit = SubmitField('OK')
