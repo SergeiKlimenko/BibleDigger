@@ -1,6 +1,7 @@
 from flask import render_template, url_for, flash, redirect, request, Blueprint, jsonify, session
 from bibledigger import db
-from .forms import browseForm, parallelForm, verseSearchForm, parallelVerseSearchForm, wordListForm, concordanceForm
+from .forms import browseForm, parallelForm, verseSearchForm, parallelVerseSearchForm, \
+                   wordListForm, concordanceForm, concordanceSortForm
 from bibledigger.models import Book, Language, Translation, Text
 
 
@@ -164,6 +165,7 @@ def verseSearch():
             ORDER BY id"))]
 
     if form.validate_on_submit():
+
         anotherVerse = form.anotherVerse.data
 
         book = db.engine.execute(f"SELECT title FROM books WHERE code = \
@@ -178,8 +180,8 @@ def verseSearch():
             translation1)
 
         verseList = list(session.values())[1:]
-        print(verseList)
-        print(list(session)[1:])
+        print(verseList) ###delete
+        print(list(session)[1:]) ###delete
         if anotherVerse == True:
             return render_template('versesearch.html', form=form,
                 anotherVerse=anotherVerse, verseToRender=verseList)
@@ -197,7 +199,7 @@ def verseSearch():
                 verseToRender.append((verse.title + " " + verse.chapter + ":" +
                     str(verse.verse), verse.text1, item[3], item[4]))
 
-                print(verseToRender)
+                print(verseToRender) ###delete
 
             sessionKeys = list(session.keys())
             for k in sessionKeys:
@@ -209,6 +211,10 @@ def verseSearch():
 
     else:
         print(form.errors) ###DELETE
+
+    for k in list(session.keys()):
+        if k != 'csrf_token' and k != '_permanent':
+            session.pop(k)
 
     return render_template('versesearch.html', form=form)
 
@@ -438,12 +444,20 @@ def wordList():
 def concordance():
 
     form = concordanceForm()
+    sortForm = concordanceSortForm()
 
-    if form.validate_on_submit():
+    if form.language1.data == None:
+        form.translation1.choices = [(tran.id, tran.translation) for tran
+            in Translation.query.filter_by(language_id=1).all()]
+    else:
+        form.translation1.choices = [(tran.id, tran.translation) for tran
+            in Translation.query.filter_by(language_id=form.language1.data).all()]
 
-        text = list(db.engine.execute('SELECT b.title, a.chapter, a.verse, a.text \
+    if form.validate_on_submit() and form.submit.data:
+
+        text = list(db.engine.execute(f'SELECT b.title, a.chapter, a.verse, a.text \
             FROM texts a LEFT JOIN books b ON a.book_code = b.code WHERE \
-            translation_id = 86'))
+            translation_id = {form.translation1.data}'))
 
         ###The concordance holder to be filled with search results
         concordanceList = []
@@ -465,20 +479,33 @@ def concordance():
                     skip = False
                     break
             if skip == True:
-                return render_template('concordance.html', form=form, concLength=0)
+                return render_template('concordance.html', form=form,
+                                        sortForm=sortForm, concLength=0)
 
             ###Catch incorrect regex
             try:
+                if form.caseSensitive.data == False:
+                    for symbol in searchItem:
+                        if searchItem.index(symbol) == 0 or \
+                          (searchItem[searchItem.index(symbol)-1] == '\\' and searchItem.index(symbol) == 1) or \
+                          (searchItem[searchItem.index(symbol)-1] == '\\' and searchItem[index(symbol)-2] != '\\'):
+                            continue
+                        else:
+                            searchItem[searchItem.index(symbol)].lower()
                 searchRegex = re.compile(searchItem)
             except:
                 errorMessage = 'Sorry It seems that your regular expression is incorrect. Try again. '
-                return render_template('concordance.html', form=form, errorMessage=errorMessage)
+                return render_template('concordance.html', form=form,
+                                        sortForm=sortForm, errorMessage=errorMessage)
 
         else:
             for symbol in reSpecialSymbols:
                 searchItem = searchItem.replace(symbol, '\\' + symbol)
             print(searchItem) ###delete
-            searchRegex = re.compile(searchItem)
+            if form.caseSensitive.data == False:
+                searchRegex = re.compile(searchItem.lower())
+            else:
+                searchRegex = re.compile(searchItem)
 
         ###Add space between non-alphanumeric symbols and words
         leftSymbols = '(["“<\'‘‛'
@@ -492,47 +519,64 @@ def concordance():
                 verseText = verseText.replace(symbol, symbol + ' ')
             for symbol in rightSymbols:
                 ###Skip adding spaces to numbers with ',' and '.'
-                if symbol == ',':
-                    listRE = list(re.finditer(',', verseText))
-                    for item in listRE:
-                        start = item.start() + listRE.index(item)
-                        end = item.end() + listRE.index(item)
-                        if start != 0 and end != len(verseText) and \
-                            verseText[start-1].isnumeric() and verseText[end].isnumeric():
-                            continue
-                        else:
-                            verseText = verseText[:start] + ' ' + verseText[start:]
-                elif symbol == '.':
-                    listRE = list(re.finditer('\.', verseText))
-                    for item in listRE:
-                        start = item.start() + listRE.index(item)
-                        end = item.end() + listRE.index(item)
-                        if start != 0 and end != len(verseText) and \
-                            verseText[start-1].isnumeric() and verseText[end].isnumeric():
-                            continue
-                        else:
-                            verseText = verseText[:start] + ' ' + verseText[start:]
+                if symbol in ',.':
+                    for commaDot in (',', '\.'):
+                        if symbol == commaDot.strip('\\'):
+                            listRE = list(re.finditer(commaDot, verseText))
+                            counter = 0
+                            for item in listRE:
+                                start = item.start() + counter
+                                end = item.end() + counter
+                                if start != 0 and end != len(verseText) and \
+                                    verseText[start-1].isnumeric() and verseText[end].isnumeric():
+                                    continue
+                                else:
+                                    verseText = verseText[:start] + ' ' + verseText[start:]
+                                    counter += 1
+                # if symbol == ',':
+                #     listRE = list(re.finditer(',', verseText))
+                #     counter = 0
+                #     for item in listRE:
+                #         start = item.start() + counter
+                #         end = item.end() + counter
+                #         if start != 0 and end != len(verseText) and \
+                #             verseText[start-1].isnumeric() and verseText[end].isnumeric():
+                #             continue
+                #         else:
+                #             verseText = verseText[:start] + ' ' + verseText[start:]
+                #             counter += 1
+                # elif symbol == '.':
+                #     listRE = list(re.finditer('\.', verseText))
+                #     counter = 0
+                #     for item in listRE:
+                #         start = item.start() + counter
+                #         end = item.end() + counter
+                #         if start != 0 and end != len(verseText) and \
+                #             verseText[start-1].isnumeric() and verseText[end].isnumeric():
+                #             continue
+                #         else:
+                #             verseText = verseText[:start] + ' ' + verseText[start:]
+                #             counter += 1
                 #################################################
                 else:
                     verseText = verseText.replace(symbol, ' ' + symbol)
             for symbol in middleSymbols:
                 verseText = verseText.replace(symbol, ' ' + symbol + ' ')
 
-            found = re.findall(searchRegex, verseText)
+            if form.caseSensitive.data == False:
+                found = list(re.finditer(searchRegex, verseText.lower()))
+            else:
+                found = list(re.finditer(searchRegex, verseText))
             ###Skip processing verses without any search results
+
             if len(found) == 0:
                 continue
-
-            ###Make a verse copy to modify it in the if statements below
-            verseCopy = verseText
 
             for item in found:
 
                 ###Skip empty searches consisting only of whitespace or regex only with dots
-                if item.strip() == '':
+                if item.group() == '':
                     continue
-
-                item = re.search(searchRegex, verseCopy)
 
                 ###Set the edges of the concordance item context
                 start = item.start()-50
@@ -567,15 +611,67 @@ def concordance():
                     verseText[start:itemStart], verseText[itemStart:itemEnd],
                     verseText[itemEnd:end])
 
-                if not toAdd in concordanceList:
-                    concordanceList.append(toAdd)
+                concordanceList.append(toAdd)
 
-                verseCopy = verseCopy[:item.start()] + '$' * len(item.group()) + verseCopy[item.end():]
+        ###Remove duplicates from the list
+        checkList = [(verse[0], verse[2]) for verse in concordanceList]
+        concordanceListNew = []
+        checkListNew = []
+        for verse in concordanceList:
+            if (verse[0], verse[2]) not in checkListNew:
+                checkListNew.append((verse[0], verse[2]))
+                concordanceListNew.append(verse)
+        concordanceList = concordanceListNew
 
         ###Get the concordance length to display the 'Nothing found' message
         concLength = len(concordanceList)
 
-        return render_template('concordance.html', form=form,
-                                conc=concordanceList, concLength=concLength)
+        session['concordance'] = concordanceList
 
-    return render_template('concordance.html', form=form)
+        print(concLength)###delete
+
+        return render_template('concordance.html', form=form,
+                                conc=concordanceList, concLength=concLength,
+                                sortForm=sortForm)
+
+    if sortForm.validate_on_submit() and sortForm.sort.data:
+
+        if sortForm.level1.data == True:
+
+            versesToSort = []
+
+            for verse in session['concordance']:
+                if int(sortForm.option1.data) == 2:
+                    versesToSort.append((verse[2].lower(), verse))
+                else:
+                    try:
+                        if sortForm.option1.data[0] == '3':
+                            versesToSort.append((verse[int(sortForm.option1.data[0])].\
+                                split()[int(sortForm.option1.data[1])].lower(), verse))
+                        elif sortForm.option1.data[0] == '1':
+                            versesToSort.append((verse[int(sortForm.option1.data[0])].\
+                                split()[int('-' + sortForm.option1.data[1])].lower(), verse))
+                    except IndexError:
+                        versesToSort.append((' ', verse))
+
+            versesToSort.sort(key=lambda tup: tup[0])
+
+            concordanceList = [item[1] for item in versesToSort]
+            concLength = len(concordanceList)
+
+            return render_template('concordance.html', form=form, sortForm=sortForm,
+                                    conc=concordanceList, concLength=concLength)
+
+        else:
+            pass
+
+    else:
+        print(sortForm.errors)
+
+
+
+# for k in list(session.keys()):
+#     if k != 'csrf_token' and k != '_permanent':
+#         session.pop(k)
+
+    return render_template('concordance.html', form=form, sortForm=sortForm)

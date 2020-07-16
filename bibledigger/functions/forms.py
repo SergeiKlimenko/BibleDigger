@@ -85,9 +85,42 @@ class wordListForm(FlaskForm):
 
 class concordanceForm(FlaskForm):
 
+    language1 = SelectField('language', choices=languageChoices, coerce=int, validators=[DataRequired()])
+    translation1 = SelectField('translation', coerce=int, validators=[DataRequired()], validate_choice=False)
+    
     search = StringField('What are you looking for?')
 
     searchOptions = RadioField('Search options', choices=[('start', 'starting with'),
          ('end', 'ending with'), ('cont', 'containing'), ('regex', 'matching regex')])
 
+    caseSensitive = BooleanField('Case sensitive')
+
     submit = SubmitField('OK')
+
+
+class concordanceSortForm(FlaskForm):
+
+    ###TO DO Add soting by the verse
+    choices = [(32, '3R'), (31, '2R'), (30, '1R'),
+               (2, 'KWIC'), (11, '1L'), (12, '2L'),
+               (13, '3L')]
+
+    level1 = BooleanField('Level 1')
+    option1 = SelectField(choices=choices, validate_choice=False)
+
+    level2 = BooleanField('Level 2')
+    option2 = SelectField(choices=choices, validate_choice=False)
+
+    level3 = BooleanField('Level 3')
+    option3 = SelectField(choices=choices, validate_choice=False)
+
+    level4 = BooleanField('Level 4')
+    option4 = SelectField(choices=choices, validate_choice=False)
+
+    level5 = BooleanField('Level 5')
+    option5 = SelectField(choices=choices, validate_choice=False)
+
+    level6 = BooleanField('Level 6')
+    option6 = SelectField(choices=choices, validate_choice=False)
+
+    sort = SubmitField('OK')

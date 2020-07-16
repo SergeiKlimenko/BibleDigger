@@ -3,30 +3,98 @@
 
 {% block form %}
   <form method="POST">
-  {{form.csrf_token}}
+  {{ form.csrf_token }}
+  <div class="form-group">
+    <div class="form-row">
+      <div class="col">
+        {{ wtf.form_field(form.language1, class="form-control form-control-sm") }}
+      </div>
+      <div class="col">
+        {{ wtf.form_field(form.translation1, class="form-control form-control-sm") }}
+      </div>
+    </div>
+  </div>
   <div class="form-group">
     {{ wtf.form_field(form.search, class="form-control form-control-sm") }}
   </div>
   <div class="form-group">
-    {{ wtf.form_field(form.searchOptions, class="form-control form-control-sm")}}
+    {{ wtf.form_field(form.caseSensitive, class="form-control form-control-sm") }}
+    {{ wtf.form_field(form.searchOptions, class="form-control form-control-sm") }}
   </div>
   <div class="form-group">
-    {{ wtf.form_field(form.submit, class="form-control form-control-sm")}}
+    {{ wtf.form_field(form.submit, class="form-control form-control-sm") }}
   </div>
+
+  <script>
+        var lang_select = document.getElementById("language1");
+        var tran_select = document.getElementById("translation1");
+
+        lang_select.onchange = function()  {
+
+            language1 = lang_select.value;
+
+            fetch('/translation1/' + language1).then(function(response) {
+
+                response.json().then(function(data) {
+                    var optionHTML = '';
+
+                    for (var translation of data.translations) {
+                        optionHTML += '<option value="' + translation.id + '">' + translation.translation + '</option>';
+                    }
+
+                    tran_select.innerHTML = optionHTML;
+                })
+
+            });
+        }
+    </script>
+
+{% endblock %}
+
+{% block form2 %}
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top bg-dark shadow">
+<form method="POST">
+  {{ sortForm.csrf_token }}
+  <div class="form-check form-check-inline">
+    {{ wtf.form_field(sortForm.level1, class="form-control form-control-sm") }}
+    {{ wtf.form_field(sortForm.option1, class="form-control form-control-sm") }}
+
+    {{ wtf.form_field(sortForm.level2, class="form-control form-control-sm") }}
+    {{ wtf.form_field(sortForm.option2, class="form-control form-control-sm") }}
+
+    {{ wtf.form_field(sortForm.level3, class="form-control form-control-sm") }}
+    {{ wtf.form_field(sortForm.option3, class="form-control form-control-sm") }}
+
+    {{ wtf.form_field(sortForm.level4, class="form-control form-control-sm") }}
+    {{ wtf.form_field(sortForm.option4, class="form-control form-control-sm") }}
+
+    {{ wtf.form_field(sortForm.level5, class="form-control form-control-sm") }}
+    {{ wtf.form_field(sortForm.option5, class="form-control form-control-sm") }}
+
+    {{ wtf.form_field(sortForm.level6, class="form-control form-control-sm") }}
+    {{ wtf.form_field(sortForm.option6, class="form-control form-control-sm") }}
+
+    {{ wtf.form_field(sortForm.sort) }}
+  </div>
+</form>
+</nav>
 {% endblock %}
 
 {% block content %}
+
   {% if errorMessage %}
   <h1>{{ errorMessage[:5] }}</h1>
   <h3>{{ errorMessage[6:] }}</h3>
   {% endif %}
 
-  {% if concLength == 0 %}
+  {% if concLength is not defined %}
+    {% set concLength = None %}
+  {% elif concLength == 0 %}
   <h1>Sorry</h1>
   <h3>Nothing found. Please, try to change your search criteria.</h3>
   {% elif concLength == 1 %}
     <p>Found: 1 result</p>
-  {% else %}
+  {% elif concLength > 1 %}
     <p>Found: {{ concLength }} results</p>
   {% endif %}
   {% for line in conc %}
