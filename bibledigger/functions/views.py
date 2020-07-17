@@ -180,8 +180,7 @@ def verseSearch():
             translation1)
 
         verseList = list(session.values())[1:]
-        print(verseList) ###delete
-        print(list(session)[1:]) ###delete
+
         if anotherVerse == True:
             return render_template('versesearch.html', form=form,
                 anotherVerse=anotherVerse, verseToRender=verseList)
@@ -198,8 +197,6 @@ def verseSearch():
 
                 verseToRender.append((verse.title + " " + verse.chapter + ":" +
                     str(verse.verse), verse.text1, item[3], item[4]))
-
-                print(verseToRender) ###delete
 
             sessionKeys = list(session.keys())
             for k in sessionKeys:
@@ -455,6 +452,10 @@ def concordance():
 
     if form.validate_on_submit() and form.submit.data:
 
+        for k in list(session.keys()):
+            if k != 'csrf_token' and k != '_permanent':
+                session.pop(k)
+
         text = list(db.engine.execute(f'SELECT b.title, a.chapter, a.verse, a.text \
             FROM texts a LEFT JOIN books b ON a.book_code = b.code WHERE \
             translation_id = {form.translation1.data}'))
@@ -501,7 +502,7 @@ def concordance():
         else:
             for symbol in reSpecialSymbols:
                 searchItem = searchItem.replace(symbol, '\\' + symbol)
-            print(searchItem) ###delete
+
             if form.caseSensitive.data == False:
                 searchRegex = re.compile(searchItem.lower())
             else:
@@ -511,6 +512,8 @@ def concordance():
         leftSymbols = '(["“<\'‘‛'
         rightSymbols = ',.)];:"”?!>\'’'
         middleSymbols = '—/\\+=_'
+
+        verseCounter = 1
 
         for verse in text:
             verseText = verse[3]
@@ -533,30 +536,6 @@ def concordance():
                                 else:
                                     verseText = verseText[:start] + ' ' + verseText[start:]
                                     counter += 1
-                # if symbol == ',':
-                #     listRE = list(re.finditer(',', verseText))
-                #     counter = 0
-                #     for item in listRE:
-                #         start = item.start() + counter
-                #         end = item.end() + counter
-                #         if start != 0 and end != len(verseText) and \
-                #             verseText[start-1].isnumeric() and verseText[end].isnumeric():
-                #             continue
-                #         else:
-                #             verseText = verseText[:start] + ' ' + verseText[start:]
-                #             counter += 1
-                # elif symbol == '.':
-                #     listRE = list(re.finditer('\.', verseText))
-                #     counter = 0
-                #     for item in listRE:
-                #         start = item.start() + counter
-                #         end = item.end() + counter
-                #         if start != 0 and end != len(verseText) and \
-                #             verseText[start-1].isnumeric() and verseText[end].isnumeric():
-                #             continue
-                #         else:
-                #             verseText = verseText[:start] + ' ' + verseText[start:]
-                #             counter += 1
                 #################################################
                 else:
                     verseText = verseText.replace(symbol, ' ' + symbol)
@@ -567,8 +546,8 @@ def concordance():
                 found = list(re.finditer(searchRegex, verseText.lower()))
             else:
                 found = list(re.finditer(searchRegex, verseText))
-            ###Skip processing verses without any search results
 
+            ###Skip processing verses without any search results
             if len(found) == 0:
                 continue
 
@@ -607,28 +586,29 @@ def concordance():
                     while itemEnd != len(verseText) and verseText[itemEnd] != ' ':
                         itemEnd += 1
 
-                toAdd = (verse[0] + ' ' + verse[1] + ':' + str(verse[2]),
+                toAdd = [verse[0] + ' ' + verse[1] + ':' + str(verse[2]),
                     verseText[start:itemStart], verseText[itemStart:itemEnd],
-                    verseText[itemEnd:end])
+                    verseText[itemEnd:end], verseCounter]
+
+                if len(concordanceList) > 0 and concordanceList[-1][0] != toAdd[0]:
+                    verseCounter += 1
 
                 concordanceList.append(toAdd)
 
+        print('here') ###delete
         ###Remove duplicates from the list
-        checkList = [(verse[0], verse[2]) for verse in concordanceList]
-        concordanceListNew = []
-        checkListNew = []
+        concordanceListNew = {}
         for verse in concordanceList:
-            if (verse[0], verse[2]) not in checkListNew:
-                checkListNew.append((verse[0], verse[2]))
-                concordanceListNew.append(verse)
-        concordanceList = concordanceListNew
+            concordanceListNew[(verse[0], verse[2])] = verse
 
+        print('there') ###delete
+
+        concordanceList = list(concordanceListNew.values())
+        print('over there') ###delete
         ###Get the concordance length to display the 'Nothing found' message
         concLength = len(concordanceList)
 
         session['concordance'] = concordanceList
-
-        print(concLength)###delete
 
         return render_template('concordance.html', form=form,
                                 conc=concordanceList, concLength=concLength,
@@ -636,42 +616,56 @@ def concordance():
 
     if sortForm.validate_on_submit() and sortForm.sort.data:
 
-        if sortForm.level1.data == True:
+        verseList = [[verse, None, None, None, None, None, None] for verse in session['concordance']]
 
-            versesToSort = []
+        options = list(sortForm)[:-2]
 
-            for verse in session['concordance']:
-                if int(sortForm.option1.data) == 2:
-                    versesToSort.append((verse[2].lower(), verse))
-                else:
-                    try:
-                        if sortForm.option1.data[0] == '3':
-                            versesToSort.append((verse[int(sortForm.option1.data[0])].\
-                                split()[int(sortForm.option1.data[1])].lower(), verse))
-                        elif sortForm.option1.data[0] == '1':
-                            versesToSort.append((verse[int(sortForm.option1.data[0])].\
-                                split()[int('-' + sortForm.option1.data[1])].lower(), verse))
-                    except IndexError:
-                        versesToSort.append((' ', verse))
+        for option in options:
 
-            versesToSort.sort(key=lambda tup: tup[0])
+            if option.data != 'None':
 
-            concordanceList = [item[1] for item in versesToSort]
-            concLength = len(concordanceList)
+                for verse in verseList:
+                    if int(option.data) == 0:
+                        # versesToSort.append((verse[4], verse))
+                        verse[options.index(option)+1] = verse[0][4]
+                    elif int(option.data) == 2:
+                        # versesToSort.append((verse[2].lower(), verse))
+                        verse[options.index(option)+1] = verse[0][2].lower()
+                    else:
+                        try:
+                            if option.data[0] == '3':
+                                # versesToSort.append((verse[int(option.data[0])].\
+                                #     split()[int(option.data[1])].lower(), verse))
+                                verse[options.index(option)+1] = verse[0][int(option.data[0])].\
+                                    split()[int(option.data[1])].lower()
+                            elif option.data[0] == '1':
+                                # versesToSort.append((verse[int(option.data[0])].\
+                                #     split()[int('-' + option.data[1])].lower(), verse))
+                                verse[options.index(option)+1] = verse[0][int(option.data[0])].\
+                                    split()[int('-' + option.data[1])].lower()
+                        except IndexError:
+                            # versesToSort.append((' ', verse))
+                            verse[options.index(option)+1] = ' '
 
-            return render_template('concordance.html', form=form, sortForm=sortForm,
+        for index in range(len(verseList[0][1:])):
+            print(verseList[0][index+1])
+            if verseList[0][index+1] != None:
+                verseList.sort(key=lambda tup: tup[index+1])
+
+        concordanceList = [entry[0] for entry in verseList]
+
+        concLength = len(concordanceList)
+
+        return render_template('concordance.html', form=form, sortForm=sortForm,
                                     conc=concordanceList, concLength=concLength)
 
-        else:
-            pass
-
     else:
-        print(sortForm.errors)
+        print(sortForm.errors) ###delete
 
 
 
-# for k in list(session.keys()):
-#     if k != 'csrf_token' and k != '_permanent':
-#         session.pop(k)
+    for k in list(session.keys()):
+        if k != 'csrf_token' and k != '_permanent':
+            session.pop(k)
 
     return render_template('concordance.html', form=form, sortForm=sortForm)
