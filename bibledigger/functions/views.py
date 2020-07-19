@@ -616,7 +616,12 @@ def concordance():
 
     if sortForm.validate_on_submit() and sortForm.sort.data:
 
-        verseList = [[verse, None, None, None, None, None, None] for verse in session['concordance']]
+        verseList = [[[verse[0], verse[1].split(), verse[2], verse[3].split(),
+                    verse[4]], None, None, None, None, None, None] for verse in session['concordance']]
+
+        colors = {sortForm.option1.name: 'DeepPink', sortForm.option2.name: 'Lime',
+                  sortForm.option3.name: 'Turquoise', sortForm.option4.name: 'Indigo',
+                  sortForm.option5.name: 'Blue', sortForm.option6.name: 'Gold'}
 
         options = list(sortForm)[:-2]
 
@@ -628,31 +633,46 @@ def concordance():
                     if int(option.data) == 0:
                         # versesToSort.append((verse[4], verse))
                         verse[options.index(option)+1] = verse[0][4]
+                        verse[0][0] = f'<span class="{colors[option.name]}">{verse[0][0]}</span>'
                     elif int(option.data) == 2:
                         # versesToSort.append((verse[2].lower(), verse))
-                        verse[options.index(option)+1] = verse[0][2].lower()
+                        verse[options.index(option)+1] = verse[0][2]
+                        verse[0][2] = f'<span class="{colors[option.name]}">{verse[0][2].lower()}</span>'
                     else:
                         try:
                             if option.data[0] == '3':
+                                kwicIndex = int(option.data[1])
                                 # versesToSort.append((verse[int(option.data[0])].\
                                 #     split()[int(option.data[1])].lower(), verse))
-                                verse[options.index(option)+1] = verse[0][int(option.data[0])].\
-                                    split()[int(option.data[1])].lower()
+                                verse[options.index(option)+1] = verse[0][3][kwicIndex].lower()
+                                verse[0][3] = verse[0][3][:kwicIndex] + \
+                                    [f'<span class="{colors[option.name]}">\
+                                    {verse[0][3][kwicIndex]}</span>'] \
+                                    + verse[0][3][kwicIndex+1:]
                             elif option.data[0] == '1':
+                                kwicIndex = int("-"+option.data[1])
                                 # versesToSort.append((verse[int(option.data[0])].\
                                 #     split()[int('-' + option.data[1])].lower(), verse))
-                                verse[options.index(option)+1] = verse[0][int(option.data[0])].\
-                                    split()[int('-' + option.data[1])].lower()
+                                verse[options.index(option)+1] = verse[0][1][kwicIndex].lower()
+                                if kwicIndex != -1:
+                                    verse[0][1] = verse[0][1][:kwicIndex] + \
+                                        [f'<span class="{colors[option.name]}">\
+                                        {verse[0][1][kwicIndex]}</span>'] + \
+                                        verse[0][1][kwicIndex+1:]
+                                elif kwicIndex == -1:
+                                    verse[0][1] = verse[0][1][:kwicIndex] + \
+                                        [f'<span class="{colors[option.name]}">\
+                                        {verse[0][1][kwicIndex]}</span>']
                         except IndexError:
                             # versesToSort.append((' ', verse))
                             verse[options.index(option)+1] = ' '
 
         for index in range(len(verseList[0][1:])):
-            print(verseList[0][index+1])
             if verseList[0][index+1] != None:
                 verseList.sort(key=lambda tup: tup[index+1])
 
-        concordanceList = [entry[0] for entry in verseList]
+        concordanceList = [[entry[0][0], ' '.join(entry[0][1]), entry[0][2],
+                            ' '.join(entry[0][3]), entry[0][4]] for entry in verseList]
 
         concLength = len(concordanceList)
 
