@@ -452,9 +452,9 @@ def concordance():
 
     if form.validate_on_submit() and form.submit.data:
 
-        for k in list(session.keys()):
-            if k != 'csrf_token' and k != '_permanent':
-                session.pop(k)
+        # for k in list(session.keys()):
+        #     if k != 'csrf_token' and k != '_permanent':
+        #         session.pop(k)
 
         text = list(db.engine.execute(f'SELECT b.title, a.chapter, a.verse, a.text \
             FROM texts a LEFT JOIN books b ON a.book_code = b.code WHERE \
@@ -487,12 +487,12 @@ def concordance():
             try:
                 if form.caseSensitive.data == False:
                     for symbol in searchItem:
-                        if searchItem.index(symbol) == 0 or \
-                          (searchItem[searchItem.index(symbol)-1] == '\\' and searchItem.index(symbol) == 1) or \
-                          (searchItem[searchItem.index(symbol)-1] == '\\' and searchItem[index(symbol)-2] != '\\'):
+                        symInd = searchItem.index(symbol)
+                        if (searchItem[symInd-1] == '\\' and symInd == 1) or \
+                            (searchItem[symInd-1] == '\\' and searchItem[symInd-2] != '\\'):
                             continue
                         else:
-                            searchItem[searchItem.index(symbol)].lower()
+                            searchItem = searchItem[:symInd] + searchItem[symInd].lower() + searchItem[symInd+1:]
                 searchRegex = re.compile(searchItem)
             except:
                 errorMessage = 'Sorry It seems that your regular expression is incorrect. Try again. '
@@ -514,6 +514,8 @@ def concordance():
         middleSymbols = '—/\\+=_'
 
         verseCounter = 1
+
+        print(searchRegex)
 
         for verse in text:
             verseText = verse[3]
@@ -636,8 +638,8 @@ def concordance():
                         verse[0][0] = f'<span class="{colors[option.name]}">{verse[0][0]}</span>'
                     elif int(option.data) == 2:
                         # versesToSort.append((verse[2].lower(), verse))
-                        verse[options.index(option)+1] = verse[0][2]
-                        verse[0][2] = f'<span class="{colors[option.name]}">{verse[0][2].lower()}</span>'
+                        verse[options.index(option)+1] = verse[0][2].lower()
+                        verse[0][2] = f'<span class="{colors[option.name]}">{verse[0][2]}</span>'
                     else:
                         try:
                             if option.data[0] == '3':
