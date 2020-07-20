@@ -456,6 +456,9 @@ def concordance():
         #     if k != 'csrf_token' and k != '_permanent':
         #         session.pop(k)
 
+        for option in list(sortForm)[:-2]:
+            option.data = 'None'
+
         text = list(db.engine.execute(f'SELECT b.title, a.chapter, a.verse, a.text \
             FROM texts a LEFT JOIN books b ON a.book_code = b.code WHERE \
             translation_id = {form.translation1.data}'))
@@ -597,16 +600,13 @@ def concordance():
 
                 concordanceList.append(toAdd)
 
-        print('here') ###delete
         ###Remove duplicates from the list
         concordanceListNew = {}
         for verse in concordanceList:
             concordanceListNew[(verse[0], verse[2])] = verse
 
-        print('there') ###delete
-
         concordanceList = list(concordanceListNew.values())
-        print('over there') ###delete
+
         ###Get the concordance length to display the 'Nothing found' message
         concLength = len(concordanceList)
 
