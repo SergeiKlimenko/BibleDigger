@@ -90,8 +90,9 @@ class concordanceForm(FlaskForm):
 
     search = StringField('What are you looking for?')
 
-    searchOptions = RadioField('Search options', choices=[('start', 'starting with'),
-         ('end', 'ending with'), ('cont', 'containing'), ('regex', 'matching regex')])
+    searchOptions = RadioField('Search options', choices=[('word', 'whole word'),
+         ('start', 'starting with'), ('end', 'ending with'), ('cont', 'containing'),
+         ('regex', 'matching regex')])
 
     caseSensitive = BooleanField('Case sensitive')
 

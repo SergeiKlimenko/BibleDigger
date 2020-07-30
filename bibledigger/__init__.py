@@ -3,14 +3,14 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_bootstrap import Bootstrap
-from flask_session import Session
+import redis
+
 
 app = Flask(__name__)
 
 
 ###CONFIG###
 app.config['SECRET_KEY'] = 'hugesecret'
-app.config['SESSION_TYPE'] = 'filesystem'
 ############
 
 
@@ -24,7 +24,6 @@ Migrate(app, db)
 ####################
 
 bootstrap = Bootstrap(app)
-Session(app)
 
 ###BLUEPRINT CONFIG###
 from bibledigger.core.views import core

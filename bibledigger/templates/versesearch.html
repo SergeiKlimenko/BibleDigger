@@ -6,26 +6,61 @@
 {% endblock %}
 
 {% block form %}
-<ul class="nav nav-tabs">
-  <li class="nav-item">
-    <a class="nav-link active" href="{{url_for('functions.verseSearch')}}">single</a>
-  </li>
-  <li class="nav-item">
-    <a class="nav-link" href="{{url_for('functions.parallelVerseSearch')}}">parallel</a>
-  </li>
-</ul>
+
+  {% if parallelOrNot == 1 %}
+  <ul class="nav nav-tabs">
+    <li class="nav-item">
+      <a class="nav-link active" href="{{ url_for('functions.verseSearch', parallelOrNot = 1) }}">single</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="{{ url_for('functions.verseSearch', parallelOrNot = 2) }}">parallel</a>
+    </li>
+  </ul>
+  {% elif parallelOrNot == 2 %}
+  <ul class="nav nav-tabs">
+    <li class="nav-item">
+      <a class="nav-link" href="{{ url_for('functions.verseSearch', parallelOrNot = 1) }}">single</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link active" href="{{ url_for('functions.verseSearch', parallelOrNot = 2) }}">parallel</a>
+    </li>
+  </ul>
+  {% endif %}
+
 
   <form method="POST">
     {{ form.csrf_token }}
-    <p>Select a translation</p>
-    <div class="form-row">
-      <div class="col">
-        {{ wtf.form_field(form.language1, class="form-control form-control-sm") }}
+    {% if parallelOrNot == 1 %}
+      <p>Select a translation</p>
+      <div class="form-row">
+        <div class="col">
+          {{ wtf.form_field(form.language1, class="form-control form-control-sm") }}
+          </div>
+        <div class="col">
+          {{ wtf.form_field(form.translation1, class="form-control form-control-sm") }}
         </div>
-      <div class="col">
-        {{ wtf.form_field(form.translation1, class="form-control form-control-sm") }}
       </div>
-    </div>
+    {% elif parallelOrNot == 2 %}
+      <p>Primary translation</p>
+      <div class="form-row">
+        <div class="col">
+          {{ wtf.form_field(form.language1, class="form-control form-control-sm") }}
+        </div>
+        <div class="col">
+          {{ wtf.form_field(form.translation1, class="form-control form-control-sm") }}
+        </div>
+      </div>
+      <hr>
+      <p>Secondary translation</p>
+      <div class="form-row">
+        <div class="col">
+          {{ wtf.form_field(form.language2, class="form-control form-control-sm") }}
+        </div>
+        <div class="col">
+        {{ wtf.form_field(form.translation2, class="form-control form-control-sm") }}
+        </div>
+      </div>
+    {% endif %}
     <hr>
     <div class="form-group">
       <div class="form-row">
@@ -72,6 +107,31 @@
             });
         }
     </script>
+    {% if parallelOrNot == 2 %}
+      <script>
+            var lang_select2 = document.getElementById("language2");
+            var tran_select2 = document.getElementById("translation2");
+
+            lang_select2.onchange = function()  {
+
+                language2 = lang_select2.value;
+
+                fetch('/translation1/' + language2).then(function(response) {
+
+                    response.json().then(function(data) {
+                        var optionHTML = '';
+
+                        for (var translation of data.translations) {
+                            optionHTML += '<option value="' + translation.id + '">' + translation.translation + '</option>';
+                        }
+
+                        tran_select2.innerHTML = optionHTML;
+                    })
+
+                });
+            }
+        </script>
+    {% endif %}
     <script>
             var tran_select = document.getElementById("translation1");
             var book_select = document.getElementById("book");
@@ -156,9 +216,18 @@
       <div class="row">
         <div class="col-2">
         </div>
-        <div class="col">
-          <p>{{ verse[2] + ": " + verse[3] }}</p>
-        </div>
+        {% if parallelOrNot == 1 %}
+          <div class="col">
+            <p>{{ verse[2] + ": " + verse[3] }}</p>
+          </div>
+        {% elif parallelOrNot == 2 %}
+          <div class="col">
+            <p>{{ verse[3] + ": " + verse[4] }}</p>
+          </div>
+          <div class="col">
+            <p>{{ verse[5] + ": " + verse[6] }}</p>
+          </div>
+        {% endif %}
       </div>
       <div class="row">
         <div class="col-2">
@@ -167,6 +236,11 @@
         <div class="col">
           <p>{{ verse[1] }}</p>
         </div>
+        {% if parallelOrNot == 2 %}
+          <div class="col">
+            <p>{{ verse[2] }}</p>
+          </div>
+        {% endif %}
       </div>
       <hr>
     {% endfor %}
@@ -180,6 +254,11 @@
       <div class="col">
         <p>{{ verse[3] + ": " + verse[4] }}</p>
       </div>
+    {% if parallelOrNot == 2 %}
+      <div class="col">
+        <p>{{ verse[5] + ": " + verse[6] }}</p>
+      </div>
+    {% endif %}
     </div>
     <hr>
     {% endfor %}

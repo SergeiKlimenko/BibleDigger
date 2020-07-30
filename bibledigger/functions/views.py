@@ -128,14 +128,45 @@ def parallel():
     return render_template('parallel.html', form=form)
 
 
-@functions.route('/verseSearch', methods=['GET', 'POST'])
-def verseSearch():
+@functions.route('/verseSearch/<int:parallelOrNot>/', methods=['GET', 'POST'])
+@functions.route('/verseSearch/<int:parallelOrNot>/<verseList>', methods=['GET', 'POST'])
+def verseSearch(parallelOrNot, verseList=None):
 
-    form = verseSearchForm()
+    if parallelOrNot == 1:
+        form = verseSearchForm()
+    elif parallelOrNot == 2:
+        form = parallelVerseSearchForm()
+
+    #Convert string representation of verse list from route into list
+    def processVerseList(verseList, fullProcess):
+        verseList = [verse.split(', ') for verse in verseList.strip('[]').replace("'", '').strip('[]').split('], [')]
+        if fullProcess == True:
+            for verse in verseList:
+                book = db.engine.execute(f"SELECT title FROM books WHERE code = \
+                    '{verse[0]}'").fetchone().title
+                language1 = db.engine.execute(f"SELECT language FROM languages \
+                    WHERE id = {verse[3]}").fetchone().language
+                translation1 = db.engine.execute(f"SELECT translation FROM translations \
+                    WHERE id = {verse[4]}").fetchone().translation
+                verse[0] = book
+                verse[3] = language1
+                verse[4] = translation1
+                if parallelOrNot == 2:
+                    language2 = db.engine.execute(f"SELECT language FROM languages \
+                        WHERE id = {verse[5]}").fetchone().language
+                    translation2 = db.engine.execute(f"SELECT translation FROM translations \
+                        WHERE id = {verse[6]}").fetchone().translation
+                    verse[5] = language2
+                    verse[6] = translation2
+
+        return verseList
 
     if form.language1.data == None:
         form.translation1.choices = [(tran.id, tran.translation) for tran
             in Translation.query.filter_by(language_id=1).all()]
+        if parallelOrNot == 2:
+            form.translation2.choices = [(tran.id, tran.translation) for tran
+                in Translation.query.filter_by(language_id=1).all()]
         form.book.choices = [(book.book_code, book.title) for book
             in Text.query.filter_by(translation_id=1).distinct(Text.book_code).
             join(Book).with_entities(Text.book_code, Book.title).all()]
@@ -150,6 +181,9 @@ def verseSearch():
     else:
         form.translation1.choices = [(tran.id, tran.translation) for tran
             in Translation.query.filter_by(language_id=form.language1.data).all()]
+        if parallelOrNot == 2:
+            form.translation2.choices = [(tran.id, tran.translation) for tran
+                in Translation.query.filter_by(language_id=form.language2.data).all()]
         form.book.choices = [(book.book_code, book.title) for book
             in Text.query.filter_by(translation_id=form.translation1.data).
             distinct(Text.book_code).join(Book).with_entities(Text.book_code,
@@ -168,52 +202,80 @@ def verseSearch():
 
         anotherVerse = form.anotherVerse.data
 
-        book = db.engine.execute(f"SELECT title FROM books WHERE code = \
-        '{form.book.data}'").fetchone().title
-        language1 = db.engine.execute(f"SELECT language FROM languages \
-            WHERE id = {form.language1.data}").fetchone().language
-        translation1 = db.engine.execute(f"SELECT translation FROM translations \
-            WHERE id = {form.translation1.data}").fetchone().translation
+        if parallelOrNot == 1:
+            verse = [form.book.data, form.chapter.data, form.verse.data,
+                form.language1.data, form.translation1.data]
+        elif parallelOrNot == 2:
+            verse = [form.book.data, form.chapter.data, form.verse.data,
+                form.language1.data, form.translation1.data, form.language2.data,
+                form.translation2.data]
 
-        session[(form.book.data, form.chapter.data, form.verse.data, language1,
-            translation1)] = (book, form.chapter.data, form.verse.data, language1,
-            translation1)
-
-        verseList = list(session.values())[1:]
+        if verseList == None:
+            verseList = []
+            verseList.append(verse)
+        else:
+            verseList = processVerseList(verseList, False)
+            verseList.append(verse)
 
         if anotherVerse == True:
-            return render_template('versesearch.html', form=form,
-                anotherVerse=anotherVerse, verseToRender=verseList)
+            return redirect(url_for('functions.verseSearch', verseList=verseList,
+                parallelOrNot=parallelOrNot))
+
         else:
-            verseToRender = []
 
-            for item in list(session)[1:]:
-                verse = db.engine.execute(f"SELECT a.id AS id, b.title AS title, \
-                    a.chapter AS chapter, a.verse AS verse, a.text AS text1 \
-                    FROM texts a LEFT JOIN books b ON a.book_code = b.code \
-                    WHERE a.translation_id = {form.translation1.data} and \
-                    a.book_code = '{item[0]}' and a.chapter = '{item[1]}' and \
-                    a.verse = '{item[2]}'").fetchone()
+            verseToRender =[]
 
-                verseToRender.append((verse.title + " " + verse.chapter + ":" +
-                    str(verse.verse), verse.text1, item[3], item[4]))
+            for item in verseList:
 
-            sessionKeys = list(session.keys())
-            for k in sessionKeys:
-                if k != 'csrf_token' and k != '_permanent':
-                    session.pop(k)
+                language1 = db.engine.execute(f"SELECT language FROM languages \
+                    WHERE id = {item[3]}").fetchone().language
+                translation1 = db.engine.execute(f"SELECT translation FROM translations \
+                    WHERE id = {item[4]}").fetchone().translation
+
+                if parallelOrNot == 1:
+
+                    verse = db.engine.execute(f"SELECT a.id AS id, b.title AS title, \
+                        a.chapter AS chapter, a.verse AS verse, a.text AS text1 \
+                        FROM texts a LEFT JOIN books b ON a.book_code = b.code \
+                        WHERE a.translation_id = {item[4]} and \
+                        a.book_code = '{item[0]}' and a.chapter = '{item[1]}' and \
+                        a.verse = '{item[2]}'").fetchone()
+
+                    verseToRender.append((verse.title + " " + verse.chapter + ":" +
+                        str(verse.verse), verse.text1, language1, translation1))
+
+                elif parallelOrNot == 2:
+
+                    verse = db.engine.execute(f"SELECT a.id AS id, d.title AS title, \
+                        a.chapter AS chapter, a.verse AS verse, a.text AS text1, \
+                        b.text AS text2 FROM ((SELECT * FROM texts \
+                        WHERE translation_id = {item[4]} and book_code = \
+                        '{item[0]}' and chapter = '{item[1]}' and \
+                        verse = '{item[2]}') a LEFT JOIN (SELECT * FROM texts \
+                        WHERE translation_id = {item[6]}) b ON \
+                        a.book_code = b.book_code AND a.chapter = b.chapter \
+                        AND a.verse = b.verse) c LEFT JOIN books d ON c.book_code = d.code").fetchone()
+                    language2 = db.engine.execute(f"SELECT language FROM languages \
+                            WHERE id = {item[5]}").fetchone().language
+                    translation2 = db.engine.execute(f"SELECT translation FROM \
+                        translations WHERE id = {item[6]}").fetchone().translation
+
+                    verseToRender.append((verse.title + " " + verse.chapter + ":" +
+                        str(verse.verse), verse.text1, verse.text2, language1,
+                        translation1, language2, translation2))
 
             return render_template('versesearch.html', form=form,
-                anotherVerse=anotherVerse, verseToRender=verseToRender)
+                anotherVerse=anotherVerse, verseToRender=verseToRender, parallelOrNot=parallelOrNot)
 
     else:
         print(form.errors) ###DELETE
 
-    for k in list(session.keys()):
-        if k != 'csrf_token' and k != '_permanent':
-            session.pop(k)
-
-    return render_template('versesearch.html', form=form)
+    if verseList == None:
+        return render_template('versesearch.html', form=form, parallelOrNot=parallelOrNot)
+    else:
+        verseList = processVerseList(verseList, True)
+        return render_template('versesearch.html', form=form,
+            anotherVerse=True, verseToRender=verseList, parallelOrNot=parallelOrNot)
 
 
 @functions.route('/parallelverseSearch', methods=['GET', 'POST'])
@@ -371,10 +433,10 @@ def wordList():
             strippedVerse = []
             for word in verse:
                 if form.caseSensitive.data == True:
-                    strippedVerse.append(word.strip(',.()[];:""“”?!—/\\-+=_<>').
+                    strippedVerse.append(word.strip(',.()[];:""“”?!—/\\-+=_<>¿»«').
                         strip(",.()[];:''‘’‛“”?!—/\\-+=_<>"))
                 elif form.caseSensitive.data == False:
-                    strippedVerse.append(word.lower().strip(',.()[];:""“”?!—/\\-+=_<>').
+                    strippedVerse.append(word.lower().strip(',.()[];:""“”?!—/\\-+=_<>¿»«').
                         strip(",.()[];:''‘’‛“”?!—/\\-+=_<>"))
             verseList += strippedVerse
             #verseList.append(verse)
@@ -404,30 +466,37 @@ def wordList():
 
         words = []
 
+        if form.caseSensitive.data == True:
+            searchItem = form.search.data
+        else:
+            searchItem = form.search.data.lower()
+
         if form.searchOptions.data == 'all':
             words = sortedWordList
         elif form.searchOptions.data == 'start':
             for word in sortedWordList:
-                if word[1].startswith(form.search.data):
+                if word[1].startswith(searchItem):
                     words.append(word)
         elif form.searchOptions.data == 'end':
             for word in sortedWordList:
-                if word[1].endswith(form.search.data):
+                if word[1].endswith(searchItem):
                     words.append(word)
         elif form.searchOptions.data == 'cont':
             for word in sortedWordList:
-                if form.search.data in word[1]:
+                if searchItem in word[1]:
                     words.append(word)
         elif form.searchOptions.data == 'regex':
             import re
-            regex = re.compile(form.search.data)
+            regex = re.compile(searchItem)
             for word in sortedWordList:
                 if re.search(regex, word[1]):
                     words.append(word)
 
         wordsLength = len(words)
 
-        return render_template('wordlist.html', form=form, words=words, wordsLength=wordsLength)
+        return render_template('wordlist.html', form=form, words=words,
+                                wordsLength=wordsLength, translation_id=form.translation1.data,
+                                case=form.caseSensitive.data)
 
     else:
         print(form.errors)
@@ -437,8 +506,10 @@ def wordList():
     return render_template('wordlist.html', form=form, wordsLength=wordsLength)
 
 
-@functions.route('/concordance', methods=['GET', 'POST'])
-def concordance():
+@functions.route('/concordance/', methods=['GET', 'POST'])
+@functions.route('/concordance/<int:translation_id>/<searchItem>/<searchOption>/<case>',
+                  methods=['GET', 'POST'])
+def concordance(translation_id=None, searchItem=None, searchOption=None, case=None):
 
     form = concordanceForm()
     sortForm = concordanceSortForm()
@@ -450,23 +521,28 @@ def concordance():
         form.translation1.choices = [(tran.id, tran.translation) for tran
             in Translation.query.filter_by(language_id=form.language1.data).all()]
 
+    ###The concordance holder to be filled with search results
+    concordanceList = []
+
     if form.validate_on_submit() and form.submit.data:
 
-        # for k in list(session.keys()):
-        #     if k != 'csrf_token' and k != '_permanent':
-        #         session.pop(k)
+        translation_id = form.translation1.data
+        searchItem = form.search.data
+        searchOption = form.searchOptions.data
+        case = form.caseSensitive.data
 
-        for option in list(sortForm)[:-2]:
-            option.data = 'None'
+        return redirect(url_for('functions.concordance',
+                         translation_id=translation_id, searchItem=searchItem,
+                         searchOption=searchOption, case=case))
+
+    if translation_id != None:
 
         text = list(db.engine.execute(f'SELECT b.title, a.chapter, a.verse, a.text \
             FROM texts a LEFT JOIN books b ON a.book_code = b.code WHERE \
-            translation_id = {form.translation1.data}'))
+            translation_id = {translation_id}'))
 
-        ###The concordance holder to be filled with search results
-        concordanceList = []
-
-        searchItem = form.search.data
+        if searchItem == None: ###Edit
+            searchItem = form.search.data
         ###Strip the search item to avoid searching just for whitespaces
         searchItem = searchItem.strip()
 
@@ -475,7 +551,7 @@ def concordance():
         reSpecialSymbols = r'\\.^$*+?{}[]|()'
 
         ###Check if search item is regex to compile it accordingly
-        if form.searchOptions.data == 'regex':
+        if searchOption == 'regex' or form.searchOptions.data == 'regex':
             ###Skip the search if it consists only of dots -- Takes too long to process and not informative
             skip = True
             for character in searchItem:
@@ -488,7 +564,7 @@ def concordance():
 
             ###Catch incorrect regex
             try:
-                if form.caseSensitive.data == False:
+                if case == False or form.caseSensitive.data == False:
                     for symbol in searchItem:
                         symInd = searchItem.index(symbol)
                         if (searchItem[symInd-1] == '\\' and symInd == 1) or \
@@ -506,19 +582,17 @@ def concordance():
             for symbol in reSpecialSymbols:
                 searchItem = searchItem.replace(symbol, '\\' + symbol)
 
-            if form.caseSensitive.data == False:
+            if case == False or form.caseSensitive.data == False:
                 searchRegex = re.compile(searchItem.lower())
             else:
                 searchRegex = re.compile(searchItem)
 
         ###Add space between non-alphanumeric symbols and words
-        leftSymbols = '(["“<\'‘‛'
+        leftSymbols = '(["“<\'‘‛¿»«'
         rightSymbols = ',.)];:"”?!>\'’'
         middleSymbols = '—/\\+=_'
 
         verseCounter = 1
-
-        print(searchRegex)
 
         for verse in text:
             verseText = verse[3]
@@ -547,7 +621,7 @@ def concordance():
             for symbol in middleSymbols:
                 verseText = verseText.replace(symbol, ' ' + symbol + ' ')
 
-            if form.caseSensitive.data == False:
+            if case == False or form.caseSensitive.data == False:
                 found = list(re.finditer(searchRegex, verseText.lower()))
             else:
                 found = list(re.finditer(searchRegex, verseText))
@@ -569,9 +643,15 @@ def concordance():
                 itemEnd = item.end()
 
                 ###Skip if item does not start or end with the search item
-                if form.searchOptions.data == 'start' and not (itemStart == 0 or verseText[itemStart-1] == ' '):
+                if searchOption == 'start' or form.searchOptions.data == 'start' \
+                    and not (itemStart == 0 or verseText[itemStart-1].isspace()):
                     continue
-                elif form.searchOptions.data == 'end' and not (itemEnd == len(verseText) or verseText[itemEnd] == ' '):
+                elif searchOption == 'end' or form.searchOptions.data == 'end' \
+                    and not (itemEnd == len(verseText) or verseText[itemEnd].isspace()):
+                    continue
+                elif (searchOption == 'word' or form.searchOptions.data == 'word') \
+                    and (not (itemStart == 0 or verseText[itemStart-1].isspace()) \
+                    or not (itemEnd == len(verseText) or verseText[itemEnd].isspace())):
                     continue
 
                 ###Adjust the edges of the concordance item context re the start and end of the verse
@@ -580,20 +660,18 @@ def concordance():
                 if end > len(verseText)-1:
                     end = None
                 ###Grab the adjacent letters of the word that was found
-                if form.searchOptions.data == 'cont' or \
-                    form.searchOptions.data == 'regex' or \
-                    form.searchOptions.data == 'end':
-                    while itemStart != 0 and verseText[itemStart-1] != ' ':
+                if searchOption in ('cont', 'regex', 'end') or \
+                    form.searchOptions.data in ('cont', 'regex', 'end'):
+                    while itemStart != 0 and not verseText[itemStart-1].isspace():
                         itemStart -= 1
-                if form.searchOptions.data == 'cont' or \
-                    form.searchOptions.data == 'regex' or \
-                    form.searchOptions.data == 'start':
-                    while itemEnd != len(verseText) and verseText[itemEnd] != ' ':
+                if searchOption in ('cont', 'regex', 'start') or \
+                    form.searchOptions.data in ('cont', 'regex', 'start'):
+                    while itemEnd != len(verseText) and not verseText[itemEnd].isspace():
                         itemEnd += 1
 
                 toAdd = [verse[0] + ' ' + verse[1] + ':' + str(verse[2]),
                     verseText[start:itemStart], verseText[itemStart:itemEnd],
-                    verseText[itemEnd:end], verseCounter]
+                    verseText[itemEnd:end], verseCounter, itemStart]
 
                 if len(concordanceList) > 0 and concordanceList[-1][0] != toAdd[0]:
                     verseCounter += 1
@@ -603,23 +681,21 @@ def concordance():
         ###Remove duplicates from the list
         concordanceListNew = {}
         for verse in concordanceList:
-            concordanceListNew[(verse[0], verse[2])] = verse
+            concordanceListNew[(verse[0], verse[2]), verse[5]] = verse
 
         concordanceList = list(concordanceListNew.values())
 
         ###Get the concordance length to display the 'Nothing found' message
         concLength = len(concordanceList)
 
-        session['concordance'] = concordanceList
-
-        return render_template('concordance.html', form=form,
-                                conc=concordanceList, concLength=concLength,
-                                sortForm=sortForm)
+        if concLength == 0:
+            return render_template('concordance.html', form=form, sortForm=sortForm,
+                                    conc=concordanceList, concLength=concLength)
 
     if sortForm.validate_on_submit() and sortForm.sort.data:
 
         verseList = [[[verse[0], verse[1].split(), verse[2], verse[3].split(),
-                    verse[4]], None, None, None, None, None, None] for verse in session['concordance']]
+                    verse[4]], None, None, None, None, None, None] for verse in concordanceList]
 
         colors = {sortForm.option1.name: 'DeepPink', sortForm.option2.name: 'Lime',
                   sortForm.option3.name: 'Turquoise', sortForm.option4.name: 'Indigo',
@@ -628,24 +704,18 @@ def concordance():
         options = list(sortForm)[:-2]
 
         for option in options:
-
             if option.data != 'None':
-
                 for verse in verseList:
                     if int(option.data) == 0:
-                        # versesToSort.append((verse[4], verse))
                         verse[options.index(option)+1] = verse[0][4]
                         verse[0][0] = f'<span class="{colors[option.name]}">{verse[0][0]}</span>'
                     elif int(option.data) == 2:
-                        # versesToSort.append((verse[2].lower(), verse))
                         verse[options.index(option)+1] = verse[0][2].lower()
                         verse[0][2] = f'<span class="{colors[option.name]}">{verse[0][2]}</span>'
                     else:
                         try:
                             if option.data[0] == '3':
                                 kwicIndex = int(option.data[1])
-                                # versesToSort.append((verse[int(option.data[0])].\
-                                #     split()[int(option.data[1])].lower(), verse))
                                 verse[options.index(option)+1] = verse[0][3][kwicIndex].lower()
                                 verse[0][3] = verse[0][3][:kwicIndex] + \
                                     [f'<span class="{colors[option.name]}">\
@@ -653,8 +723,6 @@ def concordance():
                                     + verse[0][3][kwicIndex+1:]
                             elif option.data[0] == '1':
                                 kwicIndex = int("-"+option.data[1])
-                                # versesToSort.append((verse[int(option.data[0])].\
-                                #     split()[int('-' + option.data[1])].lower(), verse))
                                 verse[options.index(option)+1] = verse[0][1][kwicIndex].lower()
                                 if kwicIndex != -1:
                                     verse[0][1] = verse[0][1][:kwicIndex] + \
@@ -666,7 +734,6 @@ def concordance():
                                         [f'<span class="{colors[option.name]}">\
                                         {verse[0][1][kwicIndex]}</span>']
                         except IndexError:
-                            # versesToSort.append((' ', verse))
                             verse[options.index(option)+1] = ' '
 
         for index in range(len(verseList[0][1:])):
@@ -681,13 +748,15 @@ def concordance():
         return render_template('concordance.html', form=form, sortForm=sortForm,
                                     conc=concordanceList, concLength=concLength)
 
+    if concordanceList == []:
+        return render_template('concordance.html', form=form, sortForm=sortForm)
     else:
-        print(sortForm.errors) ###delete
+        return render_template('concordance.html', form=form,
+                                conc=concordanceList, concLength=concLength,
+                                sortForm=sortForm)
 
 
-
-    for k in list(session.keys()):
-        if k != 'csrf_token' and k != '_permanent':
-            session.pop(k)
-
-    return render_template('concordance.html', form=form, sortForm=sortForm)
+###TO DO: Some verse numbers have letters (3a, 3b)
+###TO DO: Delete parallelversesearch.html
+###TO DO: Delete parallel.html
+###TO DO: Move scripts to separate files
