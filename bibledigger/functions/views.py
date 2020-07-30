@@ -8,10 +8,13 @@ from bibledigger.models import Book, Language, Translation, Text
 functions = Blueprint('functions', __name__)
 
 
-@functions.route('/browse', methods=['GET', 'POST'])
-def browse():
+@functions.route('/browse/<int:parallelOrNot>', methods=['GET', 'POST'])
+def browse(parallelOrNot):
 
-    form = browseForm()
+    if parallelOrNot == 1:
+        form = browseForm()
+    elif parallelOrNot == 2:
+        form = parallelForm()
 
     ###TO DO: Make a new db with translation names edited as below:
     #translationList = [(tran.id,
@@ -20,35 +23,46 @@ def browse():
     if form.language1.data == None:
         form.translation1.choices = [(tran.id, tran.translation) for tran
             in Translation.query.filter_by(language_id=1).all()]
+        if parallelOrNot == 2:
+            form.translation2.choices = [(tran.id, tran.translation) for tran
+                in Translation.query.filter_by(language_id=1).all()]
         form.book.choices = [(book.book_code, book.title) for book
             in Text.query.filter_by(translation_id=1).distinct(Text.book_code).
             join(Book).with_entities(Text.book_code, Book.title).all()]
     else:
         form.translation1.choices = [(tran.id, tran.translation) for tran
             in Translation.query.filter_by(language_id=form.language1.data).all()]
+        if parallelOrNot == 2:
+            form.translation2.choices = [(tran.id, tran.translation) for tran
+                in Translation.query.filter_by(language_id=form.language2.data).all()]
         form.book.choices = [(book.book_code, book.title) for book
             in Text.query.filter_by(translation_id=form.translation1.data).
             distinct(Text.book_code).join(Book).with_entities(Text.book_code,
             Book.title).all()]
 
     if form.validate_on_submit():
-        #print(form.errors)
-        ###
-        data = request.form
-        print(data)
-        data = request.data
-        print(data)
-        ###
-        translation1 = Translation.query.filter_by(id=form.translation1.data).first().id
-        tran1Text = Text.query.filter_by(translation_id=translation1,\
-            book_code=form.book.data).join(Book).with_entities(Text.id, \
-            Book.title, Text.chapter, Text.verse, Text.text).all()
-        textLength = len(tran1Text)
-        return render_template('browse.html', form=form, tran1Text=tran1Text, textLength=textLength)
-    else:
-        print(form.errors)
 
-    return render_template('browse.html', form=form)
+        if parallelOrNot == 1:
+            tran1Text = Text.query.filter_by(translation_id=form.translation1.data,\
+                book_code=form.book.data).join(Book).with_entities(Text.id, \
+                Book.title, Text.chapter, Text.verse, Text.text).all()
+            textLength = len(tran1Text)
+            return render_template('browse.html', form=form, texts=tran1Text,
+                textLength=textLength, parallelOrNot=parallelOrNot)
+
+        elif parallelOrNot == 2:
+            bothTranslations = list(db.engine.execute(f"SELECT a.id, d.title, a.chapter, \
+                a.verse, a.text, b.text FROM ((SELECT * FROM texts \
+                WHERE translation_id = {form.translation1.data} and book_code = \
+                '{form.book.data}') a LEFT JOIN (SELECT * FROM texts \
+                WHERE translation_id = {form.translation2.data}) b ON \
+                a.book_code = b.book_code AND a.chapter = b.chapter \
+                AND a.verse = b.verse) c LEFT JOIN books d ON c.book_code = d.code"))
+            textLength = len(list(bothTranslations))
+            return render_template('browse.html', form=form,
+                texts=bothTranslations, textLength=textLength, parallelOrNot=parallelOrNot)
+
+    return render_template('browse.html', form=form, parallelOrNot=parallelOrNot)
 
 
 @functions.route('/translation1/<language1>')
@@ -79,53 +93,6 @@ def book(translation1):
         bookArray.append(bookObj)
 
     return jsonify({'books': bookArray})
-
-
-@functions.route('/parallel', methods=['GET', 'POST'])
-def parallel():
-
-    form = parallelForm()
-
-    if form.language1.data == None:
-        form.translation1.choices = [(tran.id, tran.translation) for tran
-            in Translation.query.filter_by(language_id=1).all()]
-        form.translation2.choices = [(tran.id, tran.translation) for tran
-            in Translation.query.filter_by(language_id=1).all()]
-        form.book.choices = [(book.book_code, book.title) for book
-            in Text.query.filter_by(translation_id=1).distinct(Text.book_code).
-            join(Book).with_entities(Text.book_code, Book.title).all()]
-    else:
-        form.translation1.choices = [(tran.id, tran.translation) for tran
-            in Translation.query.filter_by(language_id=form.language1.data).all()]
-        form.translation2.choices = [(tran.id, tran.translation) for tran
-            in Translation.query.filter_by(language_id=form.language2.data).all()]
-        form.book.choices = [(book.book_code, book.title) for book
-            in Text.query.filter_by(translation_id=form.translation1.data).
-            distinct(Text.book_code).join(Book).with_entities(Text.book_code,
-            Book.title).all()]
-
-    if form.validate_on_submit():
-        #print(form.errors)
-        data = request.form
-        print(data)
-        data = request.data
-        print(data)
-
-        bothTranslations = list(db.engine.execute(f"SELECT a.id, d.title, a.chapter, \
-            a.verse, a.text, b.text FROM ((SELECT * FROM texts \
-            WHERE translation_id = {form.translation1.data} and book_code = \
-            '{form.book.data}') a LEFT JOIN (SELECT * FROM texts \
-            WHERE translation_id = {form.translation2.data}) b ON \
-            a.book_code = b.book_code AND a.chapter = b.chapter \
-            AND a.verse = b.verse) c LEFT JOIN books d ON c.book_code = d.code"))
-        textLength = len(list(bothTranslations))
-
-        return render_template('parallel.html', form=form,
-            bothTranslations=bothTranslations, textLength=textLength)
-    else:
-            print(form.errors) ###DELETE
-
-    return render_template('parallel.html', form=form)
 
 
 @functions.route('/verseSearch/<int:parallelOrNot>/', methods=['GET', 'POST'])
@@ -214,7 +181,10 @@ def verseSearch(parallelOrNot, verseList=None):
             verseList = []
             verseList.append(verse)
         else:
-            verseList = processVerseList(verseList, False)
+            if verseList.endswith("'delete']"):
+                verseList = []
+            else:
+                verseList = processVerseList(verseList, False)
             verseList.append(verse)
 
         if anotherVerse == True:
@@ -223,9 +193,32 @@ def verseSearch(parallelOrNot, verseList=None):
 
         else:
 
+            verseList.append('delete')
+
+            return redirect(url_for('functions.verseSearch', verseList=verseList,
+                parallelOrNot=parallelOrNot))
+            #return render_template('versesearch.html', form=form,
+            #    anotherVerse=anotherVerse, verseToRender=verseToRender, parallelOrNot=parallelOrNot)
+
+    if verseList == None:
+        return render_template('versesearch.html', form=form, parallelOrNot=parallelOrNot)
+
+    else:
+        if verseList.endswith("'delete']"):
+
+            verseList = verseList.replace(", 'delete'", '')
+            verseList = processVerseList(verseList, False)
+
             verseToRender =[]
 
+            print('\n')
+            print("We're here")
+            print(verseList) ###delete
+            print('\n')
+
             for item in verseList:
+
+                print(item)###Delete
 
                 language1 = db.engine.execute(f"SELECT language FROM languages \
                     WHERE id = {item[3]}").fetchone().language
@@ -265,116 +258,12 @@ def verseSearch(parallelOrNot, verseList=None):
                         translation1, language2, translation2))
 
             return render_template('versesearch.html', form=form,
-                anotherVerse=anotherVerse, verseToRender=verseToRender, parallelOrNot=parallelOrNot)
+                anotherVerse=False, verseToRender=verseToRender, parallelOrNot=parallelOrNot)
 
-    else:
-        print(form.errors) ###DELETE
-
-    if verseList == None:
-        return render_template('versesearch.html', form=form, parallelOrNot=parallelOrNot)
-    else:
-        verseList = processVerseList(verseList, True)
-        return render_template('versesearch.html', form=form,
-            anotherVerse=True, verseToRender=verseList, parallelOrNot=parallelOrNot)
-
-
-@functions.route('/parallelverseSearch', methods=['GET', 'POST'])
-def parallelVerseSearch():
-
-    form = parallelVerseSearchForm()
-
-    if form.language1.data == None:
-        form.translation1.choices = [(tran.id, tran.translation) for tran
-            in Translation.query.filter_by(language_id=1).all()]
-        form.translation2.choices = [(tran.id, tran.translation) for tran
-            in Translation.query.filter_by(language_id=1).all()]
-        form.book.choices = [(book.book_code, book.title) for book
-            in Text.query.filter_by(translation_id=1).distinct(Text.book_code).
-            join(Book).with_entities(Text.book_code, Book.title).all()]
-        form.chapter.choices = [(verse.chapter, verse.chapter) for verse
-            in list(db.engine.execute("SELECT DISTINCT chapter FROM texts \
-            WHERE translation_id = 1 AND book_code = 'GEN' ORDER BY id"))]
-        form.verse.choices = [(verse.verse, verse.verse) for verse
-            in list(db.engine.execute(f"SELECT DISTINCT verse FROM texts \
-            WHERE translation_id = 1 AND book_code = 'GEN' AND chapter = 1 \
-            ORDER BY id"))]
-
-    else:
-        form.translation1.choices = [(tran.id, tran.translation) for tran
-            in Translation.query.filter_by(language_id=form.language1.data).all()]
-        form.translation2.choices = [(tran.id, tran.translation) for tran
-            in Translation.query.filter_by(language_id=form.language2.data).all()]
-        form.book.choices = [(book.book_code, book.title) for book
-            in Text.query.filter_by(translation_id=form.translation1.data).
-            distinct(Text.book_code).join(Book).with_entities(Text.book_code,
-            Book.title).all()]
-        form.chapter.choices = [(verse.chapter, verse.chapter) for verse
-            in list(db.engine.execute(f"SELECT DISTINCT chapter FROM texts \
-            WHERE translation_id = {form.translation1.data} AND \
-            book_code = '{form.book.data}' ORDER BY id"))]
-        form.verse.choices = [(verse.verse, verse.verse) for verse
-            in list(db.engine.execute(f"SELECT DISTINCT verse FROM texts \
-            WHERE translation_id = {form.translation1.data} AND book_code = \
-            '{form.book.data}' AND chapter = {form.chapter.data} \
-            ORDER BY id"))]
-
-    if form.validate_on_submit():
-        anotherVerse = form.anotherVerse.data
-
-        book = db.engine.execute(f"SELECT title FROM books WHERE code = \
-        '{form.book.data}'").fetchone().title
-        language1 = db.engine.execute(f"SELECT language FROM languages \
-            WHERE id = {form.language1.data}").fetchone().language
-        translation1 = db.engine.execute(f"SELECT translation FROM translations \
-            WHERE id = {form.translation1.data}").fetchone().translation
-        language2 = db.engine.execute(f"SELECT language FROM languages \
-            WHERE id = {form.language2.data}").fetchone().language
-        translation2 = db.engine.execute(f"SELECT translation FROM translations \
-            WHERE id = {form.translation2.data}").fetchone().translation
-
-        session[(form.book.data, form.chapter.data, form.verse.data, language1,
-            translation1, language2, translation2)] = (book, form.chapter.data,
-            form.verse.data, language1, translation1, language2, translation2)
-
-        verseList = list(session.values())[1:]
-        print(verseList)
-        print(list(session)[1:])
-        if anotherVerse == True:
-            return render_template('parallelversesearch.html', form=form,
-                anotherVerse=anotherVerse, verseToRender=verseList)
         else:
-            verseToRender = []
-
-            for item in list(session)[1:]:
-                verse = db.engine.execute(f"SELECT a.id AS id, d.title AS title, \
-                    a.chapter AS chapter, a.verse AS verse, a.text AS text1, \
-                    b.text AS text2 FROM ((SELECT * FROM texts \
-                    WHERE translation_id = {form.translation1.data} and book_code = \
-                    '{item[0]}' and chapter = '{item[1]}' and \
-                    verse = '{item[2]}') a LEFT JOIN (SELECT * FROM texts \
-                    WHERE translation_id = {form.translation2.data}) b ON \
-                    a.book_code = b.book_code AND a.chapter = b.chapter \
-                    AND a.verse = b.verse) c LEFT JOIN books d ON c.book_code = d.code").fetchone()
-
-                verseToRender.append((verse.title + " " + verse.chapter + ":" +
-                    str(verse.verse), verse.text1, verse.text2,
-                    item[3], item[4],
-                    item[5], item[6]))
-
-                print(verseToRender)
-
-            sessionKeys = list(session.keys())
-            for k in sessionKeys:
-                if k != 'csrf_token' and k != '_permanent':
-                    session.pop(k)
-
-            return render_template('parallelversesearch.html', form=form,
-                anotherVerse=anotherVerse, verseToRender=verseToRender)
-
-    else:
-        print(form.errors)
-
-    return render_template('parallelversesearch.html', form=form)
+            verseList = processVerseList(verseList, True)
+            return render_template('versesearch.html', form=form,
+                anotherVerse=True, verseToRender=verseList, parallelOrNot=parallelOrNot)
 
 
 @functions.route('/chapter/<book>/<translation_id>')
@@ -760,3 +649,4 @@ def concordance(translation_id=None, searchItem=None, searchOption=None, case=No
 ###TO DO: Delete parallelversesearch.html
 ###TO DO: Delete parallel.html
 ###TO DO: Move scripts to separate files
+###TO DO: Fix translation names in the database

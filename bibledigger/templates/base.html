@@ -20,7 +20,7 @@
       </button>
       <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
         <div class="navbar-nav">
-          <a class="nav-item nav-link" href="{{ url_for('functions.browse') }}">browse</a>
+          <a class="nav-item nav-link" href="{{ url_for('functions.browse', parallelOrNot = 1) }}">browse</a>
           <a class="nav-item nav-link" href="{{ url_for('functions.verseSearch', parallelOrNot = 1) }}">verse search</a>
           <a class="nav-item nav-link" href="{{ url_for('functions.concordance') }}">concordance</a>
           <a class="nav-item nav-link" href="{{ url_for('functions.wordList') }}">word list</a>
