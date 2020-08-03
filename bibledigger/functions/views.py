@@ -544,10 +544,10 @@ def concordance(translation_id=None, searchItem=None, searchOption=None, case=No
                 itemEnd = item.end()
 
                 ###Skip if item does not start or end with the search item
-                if searchOption == 'start' or form.searchOptions.data == 'start' \
+                if (searchOption == 'start' or form.searchOptions.data == 'start') \
                     and not (itemStart == 0 or verseText[itemStart-1].isspace()):
-                    continue
-                elif searchOption == 'end' or form.searchOptions.data == 'end' \
+                        continue
+                elif (searchOption == 'end' or form.searchOptions.data == 'end') \
                     and not (itemEnd == len(verseText) or verseText[itemEnd].isspace()):
                     continue
                 elif (searchOption == 'word' or form.searchOptions.data == 'word') \
