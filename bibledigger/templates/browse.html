@@ -1,6 +1,15 @@
 {% import "bootstrap/wtf.html" as wtf %}
 {% extends "base.html" %}
 
+{% block head %}
+  <style>
+    #here {
+      position: relative;
+      padding-top: 75px;
+    }
+  </style>
+{% endblock %}
+
 {% block form %}
 <ul class="nav nav-tabs">
   {% if parallelOrNot == 1 %}
@@ -155,7 +164,11 @@
   <div class="row">
     {% if parallelOrNot == 1 %}
       <div class="col-2">
-        <p>{{verse.title + " " + verse.chapter + ":" + verse.verse|string}}</p>
+        {% if verse.title + " " + verse.chapter + ":" + verse.verse|string == verseCode %}
+          <p><span id='here'>{{ verse.title + " " + verse.chapter + ":" + verse.verse|string }}</span></p>
+        {% else %}
+          <p>{{ verse.title + " " + verse.chapter + ":" + verse.verse|string }}</p>
+        {% endif %}
       </div>
       <div class="col">
         <p>{{verse.text}}</p>

@@ -113,7 +113,11 @@
   {% for line in conc %}
     <div class="row">
       <div class="col-2">
-        <p>{{ line[0]|safe }}</p>
+        {% if '<span' in line[0] %}
+        <p><a href="{{ url_for('functions.browse', parallelOrNot=1, translation_id=translation_id, verseCode=line[0].replace('>', '<').split('<')[2]|safe, _anchor='here') }}">{{ line[0]|safe }}</a></p>
+        {% else %}
+        <p><a href="{{ url_for('functions.browse', parallelOrNot=1, translation_id=translation_id, verseCode=line[0]|safe, _anchor='here') }}">{{ line[0]|safe }}</a></p>
+        {% endif %}
       </div>
       <div class="col">
         <p style="text-align: right">{{ line[1]|safe }}</p>

@@ -8,8 +8,9 @@ from bibledigger.models import Book, Language, Translation, Text
 functions = Blueprint('functions', __name__)
 
 
-@functions.route('/browse/<int:parallelOrNot>', methods=['GET', 'POST'])
-def browse(parallelOrNot):
+@functions.route('/browse/<int:parallelOrNot>/', methods=['GET', 'POST'])
+@functions.route('/browse/<int:parallelOrNot>/<int:translation_id>/<verseCode>', methods=['GET', 'POST'])
+def browse(parallelOrNot, translation_id=None, verseCode=None):
 
     if parallelOrNot == 1:
         form = browseForm()
@@ -48,7 +49,7 @@ def browse(parallelOrNot):
                 Book.title, Text.chapter, Text.verse, Text.text).all()
             textLength = len(tran1Text)
             return render_template('browse.html', form=form, texts=tran1Text,
-                textLength=textLength, parallelOrNot=parallelOrNot)
+                textLength=textLength, parallelOrNot=parallelOrNot, verseCode=None)
 
         elif parallelOrNot == 2:
             bothTranslations = list(db.engine.execute(f"SELECT a.id, d.title, a.chapter, \
@@ -59,8 +60,19 @@ def browse(parallelOrNot):
                 a.book_code = b.book_code AND a.chapter = b.chapter \
                 AND a.verse = b.verse) c LEFT JOIN books d ON c.book_code = d.code"))
             textLength = len(list(bothTranslations))
+
             return render_template('browse.html', form=form,
                 texts=bothTranslations, textLength=textLength, parallelOrNot=parallelOrNot)
+
+    if translation_id != None:
+        book_code = Book.query.with_entities(Book.code).filter_by(title=' '.join(verseCode.split()[:-1])).first()[0]
+        tran1Text = Text.query.filter_by(translation_id=translation_id,\
+            book_code=book_code).join(Book).with_entities(Text.id, \
+            Book.title, Text.chapter, Text.verse, Text.text).all()
+        textLength = len(tran1Text)
+
+        return render_template('browse.html', form=form, texts=tran1Text,
+            textLength=textLength, parallelOrNot=parallelOrNot, verseCode=verseCode)
 
     return render_template('browse.html', form=form, parallelOrNot=parallelOrNot)
 
@@ -567,19 +579,20 @@ def concordance(translation_id=None, searchItem=None, searchOption=None, case=No
 
                 concordanceList.append(toAdd)
 
+        print(len(concordanceList))###delete
         ###Remove duplicates from the list
         concordanceListNew = {}
         for verse in concordanceList:
             concordanceListNew[(verse[0], verse[2]), verse[5]] = verse
 
         concordanceList = list(concordanceListNew.values())
-
+        print(len(concordanceList))###delete
         ###Get the concordance length to display the 'Nothing found' message
         concLength = len(concordanceList)
 
         if concLength == 0:
             return render_template('concordance.html', form=form, sortForm=sortForm,
-                                    conc=concordanceList, concLength=concLength)
+                                    conc=concordanceList, concLength=concLength, translation_id=translation_id)
 
     if sortForm.validate_on_submit() and sortForm.sort.data:
 
@@ -635,14 +648,15 @@ def concordance(translation_id=None, searchItem=None, searchOption=None, case=No
         concLength = len(concordanceList)
 
         return render_template('concordance.html', form=form, sortForm=sortForm,
-                                    conc=concordanceList, concLength=concLength)
+                                    conc=concordanceList, concLength=concLength,
+                                    translation_id=translation_id)
 
     if concordanceList == []:
         return render_template('concordance.html', form=form, sortForm=sortForm)
     else:
         return render_template('concordance.html', form=form,
                                 conc=concordanceList, concLength=concLength,
-                                sortForm=sortForm)
+                                sortForm=sortForm, translation_id=translation_id)
 
 
 ###TO DO: Some verse numbers have letters (3a, 3b)
@@ -650,3 +664,4 @@ def concordance(translation_id=None, searchItem=None, searchOption=None, case=No
 ###TO DO: Delete parallel.html
 ###TO DO: Move scripts to separate files
 ###TO DO: Fix translation names in the database
+###TO DO: Concordance: separate colons ("22 :14")
