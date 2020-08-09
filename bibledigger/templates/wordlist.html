@@ -71,6 +71,52 @@
     <p>Please, try to change search criteria</p>
   {% elif wordsLength > 0 %}
     <div class="row">
+      <p>Number of words found: {{ wordsLength }}</p>
+    </div>
+
+    <nav class="table-responsive mb-2s">
+      <ul class="pagination mb-0">
+        {% if page == 1 %}
+          <li class="page-item disabled">
+        {% else %}
+          <li class="page-item">
+        {% endif %}
+          <a class="page-link" href="{{ url_for('functions.wordList',
+            translation_id=translation_id, searchItem=searchItem, searchOption=searchOption,
+            case=case, freqMin=freqMin, freqMax=freqMax, order=order, page=page-1) }}" aria-label="Previous">
+         <span aria-hidden="true">&laquo;</span>
+       </a>
+        </li>
+        {% for i in range(pages) %}
+          {% if i+1 == page %}
+            <li class="page-item active" aria-current="page">
+              <a class="page-link" href="{{ url_for('functions.wordList',
+                translation_id=translation_id, searchItem=searchItem, searchOption=searchOption,
+                case=case, freqMin=freqMin, freqMax=freqMax, order=order, page=i+1) }}">{{ i+1 }} <span class="sr-only">(current)</span></a>
+            </li>
+          {% else %}
+            <li class="page-item">
+              <a class="page-link" href="{{ url_for('functions.wordList',
+                translation_id=translation_id, searchItem=searchItem, searchOption=searchOption,
+                case=case, freqMin=freqMin, freqMax=freqMax, order=order, page=i+1) }}">{{ i+1 }}</a>
+            </li>
+          {% endif %}
+        {% endfor %}
+        {% if page == pages %}
+          <li class="page-item disabled">
+        {% else %}
+          <li class="page-item">
+        {% endif %}
+          <a class="page-link" href="{{ url_for('functions.wordList',
+            translation_id=translation_id, searchItem=searchItem, searchOption=searchOption,
+            case=case, freqMin=freqMin, freqMax=freqMax, order=order, page=page+1) }}" aria-label="Next">
+         <span aria-hidden="true">&raquo;</span>
+       </a>
+        </li>
+      </ul>
+    </nav>
+
+    <div class="row">
       <div class="col-1">
         <p>rank</p>
       </div>
@@ -81,10 +127,10 @@
         <p>frequency</p>
       </div>
     </div>
-    {% for frequency, word in words %}
+    {% for (rank, frequency, word) in words[page] %}
       <div class="row">
         <div class="col-1">
-          <p>{{ words.index((frequency, word)) + 1 }}</p>
+          <p>{{ rank }}</p>
         </div>
         <div class="col-2">
           <p><a href="{{ url_for('functions.concordance',  translation_id=translation_id, searchItem=word, searchOption='word', case=case) }}">{{ word }}</a></p>

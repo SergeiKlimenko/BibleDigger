@@ -3,7 +3,7 @@ from bibledigger import db
 from .forms import browseForm, parallelForm, verseSearchForm, parallelVerseSearchForm, \
                    wordListForm, concordanceForm, concordanceSortForm
 from bibledigger.models import Book, Language, Translation, Text
-
+import json
 
 functions = Blueprint('functions', __name__)
 
@@ -310,8 +310,11 @@ def verse(translation_id, book, chapter):
     return jsonify({'verses': verseArray})
 
 
-@functions.route('/wordlist', methods=['GET', 'POST'])
-def wordList():
+@functions.route('/wordlist/', methods=['GET', 'POST'])
+@functions.route('''/wordlist/<int:translation_id>/<searchItem>/<searchOption>/
+                     <case>/<int:freqMin>/<int:freqMax>/<order>/<int:page>''', methods=['GET', 'POST'])
+def wordList(translation_id=None, searchItem=None, searchOption=None, case=None,
+              freqMin=None, freqMax=None, order=None, page=None):
 
     form = wordListForm()
 
@@ -324,7 +327,38 @@ def wordList():
 
     if form.validate_on_submit():
 
-        fullText = Text.query.filter_by(translation_id=form.translation1.data).with_entities(Text.text).all()
+        translation_id=form.translation1.data
+        searchItem=form.search.data.replace('/', '%2F').replace('.', '%2E')
+        searchOption=form.searchOptions.data
+        if searchOption == 'all':
+            searchItem = "None"
+        case=form.caseSensitive.data
+        freqMin=form.freqMin.data
+        if freqMin == None:
+            freqMin = 0
+        freqMax=form.freqMax.data
+        if freqMax == None:
+            freqMax = 0
+        order=form.orderOptions.data
+        page=1
+
+        return redirect(url_for('functions.wordList',
+                                translation_id=translation_id,
+                                searchItem=searchItem,
+                                searchOption=searchOption,
+                                case=case,
+                                freqMin=freqMin,
+                                freqMax=freqMax,
+                                order=order,
+                                page=page))
+
+    if translation_id != None:
+
+        fullText = Text.query.filter_by(translation_id=translation_id).with_entities(Text.text).all()
+
+        searchItem = searchItem.replace('%2F', '/').replace('%2E', '.')
+        print(searchItem)
+        print(searchOption)
 
         verseList = []
 
@@ -333,14 +367,14 @@ def wordList():
             verse = verse[0].replace('—', ' ').split()
             strippedVerse = []
             for word in verse:
-                if form.caseSensitive.data == True:
+                if case == 'True':
+                    ###TO DO: Add spaces for punctuation symbols, rather then strip them
                     strippedVerse.append(word.strip(',.()[];:""“”?!—/\\-+=_<>¿»«').
                         strip(",.()[];:''‘’‛“”?!—/\\-+=_<>"))
-                elif form.caseSensitive.data == False:
+                elif case == 'False':
                     strippedVerse.append(word.lower().strip(',.()[];:""“”?!—/\\-+=_<>¿»«').
                         strip(",.()[];:''‘’‛“”?!—/\\-+=_<>"))
             verseList += strippedVerse
-            #verseList.append(verse)
 
         from collections import Counter
         wordList = Counter(verseList)
@@ -350,61 +384,83 @@ def wordList():
         for k, v in wordList.items():
             if k == '':
                 continue
-            if form.freqMin.data != None:
-                if v < form.freqMin.data:
+            if freqMin != 0:
+                if v < freqMin:
                     continue
-            if form.freqMax.data != None:
-                if v > form.freqMax.data:
+            if freqMax != 0:
+                if v > freqMax:
                     continue
             sortedWordList.append((v, k))
 
-        if form.orderOptions.data == 'freq':
+        if order == 'freq':
             sortedWordList.sort(key=lambda tup: tup[1])
             sortedWordList.sort(key=lambda tup: tup[0], reverse=True)
-        elif form.orderOptions.data == 'word':
+        elif order == 'word':
             sortedWordList.sort(key=lambda tup: tup[0], reverse=True)
             sortedWordList.sort(key=lambda tup: tup[1])
+
+        #Add ranks to the wordlist
+        rank = 1
+        for i in range(len(sortedWordList)):
+            sortedWordList[i] = (rank, sortedWordList[i][0], sortedWordList[i][1])
+            rank += 1
 
         words = []
 
-        if form.caseSensitive.data == True:
-            searchItem = form.search.data
-        else:
-            searchItem = form.search.data.lower()
+        if case == False:
+            searchItem = searchItem.lower()
 
-        if form.searchOptions.data == 'all':
+        ###TO DO: test thoroughly. A lot of bugs!!!
+        if searchOption == 'all':
             words = sortedWordList
-        elif form.searchOptions.data == 'start':
+        elif searchOption == 'start':
             for word in sortedWordList:
-                if word[1].startswith(searchItem):
+                if word[2].startswith(searchItem):
                     words.append(word)
-        elif form.searchOptions.data == 'end':
+        elif searchOption == 'end':
             for word in sortedWordList:
-                if word[1].endswith(searchItem):
+                if word[2].endswith(searchItem):
                     words.append(word)
-        elif form.searchOptions.data == 'cont':
+        elif searchOption == 'cont':
             for word in sortedWordList:
-                if searchItem in word[1]:
+                if searchItem in word[2]:
                     words.append(word)
-        elif form.searchOptions.data == 'regex':
+        elif searchOption == 'regex':
             import re
             regex = re.compile(searchItem)
             for word in sortedWordList:
-                if re.search(regex, word[1]):
+                if re.search(regex, word[2]):
                     words.append(word)
 
         wordsLength = len(words)
+        print(words[:10])###delete
+        #Split the words into pages
+        pages = wordsLength // 100 + (wordsLength % 100 > 0)
 
-        return render_template('wordlist.html', form=form, words=words,
-                                wordsLength=wordsLength, translation_id=form.translation1.data,
-                                case=form.caseSensitive.data)
+        wordsPaginated = {}
+
+        if pages > 1:
+            pageStep1 = 0
+            pageStep2 = 100
+            for i in range(pages):
+                if i + 1 == pages:
+                    wordsPaginated[i+1] = words[pageStep1:]
+                else:
+                    wordsPaginated[i+1] = words[pageStep1:pageStep2]
+                    pageStep1 += 100
+                    pageStep2 += 100
+        else:
+            wordsPaginated[1] = words
+
+        return render_template('wordlist.html', form=form, words=wordsPaginated,
+                                wordsLength=wordsLength, translation_id=translation_id,
+                                searchItem=searchItem, searchOption=searchOption,
+                                case=case, freqMin=freqMin, freqMax=freqMax,
+                                order=order, page=page, pages=pages)
 
     else:
-        print(form.errors)
-
-    wordsLength = -1
-
-    return render_template('wordlist.html', form=form, wordsLength=wordsLength)
+        wordsLength = -1
+        return render_template('wordlist.html', form=form, wordsLength=wordsLength)
 
 
 @functions.route('/concordance/', methods=['GET', 'POST'])
@@ -579,17 +635,17 @@ def concordance(translation_id=None, searchItem=None, searchOption=None, case=No
 
                 concordanceList.append(toAdd)
 
-        print(len(concordanceList))###delete
         ###Remove duplicates from the list
         concordanceListNew = {}
         for verse in concordanceList:
             concordanceListNew[(verse[0], verse[2]), verse[5]] = verse
 
         concordanceList = list(concordanceListNew.values())
-        print(len(concordanceList))###delete
+
         ###Get the concordance length to display the 'Nothing found' message
         concLength = len(concordanceList)
 
+        print("concordance ready") ###delete
         if concLength == 0:
             return render_template('concordance.html', form=form, sortForm=sortForm,
                                     conc=concordanceList, concLength=concLength, translation_id=translation_id)
@@ -660,8 +716,9 @@ def concordance(translation_id=None, searchItem=None, searchOption=None, case=No
 
 
 ###TO DO: Some verse numbers have letters (3a, 3b)
-###TO DO: Delete parallelversesearch.html
-###TO DO: Delete parallel.html
 ###TO DO: Move scripts to separate files
 ###TO DO: Fix translation names in the database
 ###TO DO: Concordance: separate colons ("22 :14")
+###TO DO: Pagination or lazy loading
+###TO DO: JavaScript for dropdown lists
+###TO DO: Separate punctuation from words for all languages

@@ -23,7 +23,7 @@ db = SQLAlchemy(app)
 Migrate(app, db)
 ####################
 
-bootstrap = Bootstrap(app)
+bootstrap = Bootstrap(app) ###remove?
 
 ###BLUEPRINT CONFIG###
 from bibledigger.core.views import core
