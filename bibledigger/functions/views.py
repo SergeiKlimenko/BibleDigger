@@ -399,12 +399,6 @@ def wordList(translation_id=None, searchItem=None, searchOption=None, case=None,
             sortedWordList.sort(key=lambda tup: tup[0], reverse=True)
             sortedWordList.sort(key=lambda tup: tup[1])
 
-        #Add ranks to the wordlist
-        rank = 1
-        for i in range(len(sortedWordList)):
-            sortedWordList[i] = (rank, sortedWordList[i][0], sortedWordList[i][1])
-            rank += 1
-
         words = []
 
         if case == False:
@@ -415,25 +409,31 @@ def wordList(translation_id=None, searchItem=None, searchOption=None, case=None,
             words = sortedWordList
         elif searchOption == 'start':
             for word in sortedWordList:
-                if word[2].startswith(searchItem):
+                if word[1].startswith(searchItem):
                     words.append(word)
         elif searchOption == 'end':
             for word in sortedWordList:
-                if word[2].endswith(searchItem):
+                if word[1].endswith(searchItem):
                     words.append(word)
         elif searchOption == 'cont':
             for word in sortedWordList:
-                if searchItem in word[2]:
+                if searchItem in word[1]:
                     words.append(word)
         elif searchOption == 'regex':
             import re
             regex = re.compile(searchItem)
             for word in sortedWordList:
-                if re.search(regex, word[2]):
+                if re.search(regex, word[1]):
                     words.append(word)
 
+        #Add ranks to the wordlist
+        rank = 1
+        for i in range(len(words)):
+            words[i] = (rank, words[i][0], words[i][1])
+            rank += 1
+
         wordsLength = len(words)
-        print(words[:10])###delete
+
         #Split the words into pages
         pages = wordsLength // 100 + (wordsLength % 100 > 0)
 
@@ -464,9 +464,9 @@ def wordList(translation_id=None, searchItem=None, searchOption=None, case=None,
 
 
 @functions.route('/concordance/', methods=['GET', 'POST'])
-@functions.route('/concordance/<int:translation_id>/<searchItem>/<searchOption>/<case>',
+@functions.route('/concordance/<int:translation_id>/<searchItem>/<searchOption>/<case>/<int:page>',
                   methods=['GET', 'POST'])
-def concordance(translation_id=None, searchItem=None, searchOption=None, case=None):
+def concordance(translation_id=None, searchItem=None, searchOption=None, case=None, page=None):
 
     form = concordanceForm()
     sortForm = concordanceSortForm()
@@ -490,7 +490,7 @@ def concordance(translation_id=None, searchItem=None, searchOption=None, case=No
 
         return redirect(url_for('functions.concordance',
                          translation_id=translation_id, searchItem=searchItem,
-                         searchOption=searchOption, case=case))
+                         searchOption=searchOption, case=case, page=1))
 
     if translation_id != None:
 
@@ -703,16 +703,37 @@ def concordance(translation_id=None, searchItem=None, searchOption=None, case=No
 
         concLength = len(concordanceList)
 
-        return render_template('concordance.html', form=form, sortForm=sortForm,
-                                    conc=concordanceList, concLength=concLength,
-                                    translation_id=translation_id)
+        # return render_template('concordance.html', form=form, sortForm=sortForm,
+        #                             conc=concordanceList, concLength=concLength,
+        #                             translation_id=translation_id)
 
     if concordanceList == []:
         return render_template('concordance.html', form=form, sortForm=sortForm)
     else:
+
+        #Split the words into pages
+        pages = concLength // 100 + (concLength % 100 > 0)
+
+        concPaginated = {}
+
+        if pages > 1:
+            pageStep1 = 0
+            pageStep2 = 100
+            for i in range(pages):
+                if i + 1 == pages:
+                    concPaginated[i+1] = concordanceList[pageStep1:]
+                else:
+                    concPaginated[i+1] = concordanceList[pageStep1:pageStep2]
+                    pageStep1 += 100
+                    pageStep2 += 100
+        else:
+            concPaginated[1] = concordanceList
+
         return render_template('concordance.html', form=form,
-                                conc=concordanceList, concLength=concLength,
-                                sortForm=sortForm, translation_id=translation_id)
+                                conc=concPaginated, concLength=concLength,
+                                sortForm=sortForm, translation_id=translation_id,
+                                searchItem=searchItem, searchOption=searchOption,
+                                case=case, page=page, pages=pages)
 
 
 ###TO DO: Some verse numbers have letters (3a, 3b)

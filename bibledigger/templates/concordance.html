@@ -72,18 +72,13 @@
 
     {{ wtf.form_field(sortForm.option1, class="form-control form-control-sm") }}
 
-
     {{ wtf.form_field(sortForm.option2, class="form-control form-control-sm") }}
-
 
     {{ wtf.form_field(sortForm.option3, class="form-control form-control-sm") }}
 
-
     {{ wtf.form_field(sortForm.option4, class="form-control form-control-sm") }}
 
-
     {{ wtf.form_field(sortForm.option5, class="form-control form-control-sm") }}
-
 
     {{ wtf.form_field(sortForm.option6, class="form-control form-control-sm") }}
 
@@ -105,30 +100,122 @@
   {% elif concLength == 0 %}
   <h1>Sorry</h1>
   <h3>Nothing found. Please, try to change your search criteria.</h3>
-  {% elif concLength == 1 %}
-    <p>Found: 1 result</p>
-  {% elif concLength > 1 %}
-    <p>Found: {{ concLength }} results</p>
-  {% endif %}
-  {% for line in conc %}
+  {% else %}
+    {% if concLength == 1 %}
     <div class="row">
-      <div class="col-2">
-        {% if '<span' in line[0] %}
-        <p><a href="{{ url_for('functions.browse', parallelOrNot=1, translation_id=translation_id, verseCode=line[0].replace('>', '<').split('<')[2]|safe, _anchor='here') }}">{{ line[0]|safe }}</a></p>
-        {% else %}
-        <p><a href="{{ url_for('functions.browse', parallelOrNot=1, translation_id=translation_id, verseCode=line[0]|safe, _anchor='here') }}">{{ line[0]|safe }}</a></p>
-        {% endif %}
-      </div>
-      <div class="col">
-        <p style="text-align: right">{{ line[1]|safe }}</p>
-      </div>
-      <div class="col-1">
-        <p style="text-align: center">{{ line[2]|safe }}</p>
-      </div>
-      <div class="col">
-        <p style="text-align: left">{{ line[3]|safe }}</p>
-      </div>
+      <p>Found: 1 result</p>
     </div>
-  {% endfor %}
+    {% elif concLength > 1 %}
+    <div class="row">
+      <p>Found: {{ concLength }} results</p>
+    </div>
+    {% endif %}
+
+    <nav class="table-responsive mb-2s">
+      <ul class="pagination mb-0">
+        {% if page == 1 %}
+          <li class="page-item disabled">
+        {% else %}
+          <li class="page-item">
+        {% endif %}
+          <a class="page-link" href="{{ url_for('functions.concordance',
+            translation_id=translation_id, searchItem=searchItem, searchOption=searchOption,
+            case=case, page=page-1) }}" aria-label="Previous">
+         <span aria-hidden="true">&laquo;</span>
+       </a>
+        </li>
+        {% for i in range(pages) %}
+          {% if i+1 == page %}
+            <li class="page-item active" aria-current="page">
+              <a class="page-link" href="{{ url_for('functions.concordance',
+                translation_id=translation_id, searchItem=searchItem, searchOption=searchOption,
+                case=case, page=i+1) }}">{{ i+1 }} <span class="sr-only">(current)</span></a>
+            </li>
+          {% else %}
+            <li class="page-item">
+              <a class="page-link" href="{{ url_for('functions.concordance',
+                translation_id=translation_id, searchItem=searchItem, searchOption=searchOption,
+                case=case, page=i+1) }}">{{ i+1 }}</a>
+            </li>
+          {% endif %}
+        {% endfor %}
+        {% if page == pages %}
+          <li class="page-item disabled">
+        {% else %}
+          <li class="page-item">
+        {% endif %}
+          <a class="page-link" href="{{ url_for('functions.concordance',
+            translation_id=translation_id, searchItem=searchItem, searchOption=searchOption,
+            case=case, page=page+1) }}" aria-label="Next">
+         <span aria-hidden="true">&raquo;</span>
+       </a>
+        </li>
+      </ul>
+    </nav>
+
+    {% for line in conc[page] %}
+      <div class="row">
+        <div class="col-2">
+          {% if '<span' in line[0] %}
+          <p><a href="{{ url_for('functions.browse', parallelOrNot=1, translation_id=translation_id, verseCode=line[0].replace('>', '<').split('<')[2]|safe, _anchor='here') }}">{{ line[0]|safe }}</a></p>
+          {% else %}
+          <p><a href="{{ url_for('functions.browse', parallelOrNot=1, translation_id=translation_id, verseCode=line[0]|safe, _anchor='here') }}">{{ line[0]|safe }}</a></p>
+          {% endif %}
+        </div>
+        <div class="col">
+          <p style="text-align: right">{{ line[1]|safe }}</p>
+        </div>
+        <div class="col-1">
+          <p style="text-align: center">{{ line[2]|safe }}</p>
+        </div>
+        <div class="col">
+          <p style="text-align: left">{{ line[3]|safe }}</p>
+        </div>
+      </div>
+    {% endfor %}
+
+    <nav class="table-responsive mb-2s">
+      <ul class="pagination mb-0">
+        {% if page == 1 %}
+          <li class="page-item disabled">
+        {% else %}
+          <li class="page-item">
+        {% endif %}
+          <a class="page-link" href="{{ url_for('functions.concordance',
+            translation_id=translation_id, searchItem=searchItem, searchOption=searchOption,
+            case=case, page=page-1) }}" aria-label="Previous">
+         <span aria-hidden="true">&laquo;</span>
+       </a>
+        </li>
+        {% for i in range(pages) %}
+          {% if i+1 == page %}
+            <li class="page-item active" aria-current="page">
+              <a class="page-link" href="{{ url_for('functions.concordance',
+                translation_id=translation_id, searchItem=searchItem, searchOption=searchOption,
+                case=case, page=i+1) }}">{{ i+1 }} <span class="sr-only">(current)</span></a>
+            </li>
+          {% else %}
+            <li class="page-item">
+              <a class="page-link" href="{{ url_for('functions.concordance',
+                translation_id=translation_id, searchItem=searchItem, searchOption=searchOption,
+                case=case, page=i+1) }}">{{ i+1 }}</a>
+            </li>
+          {% endif %}
+        {% endfor %}
+        {% if page == pages %}
+          <li class="page-item disabled">
+        {% else %}
+          <li class="page-item">
+        {% endif %}
+          <a class="page-link" href="{{ url_for('functions.concordance',
+            translation_id=translation_id, searchItem=searchItem, searchOption=searchOption,
+            case=case, page=page+1) }}" aria-label="Next">
+         <span aria-hidden="true">&raquo;</span>
+       </a>
+        </li>
+      </ul>
+    </nav>
+
+  {% endif %}
 
 {% endblock %}
