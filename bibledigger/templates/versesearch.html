@@ -87,6 +87,10 @@
   <script>
         var lang_select = document.getElementById("language1");
         var tran_select = document.getElementById("translation1");
+        var book_select = document.getElementById("book");
+        var chapter_select = document.getElementById("chapter");
+        var verse_select = document.getElementById("verse");
+
 
         lang_select.onchange = function()  {
 
@@ -102,11 +106,161 @@
                     }
 
                     tran_select.innerHTML = optionHTML;
+
+                    translation1 = tran_select.value;
+
+                    fetch('/book/' + translation1).then(function(response) {
+
+                        response.json().then(function(data) {
+                            var optionHTML = '';
+
+                            for (var book of data.books) {
+                                optionHTML += '<option value="' + book.id + '">' + book.book + '</option>';
+                            }
+
+                            book_select.innerHTML = optionHTML;
+
+                            book = book_select.value;
+
+                            fetch('/chapter/' + book + '/' + translation1).then(function(response) {
+
+                                response.json().then(function(data) {
+                                    var optionHTML = '';
+
+                                    for (var chapter of data.chapters) {
+                                        optionHTML += '<option value="' + chapter.id + '">' + chapter.chapter + '</option>';
+                                    }
+
+                                    chapter_select.innerHTML = optionHTML;
+
+                                    chapter = chapter_select.value;
+
+                                    fetch('/verse/' + chapter + '/' + book + '/' + translation1).then(function(response) {
+
+                                        response.json().then(function(data) {
+                                            var optionHTML = '';
+
+                                            for (var verse of data.verses) {
+                                                optionHTML += '<option value="' + verse.id + '">' + verse.verse + '</option>';
+                                            }
+
+                                            verse_select.innerHTML = optionHTML;
+                                        })
+                                    });
+                                })
+                            });
+                        })
+                    });
+                })
+            });
+        }
+
+
+        tran_select.onchange = function()  {
+
+            translation1 = tran_select.value;
+
+            fetch('/book/' + translation1).then(function(response) {
+
+                response.json().then(function(data) {
+                    var optionHTML = '';
+
+                    for (var book of data.books) {
+                        optionHTML += '<option value="' + book.id + '">' + book.book + '</option>';
+                    }
+
+                    book_select.innerHTML = optionHTML;
+
+                    book = book_select.value;
+
+                    fetch('/chapter/' + book + '/' + translation1).then(function(response) {
+
+                        response.json().then(function(data) {
+                            var optionHTML = '';
+
+                            for (var chapter of data.chapters) {
+                                optionHTML += '<option value="' + chapter.id + '">' + chapter.chapter + '</option>';
+                            }
+
+                            chapter_select.innerHTML = optionHTML;
+
+                            chapter = chapter_select.value;
+
+                            fetch('/verse/' + chapter + '/' + book + '/' + translation1).then(function(response) {
+
+                                response.json().then(function(data) {
+                                    var optionHTML = '';
+
+                                    for (var verse of data.verses) {
+                                        optionHTML += '<option value="' + verse.id + '">' + verse.verse + '</option>';
+                                    }
+
+                                    verse_select.innerHTML = optionHTML;
+                                })
+                            });
+                        })
+                    });
+                })
+            });
+        }
+
+        book_select.onchange = function()  {
+
+            book = book_select.value;
+            translation1 = tran_select.value;
+
+            fetch('/chapter/' + book + '/' + translation1).then(function(response) {
+
+                response.json().then(function(data) {
+                    var optionHTML = '';
+
+                    for (var chapter of data.chapters) {
+                        optionHTML += '<option value="' + chapter.id + '">' + chapter.chapter + '</option>';
+                    }
+
+                    chapter_select.innerHTML = optionHTML;
+
+                    chapter = chapter_select.value;
+
+                    fetch('/verse/' + chapter + '/' + book + '/' + translation1).then(function(response) {
+
+                        response.json().then(function(data) {
+                            var optionHTML = '';
+
+                            for (var verse of data.verses) {
+                                optionHTML += '<option value="' + verse.id + '">' + verse.verse + '</option>';
+                            }
+
+                            verse_select.innerHTML = optionHTML;
+                        })
+                    });
+                })
+            });
+        }
+
+        chapter_select.onchange = function()  {
+
+            chapter = chapter_select.value;
+            book = book_select.value;
+            translation1 = tran_select.value;
+
+            fetch('/verse/' + chapter + '/' + book + '/' + translation1).then(function(response) {
+
+                response.json().then(function(data) {
+                    var optionHTML = '';
+
+                    for (var verse of data.verses) {
+                        optionHTML += '<option value="' + verse.id + '">' + verse.verse + '</option>';
+                    }
+
+                    verse_select.innerHTML = optionHTML;
                 })
 
             });
         }
     </script>
+
+
     {% if parallelOrNot == 2 %}
       <script>
             var lang_select2 = document.getElementById("language2");
@@ -132,81 +286,6 @@
             }
         </script>
     {% endif %}
-    <script>
-            var tran_select = document.getElementById("translation1");
-            var book_select = document.getElementById("book");
-
-            tran_select.onchange = function()  {
-
-                translation1 = tran_select.value;
-
-                fetch('/book/' + translation1).then(function(response) {
-
-                    response.json().then(function(data) {
-                        var optionHTML = '';
-
-                        for (var book of data.books) {
-                            optionHTML += '<option value="' + book.id + '">' + book.book + '</option>';
-                        }
-
-                        book_select.innerHTML = optionHTML;
-                    })
-
-                });
-            }
-      </script>
-      <script>
-            var book_select = document.getElementById("book");
-            var chapter_select = document.getElementById("chapter");
-            var translation1_select = document.getElementById("translation1");
-
-            book_select.onchange = function()  {
-
-                book = book_select.value;
-                translation1 = translation1_select.value;
-
-                fetch('/chapter/' + book + '/' + translation1).then(function(response) {
-
-                    response.json().then(function(data) {
-                        var optionHTML = '';
-
-                        for (var chapter of data.chapters) {
-                            optionHTML += '<option value="' + chapter.id + '">' + chapter.chapter + '</option>';
-                        }
-
-                        chapter_select.innerHTML = optionHTML;
-                    })
-
-                });
-            }
-        </script>
-        <script>
-              var chapter_select = document.getElementById("chapter");
-              var verse_select = document.getElementById("verse");
-              var book_select = document.getElementById("book");
-              var translation1_select = document.getElementById("translation1");
-
-              chapter_select.onchange = function()  {
-
-                  chapter = chapter_select.value;
-                  book = book_select.value;
-                  translation1 = translation1_select.value;
-
-                  fetch('/verse/' + chapter + '/' + book + '/' + translation1).then(function(response) {
-
-                      response.json().then(function(data) {
-                          var optionHTML = '';
-
-                          for (var verse of data.verses) {
-                              optionHTML += '<option value="' + verse.id + '">' + verse.verse + '</option>';
-                          }
-
-                          verse_select.innerHTML = optionHTML;
-                      })
-
-                  });
-              }
-          </script>
 {% endblock %}
 
 {% block content %}

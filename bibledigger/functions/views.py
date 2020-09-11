@@ -737,6 +737,7 @@ def concordance(translation_id=None, searchItem=None, searchOption=None, case=No
 
 
 ###TO DO: Some verse numbers have letters (3a, 3b)
+###TO DO: Shitty vese numbering (21, 2, 3,.. 20, 22 in Afrikaans NLV)
 ###TO DO: Move scripts to separate files
 ###TO DO: Fix translation names in the database
 ###TO DO: Concordance: separate colons ("22 :14")
