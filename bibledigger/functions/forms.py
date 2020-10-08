@@ -11,24 +11,6 @@ languageChoices = [(lang.id, lang.language) for lang in Language.query.all()]
 
 class browseForm(FlaskForm):
 
-    language1 = SelectField('language', choices=languageChoices, coerce=int, validators=[DataRequired()])
-    translation1 = SelectField('translation', coerce=int, validators=[DataRequired()], validate_choice=False)
-
-    book = SelectField('Select a book', validators=[DataRequired()])
-
-    submit = SubmitField('OK')
-
-
-class parallelForm(FlaskForm):
-
-    language1 = SelectField('language', choices=languageChoices, coerce=int, validators=[DataRequired()])
-    translation1 = SelectField('translation', coerce=int, validators=[DataRequired()], validate_choice=False)
-
-    language2 = SelectField('language', choices=languageChoices, coerce=int)
-    translation2 = SelectField('translation', coerce=int, validate_choice=False)
-
-    book = SelectField('Select a book', validators=[DataRequired()])
-
     submit = SubmitField('OK')
 
 

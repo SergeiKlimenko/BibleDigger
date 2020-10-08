@@ -1,6 +1,6 @@
 from flask import render_template, url_for, flash, redirect, request, Blueprint, jsonify, session
 from bibledigger import db
-from .forms import browseForm, parallelForm, verseSearchForm, parallelVerseSearchForm, \
+from .forms import browseForm, verseSearchForm, parallelVerseSearchForm, \
                    wordListForm, concordanceForm, concordanceSortForm
 from bibledigger.models import Book, Language, Translation, Text
 import json
@@ -12,57 +12,45 @@ functions = Blueprint('functions', __name__)
 @functions.route('/browse/<int:parallelOrNot>/<int:translation_id>/<verseCode>', methods=['GET', 'POST'])
 def browse(parallelOrNot, translation_id=None, verseCode=None):
 
-    if parallelOrNot == 1:
-        form = browseForm()
-    elif parallelOrNot == 2:
-        form = parallelForm()
+    form = browseForm()
 
     ###TO DO: Make a new db with translation names edited as below:
     #translationList = [(tran.id,
     #    tran.translation.split('--')[1].split('_(')[0].replace('_', ' '))
     #    for tran in Translation.query.filter_by(language_id=8).all()]
-    if form.language1.data == None:
-        form.translation1.choices = [(tran.id, tran.translation) for tran
-            in Translation.query.filter_by(language_id=1).all()]
-        if parallelOrNot == 2:
-            form.translation2.choices = [(tran.id, tran.translation) for tran
-                in Translation.query.filter_by(language_id=1).all()]
-        form.book.choices = [(book.book_code, book.title) for book
-            in Text.query.filter_by(translation_id=1).distinct(Text.book_code).
-            join(Book).with_entities(Text.book_code, Book.title).all()]
-    else:
-        form.translation1.choices = [(tran.id, tran.translation) for tran
-            in Translation.query.filter_by(language_id=form.language1.data).all()]
-        if parallelOrNot == 2:
-            form.translation2.choices = [(tran.id, tran.translation) for tran
-                in Translation.query.filter_by(language_id=form.language2.data).all()]
-        form.book.choices = [(book.book_code, book.title) for book
-            in Text.query.filter_by(translation_id=form.translation1.data).
-            distinct(Text.book_code).join(Book).with_entities(Text.book_code,
-            Book.title).all()]
+
+    ######delete
+    languageChoices = [(lang.id, lang.language) for lang in Language.query.all()]
 
     if form.validate_on_submit():
 
+        language1 = request.form['language1']
+        translation1 = request.form['translation1']
+        book = request.form['book']
+
         if parallelOrNot == 1:
-            tran1Text = Text.query.filter_by(translation_id=form.translation1.data,\
-                book_code=form.book.data).join(Book).with_entities(Text.id, \
+            tran1Text = Text.query.filter_by(translation_id=translation1,\
+                book_code=book).join(Book).with_entities(Text.id, \
                 Book.title, Text.chapter, Text.verse, Text.text).all()
             textLength = len(tran1Text)
             return render_template('browse.html', form=form, texts=tran1Text,
-                textLength=textLength, parallelOrNot=parallelOrNot, verseCode=None)
+                textLength=textLength, parallelOrNot=parallelOrNot,
+                languageChoices=languageChoices, input=[language1, translation1, book])
 
         elif parallelOrNot == 2:
+            language2 = request.form['language2']
+            translation2 = request.form['translation2']
             bothTranslations = list(db.engine.execute(f"SELECT a.id, d.title, a.chapter, \
                 a.verse, a.text, b.text FROM ((SELECT * FROM texts \
-                WHERE translation_id = {form.translation1.data} and book_code = \
-                '{form.book.data}') a LEFT JOIN (SELECT * FROM texts \
-                WHERE translation_id = {form.translation2.data}) b ON \
+                WHERE translation_id = {translation1} and book_code = \
+                '{book}') a LEFT JOIN (SELECT * FROM texts \
+                WHERE translation_id = {translation2}) b ON \
                 a.book_code = b.book_code AND a.chapter = b.chapter \
                 AND a.verse = b.verse) c LEFT JOIN books d ON c.book_code = d.code"))
             textLength = len(list(bothTranslations))
-
             return render_template('browse.html', form=form,
-                texts=bothTranslations, textLength=textLength, parallelOrNot=parallelOrNot)
+                texts=bothTranslations, textLength=textLength, parallelOrNot=parallelOrNot,
+                languageChoices=languageChoices, input=[language1, translation1, book, language2, translation2])
 
     if translation_id != None:
         book_code = Book.query.with_entities(Book.code).filter_by(title=' '.join(verseCode.split()[:-1])).first()[0]
@@ -74,37 +62,29 @@ def browse(parallelOrNot, translation_id=None, verseCode=None):
         return render_template('browse.html', form=form, texts=tran1Text,
             textLength=textLength, parallelOrNot=parallelOrNot, verseCode=verseCode)
 
-    return render_template('browse.html', form=form, parallelOrNot=parallelOrNot)
+    return render_template('browse.html', form=form, parallelOrNot=parallelOrNot,
+        languageChoices=languageChoices)
 
 
-@functions.route('/translation1/<language1>')
-def translation(language1):
-    translations = Translation.query.filter_by(language_id=language1).all()
-    translationArray = []
+@functions.route('/<target>/<anchor>')
+def newList(target, anchor):
+    if target == 'translation':
+        items = list(db.engine.execute(f"SELECT DISTINCT id, translation \
+            FROM translations WHERE language_id = {anchor}"))
+    elif target == 'book':
+        items = list(db.engine.execute(f"SELECT DISTINCT a.book_code, b.title \
+            FROM texts a LEFT JOIN books b ON a.book_code = b.code \
+              WHERE translation_id = {anchor}"))
 
-    for translation in translations:
-        translationObj = {}
-        translationObj['id'] = translation.id
-        translationObj['translation'] = translation.translation
-        translationArray.append(translationObj)
+    itemArray = []
 
-    return jsonify({'translations': translationArray})
+    for item in items:
+        itemObj = {}
+        itemObj['id'] = item[0]
+        itemObj['item'] = item[1]
+        itemArray.append(itemObj)
 
-
-@functions.route('/book/<translation1>')
-def book(translation1):
-    books = list(db.engine.execute(f"SELECT DISTINCT a.book_code, b.title \
-        FROM texts a LEFT JOIN books b ON a.book_code = b.code \
-        WHERE translation_id = {translation1}"))
-    bookArray = []
-
-    for book in books:
-        bookObj = {}
-        bookObj['id'] = book[0]
-        bookObj['book'] = book[1]
-        bookArray.append(bookObj)
-
-    return jsonify({'books': bookArray})
+    return jsonify({'items': itemArray})
 
 
 @functions.route('/verseSearch/<int:parallelOrNot>/', methods=['GET', 'POST'])

@@ -35,124 +35,110 @@
     <p>Select a translation</p>
     <div class="form-group">
       <div class="form-row">
+
         <div class="col">
-          {{ wtf.form_field(form.language1, class="form-control form-control-sm") }}
+          <select class="selectpicker" data-live-search="true" data-live-search-normalize="true" data-width="90px" data-style='' data-style-base='form-control form-control-sm' id="language1" name="language1">
+            {% for language in languageChoices %}
+              <option value="{{ language[0] }}">{{ language[1] }}</option>
+            {% endfor %}
+          </select>
         </div>
+
         <div class="col">
-          {{ wtf.form_field(form.translation1, class="form-control form-control-sm") }}
+          <select class="selectpicker" data-live-search="true" data-live-search-normalize="true" data-width="90px" data-style='' data-style-base='form-control form-control-sm' id="translation1" name="translation1">
+          </select>
         </div>
+
       </div>
     </div>
     {% elif parallelOrNot == 2 %}
       <p>Primary translation</p>
       <div class="form-group">
         <div class="form-row">
+
           <div class="col">
-            {{ wtf.form_field(form.language1, class="form-control form-control-sm") }}
+            <select class="selectpicker" data-live-search="true" data-live-search-normalize="true" data-width="90px" data-style='' data-style-base='form-control form-control-sm' id="language1" name="language1">
+              {% for language in languageChoices %}
+                <option value="{{ language[0] }}">{{ language[1] }}</option>
+              {% endfor %}
+            </select>
           </div>
+
           <div class="col">
-            {{ wtf.form_field(form.translation1, class="form-control form-control-sm")}}
+            <select class="selectpicker" data-live-search="true" data-live-search-normalize="true" data-width="90px" data-style='' data-style-base='form-control form-control-sm' id="translation1" name="translation1">
+            </select>
           </div>
+
         </div>
       </div>
       <hr>
+
     <p>Secondary translation</p>
       <div class="form-group">
         <div class="form-row">
+
           <div class="col">
-            {{ wtf.form_field(form.language2, class="form-control form-control-sm") }}
+            <select class="selectpicker" data-live-search="true" data-live-search-normalize="true" data-width="90px" data-style='' data-style-base='form-control form-control-sm' id="language2" name="language2">
+              {% for language in languageChoices %}
+                <option value="{{ language[0] }}">{{ language[1] }}</option>
+              {% endfor %}
+            </select>
           </div>
+
           <div class="col">
-            {{ wtf.form_field(form.translation2, class="form-control form-control-sm")}}
+            <select class="selectpicker" data-live-search="true" data-live-search-normalize="true" data-width="90px" data-style='' data-style-base='form-control form-control-sm' id="translation2" name="translation2">
+            </select>
           </div>
+
         </div>
       </div>
     {% endif %}
       <hr>
+
       <div class="form-group">
-        {{ wtf.form_field(form.book, class="form-control form-control-sm") }}
+        <select class="selectpicker" data-live-search="true" data-live-search-normalize="true" data-width="190px" data-style='' data-style-base='form-control form-control-sm' id="book" name="book">
+        </select>
       </div>
       <hr>
+
     <div class="form-group">
       {{ wtf.form_field(form.submit, class="form-control form-control-sm") }}
     </div>
+
   </form>
 
+
+  <script src="{{url_for('static', filename='scripts.js')}}"></script>
   <script>
-        var lang_select = document.getElementById("language1");
-        var tran_select = document.getElementById("translation1");
+      lang_select.onchange = function() {
+          populateList(lang_select, tran_select, 'translation1', lang_select.value);
+      };
+      tran_select.onchange = function() {
+          populateList(tran_select, book_select, 'book', tran_select.value);
+      };
+      if (lang_select2 !== null) {
+          lang_select2.onchange = function() {
+          populateList(lang_select2, tran_select2, 'translation2', lang_select2.value);
+          };
+      };
 
-        lang_select.onchange = function()  {
-
-            language1 = lang_select.value;
-
-            fetch('/translation1/' + language1).then(function(response) {
-
-                response.json().then(function(data) {
-                    var optionHTML = '';
-
-                    for (var translation of data.translations) {
-                        optionHTML += '<option value="' + translation.id + '">' + translation.translation + '</option>';
-                    }
-
-                    tran_select.innerHTML = optionHTML;
-                })
-
-            });
-        }
-    </script>
-
-    {% if parallelOrNot == 2 %}
-      <script>
-            var lang_select2 = document.getElementById("language2");
-            var tran_select2 = document.getElementById("translation2");
-
-            lang_select2.onchange = function()  {
-
-                language2 = lang_select2.value;
-
-                fetch('/translation1/' + language2).then(function(response) {
-
-                    response.json().then(function(data) {
-                        var optionHTML = '';
-
-                        for (var translation of data.translations) {
-                            optionHTML += '<option value="' + translation.id + '">' + translation.translation + '</option>';
-                        }
-
-                        tran_select2.innerHTML = optionHTML;
-                    })
-
-                });
-            }
-      </script>
-    {% endif %}
-
-    <script>
-          var tran_select = document.getElementById("translation1");
-          var book_select = document.getElementById("book");
-
-          tran_select.onchange = function()  {
-
-              translation1 = tran_select.value;
-
-              fetch('/book/' + translation1).then(function(response) {
-
-                  response.json().then(function(data) {
-                      var optionHTML = '';
-
-                      for (var book of data.books) {
-                          optionHTML += '<option value="' + book.id + '">' + book.book + '</option>';
-                      }
-
-                      book_select.innerHTML = optionHTML;
-                  })
-
-              });
+      {% if input is defined %}
+          var inputList = {{ input|safe }};
+          $('#language1').selectpicker('val', inputList[0]);
+          populateList(lang_select, tran_select, 'translation1', lang_select.value, [inputList[1], inputList[2]]);
+          if (lang_select2 !== null) {
+              $('#language2').selectpicker('val', inputList[3]);
+              populateList(lang_select2, tran_select2, 'translation2', lang_select2.value, [inputList[4]]);
           }
-      </script>
-
+      {% else %}
+          populateList(lang_select, tran_select, 'translation1');
+          if (lang_select2 !== null) {
+              populateList(lang_select2, tran_select2, 'translation2');
+          };
+      {% endif %}
+  </script>
 {% endblock %}
+
 
 {% block content %}
 
