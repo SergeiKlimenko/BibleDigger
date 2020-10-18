@@ -19,12 +19,20 @@
   {{ form.csrf_token }}
   <div class="form-group">
     <div class="form-row">
+
       <div class="col">
-        {{ wtf.form_field(form.language1, class="form-control form-control-sm") }}
+        <select class="selectpicker" data-live-search="true" data-live-search-normalize="true" data-width="90px" data-style='' data-style-base='form-control form-control-sm' id="language1" name="language1">
+          {% for language in languageChoices %}
+            <option value="{{ language[0] }}">{{ language[1] }}</option>
+          {% endfor %}
+        </select>
       </div>
+
       <div class="col">
-        {{ wtf.form_field(form.translation1, class="form-control form-control-sm") }}
+        <select class="selectpicker" data-live-search="true" data-live-search-normalize="true" data-width="90px" data-style='' data-style-base='form-control form-control-sm' id="translation1" name="translation1">
+        </select>
       </div>
+
     </div>
   </div>
   <div class="form-group">
@@ -38,54 +46,118 @@
     {{ wtf.form_field(form.submit, class="form-control form-control-sm") }}
   </div>
 
+  <script src="{{url_for('static', filename='scripts.js')}}"></script>
   <script>
-        var lang_select = document.getElementById("language1");
-        var tran_select = document.getElementById("translation1");
 
-        lang_select.onchange = function()  {
+    lang_select.onchange = function() {
+        populateList(lang_select, tran_select, 'translation1', lang_select.value);
+    };
 
-            language1 = lang_select.value;
+    {% if language_id is defined %}
+        $('#language1').selectpicker('val', {{ language_id }});
+        populateList(lang_select, tran_select, 'translation1', lang_select.value, [{{ translation_id }}]);
+        $('#search').attr('value', {{ searchItem|tojson }});
+        $("#caseSensitive").attr('checked', "{{ case }}".toLowerCase());
+        $('input[value="{{ searchOption }}"]').attr('checked', 'checked');
+    {% else %}
+        populateList(lang_select, tran_select, 'translation1');
+    {% endif %}
 
-            fetch('/translation1/' + language1).then(function(response) {
-
-                response.json().then(function(data) {
-                    var optionHTML = '';
-
-                    for (var translation of data.translations) {
-                        optionHTML += '<option value="' + translation.id + '">' + translation.translation + '</option>';
-                    }
-
-                    tran_select.innerHTML = optionHTML;
-                })
-
-            });
-        }
-    </script>
+  </script>
 
 {% endblock %}
 
 {% block form2 %}
-<nav class="navbar navbar-expand-lg navbar-dark sticky-top bg-dark shadow">
-<form method="POST">
+<nav class="navbar navbar-expand-lg sticky-top bg-dark shadow text-light">
+<form method="POST" class="form-inline">
   {{ sortForm.csrf_token }}
-  <div class="form-check form-check-inline">
 
-    {{ wtf.form_field(sortForm.option1, class="form-control form-control-sm") }}
+<div class="form-row justify-content-between">
 
-    {{ wtf.form_field(sortForm.option2, class="form-control form-control-sm") }}
+<div class="col-inline align-text-bottom">
+    <p>Sorting options: </p>
+</div>
 
-    {{ wtf.form_field(sortForm.option3, class="form-control form-control-sm") }}
+<div class="col-inline">
+    <label for="option1">1</label>
+    <select class="selectpicker" data-style='' data-style-base='form-control form-control-sm' data-width="auto" id="option1" name="option1">
+      {% for choice in choices %}
+        <option value="{{ choice[0] }}">{{ choice[1] }}</option>
+      {% endfor %}
+    </select>
+</div>
 
-    {{ wtf.form_field(sortForm.option4, class="form-control form-control-sm") }}
+<div class="col-inline">
+    <label for="option2">2</label>
+    <select class="selectpicker" data-style='' data-style-base='form-control form-control-sm' data-width="auto" id="option2" name="option2">
+      {% for choice in choices %}
+        <option value="{{ choice[0] }}">{{ choice[1] }}</option>
+      {% endfor %}
+    </select>
+</div>
 
-    {{ wtf.form_field(sortForm.option5, class="form-control form-control-sm") }}
+    <div class="col-inline">
+    <label for="option3">3</label>
+    <select class="selectpicker" data-style='' data-style-base='form-control form-control-sm' data-width="auto" id="option3" name="option3">
+      {% for choice in choices %}
+        <option value="{{ choice[0] }}">{{ choice[1] }}</option>
+      {% endfor %}
+    </select>
+</div>
 
-    {{ wtf.form_field(sortForm.option6, class="form-control form-control-sm") }}
+    <div class="col-inline">
+    <label for="option4">4</label>
+    <select class="selectpicker" data-style='' data-style-base='form-control form-control-sm' data-width="auto" id="option4" name="option4">
+      {% for choice in choices %}
+        <option value="{{ choice[0] }}">{{ choice[1] }}</option>
+      {% endfor %}
+    </select>
+</div>
 
-    {{ wtf.form_field(sortForm.sort) }}
-  </div>
+    <div class="col-inline">
+    <label for="option5">5</label>
+    <select class="selectpicker" data-style='' data-style-base='form-control form-control-sm' data-width="auto" id="option5" name="option5">
+      {% for choice in choices %}
+        <option value="{{ choice[0] }}">{{ choice[1] }}</option>
+      {% endfor %}
+    </select>
+</div>
+
+    <div class="col-inline">
+    <label for="option6">6</label>
+    <select class="selectpicker" data-style='' data-style-base='form-control form-control-sm' data-width="auto" id="option6" name="option6">
+      {% for choice in choices %}
+        <option value="{{ choice[0] }}">{{ choice[1] }}</option>
+      {% endfor %}
+    </select>
+</div>
+
+    <div class="col">
+    <div style="width=50%">
+      {{ wtf.form_field(sortForm.sort, class="form-control form-control-sm") }}
+    </div>
+
+    <div class="form-group">
+      {{ wtf.form_field(form.option8, class="form-control form-control-sm my-select") }}
+    </div>
+</div>
+</div>
 </form>
 </nav>
+
+  <script>
+    $('.my-select').addClass('selectpicker');
+    $('.my-select').attr('data-width', 'auto');
+    $('.my-select').attr('data-style', '');
+
+    var sortSubmit = document.getElementById('sort');
+    sortSubmit.onclick = function() {
+        var options = [];
+        for (var i = 0; i < 6; i++) {
+            options.push(document.getElementById(`option${i+1}`).value);
+        };
+    };
+  </script>
 {% endblock %}
 
 {% block content %}
@@ -101,121 +173,135 @@
   <h1>Sorry</h1>
   <h3>Nothing found. Please, try to change your search criteria.</h3>
   {% else %}
+    <div class="row justify-content-center">
     {% if concLength == 1 %}
-    <div class="row">
-      <p>Found: 1 result</p>
-    </div>
-    {% elif concLength > 1 %}
-    <div class="row">
-      <p>Found: {{ concLength }} results</p>
-    </div>
+      <p><b>Found: 1 result / {{ pages }} page</b></p>
+    {% elif concLength > 1 and pages == 1 %}
+      <p><b>Found: {{ concLength }} results / {{ pages }} page</b></p>
+    {% else %}
+      <p><b>Found: {{ concLength }} results / {{ pages }} pages</b></p>
     {% endif %}
+    </div>
 
     <nav class="table-responsive mb-2s">
-      <ul class="pagination mb-0">
-        {% if page == 1 %}
-          <li class="page-item disabled">
-        {% else %}
-          <li class="page-item">
-        {% endif %}
-          <a class="page-link" href="{{ url_for('functions.concordance',
-            translation_id=translation_id, searchItem=searchItem, searchOption=searchOption,
-            case=case, page=page-1) }}" aria-label="Previous">
-         <span aria-hidden="true">&laquo;</span>
-       </a>
+      <ul class="pagination mb-0 justify-content-center">
+        <li class="page-item disabled">
+         <a class="page-link" tabindex="-1" aria-disabled="true" id="first1">First</a>
         </li>
-        {% for i in range(pages) %}
-          {% if i+1 == page %}
-            <li class="page-item active" aria-current="page">
-              <a class="page-link" href="{{ url_for('functions.concordance',
-                translation_id=translation_id, searchItem=searchItem, searchOption=searchOption,
-                case=case, page=i+1) }}">{{ i+1 }} <span class="sr-only">(current)</span></a>
-            </li>
-          {% else %}
-            <li class="page-item">
-              <a class="page-link" href="{{ url_for('functions.concordance',
-                translation_id=translation_id, searchItem=searchItem, searchOption=searchOption,
-                case=case, page=i+1) }}">{{ i+1 }}</a>
-            </li>
-          {% endif %}
-        {% endfor %}
-        {% if page == pages %}
-          <li class="page-item disabled">
-        {% else %}
-          <li class="page-item">
-        {% endif %}
-          <a class="page-link" href="{{ url_for('functions.concordance',
-            translation_id=translation_id, searchItem=searchItem, searchOption=searchOption,
-            case=case, page=page+1) }}" aria-label="Next">
-         <span aria-hidden="true">&raquo;</span>
-       </a>
+
+        <li class="page-item disabled">
+         <a class="page-link" tabindex="-1" aria-disabled="true" id="previous1">Previous</a>
+        </li>
+
+        <div class="input-group mb-3" style="width: 60px">
+          <input type="text" class="form-control" value="1" aria-describedby="basic-addon1" id="pageNumber1">
+        </div>
+
+        <li class="page-item">
+          <a class="page-link" id="next1">Next</a>
+        </li>
+
+        <li class="page-item">
+         <a class="page-link" tabindex="-1" aria-disabled="true" id="last1">Last</a>
         </li>
       </ul>
     </nav>
 
-    {% for line in conc[page] %}
-      <div class="row">
-        <div class="col-2">
-          {% if '<span' in line[0] %}
-          <p><a href="{{ url_for('functions.browse', parallelOrNot=1, translation_id=translation_id, verseCode=line[0].replace('>', '<').split('<')[2]|safe, _anchor='here') }}">{{ line[0]|safe }}</a></p>
-          {% else %}
-          <p><a href="{{ url_for('functions.browse', parallelOrNot=1, translation_id=translation_id, verseCode=line[0]|safe, _anchor='here') }}">{{ line[0]|safe }}</a></p>
-          {% endif %}
-        </div>
-        <div class="col">
-          <p style="text-align: right">{{ line[1]|safe }}</p>
-        </div>
-        <div class="col-1">
-          <p style="text-align: center">{{ line[2]|safe }}</p>
-        </div>
-        <div class="col">
-          <p style="text-align: left">{{ line[3]|safe }}</p>
-        </div>
-      </div>
-    {% endfor %}
+    <div id="renderPagConc">
+    </div>
+
+    <div class="row justify-content-center">
+    {% if concLength == 1 %}
+      <p><b>Found: 1 result / {{ pages }} page</b></p>
+    {% elif concLength > 1 and pages == 1 %}
+      <p><b>Found: {{ concLength }} results / {{ pages }} page</b></p>
+    {% else %}
+      <p><b>Found: {{ concLength }} results / {{ pages }} pages</b></p>
+    {% endif %}
+    </div>
 
     <nav class="table-responsive mb-2s">
-      <ul class="pagination mb-0">
-        {% if page == 1 %}
-          <li class="page-item disabled">
-        {% else %}
-          <li class="page-item">
-        {% endif %}
-          <a class="page-link" href="{{ url_for('functions.concordance',
-            translation_id=translation_id, searchItem=searchItem, searchOption=searchOption,
-            case=case, page=page-1) }}" aria-label="Previous">
-         <span aria-hidden="true">&laquo;</span>
-       </a>
+      <ul class="pagination mb-0 justify-content-center">
+        <li class="page-item disabled">
+         <a class="page-link" tabindex="-1" aria-disabled="true" id="first2">First</a>
         </li>
-        {% for i in range(pages) %}
-          {% if i+1 == page %}
-            <li class="page-item active" aria-current="page">
-              <a class="page-link" href="{{ url_for('functions.concordance',
-                translation_id=translation_id, searchItem=searchItem, searchOption=searchOption,
-                case=case, page=i+1) }}">{{ i+1 }} <span class="sr-only">(current)</span></a>
-            </li>
-          {% else %}
-            <li class="page-item">
-              <a class="page-link" href="{{ url_for('functions.concordance',
-                translation_id=translation_id, searchItem=searchItem, searchOption=searchOption,
-                case=case, page=i+1) }}">{{ i+1 }}</a>
-            </li>
-          {% endif %}
-        {% endfor %}
-        {% if page == pages %}
-          <li class="page-item disabled">
-        {% else %}
-          <li class="page-item">
-        {% endif %}
-          <a class="page-link" href="{{ url_for('functions.concordance',
-            translation_id=translation_id, searchItem=searchItem, searchOption=searchOption,
-            case=case, page=page+1) }}" aria-label="Next">
-         <span aria-hidden="true">&raquo;</span>
-       </a>
+
+        <li class="page-item disabled">
+         <a class="page-link" tabindex="-1" aria-disabled="true" id="previous2">Previous</a>
+        </li>
+
+        <div class="input-group mb-3" style="width: 60px">
+          <input type="text" class="form-control" value="1" aria-describedby="basic-addon1" id="pageNumber2">
+        </div>
+
+        <li class="page-item">
+          <a class="page-link" id="next2">Next</a>
+        </li>
+
+        <li class="page-item">
+         <a class="page-link" tabindex="-1" aria-disabled="true" id="last2">Last</a>
         </li>
       </ul>
     </nav>
 
-  {% endif %}
+    <script>
 
+        var link = `/browse/1/{{ language_id }}/{{ translation_id }}`;
+
+        renderPagConc({{ conc|tojson }}, 1, link);
+
+        var pageValue = parseInt(pageNumber1.value);
+
+        pageNumber1.onchange = function() {
+              pageValue = parseInt(pageNumber1.value);
+                renderPagConc({{ conc|tojson }}, pageValue, link);
+        };
+
+        pageNumber2.onchange = function() {
+              pageValue = parseInt(pageNumber2.value);
+                renderPagConc({{ conc|tojson }}, pageValue, link);
+        };
+
+        previous1.onclick = function() {
+            pageValue -= 1;
+            renderPagConc({{ conc|tojson }}, pageValue, link);
+        };
+
+        previous2.onclick = function() {
+            pageValue -= 1;
+            renderPagConc({{ conc|tojson }}, pageValue, link);
+        };
+
+        next1.onclick = function() {
+            pageValue += 1;
+            renderPagConc({{ conc|tojson }}, pageValue, link);
+        };
+
+        next2.onclick = function() {
+            pageValue += 1;
+            renderPagConc({{ conc|tojson }}, pageValue, link);
+        };
+
+        first1.onclick = function() {
+            pageValue = 1;
+            renderPagConc({{ conc|tojson }}, pageValue, link);
+        };
+
+        first2.onclick = function() {
+            pageValue = 1;
+            renderPagConc({{ conc|tojson }}, pageValue, link);
+        };
+
+        last1.onclick = function() {
+            pageValue = Object.keys({{ conc|tojson }}).length;
+            renderPagConc({{ conc|tojson }}, pageValue, link);
+        };
+
+        last2.onclick = function() {
+            pageValue = Object.keys({{ conc|tojson }}).length;
+            renderPagConc({{ conc|tojson }}, pageValue, link);
+        };
+    </script>
+
+    {% endif %}
 {% endblock %}

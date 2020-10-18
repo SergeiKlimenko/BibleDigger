@@ -9,8 +9,8 @@ functions = Blueprint('functions', __name__)
 
 
 @functions.route('/browse/<int:parallelOrNot>/', methods=['GET', 'POST'])
-@functions.route('/browse/<int:parallelOrNot>/<int:translation_id>/<verseCode>', methods=['GET', 'POST'])
-def browse(parallelOrNot, translation_id=None, verseCode=None):
+@functions.route('/browse/<int:parallelOrNot>/<int:language_id>/<int:translation_id>/<verseCode>', methods=['GET', 'POST'])
+def browse(parallelOrNot, language_id=None, translation_id=None, verseCode=None):
 
     form = browseForm()
 
@@ -60,7 +60,8 @@ def browse(parallelOrNot, translation_id=None, verseCode=None):
         textLength = len(tran1Text)
 
         return render_template('browse.html', form=form, texts=tran1Text,
-            textLength=textLength, parallelOrNot=parallelOrNot, verseCode=verseCode)
+            textLength=textLength, parallelOrNot=parallelOrNot, verseCode=verseCode,
+            languageChoices=languageChoices, input=[language_id, translation_id, book_code])
 
     return render_template('browse.html', form=form, parallelOrNot=parallelOrNot,
         languageChoices=languageChoices)
@@ -444,33 +445,33 @@ def wordList(translation_id=None, searchItem=None, searchOption=None, case=None,
 
 
 @functions.route('/concordance/', methods=['GET', 'POST'])
-@functions.route('/concordance/<int:translation_id>/<searchItem>/<searchOption>/<case>/<int:page>',
+@functions.route('/concordance/<int:language_id>/<int:translation_id>/<searchItem>/<searchOption>/<case>',
                   methods=['GET', 'POST'])
-def concordance(translation_id=None, searchItem=None, searchOption=None, case=None, page=None):
+def concordance(language_id=None, translation_id=None, searchItem=None, searchOption=None, case=None):
 
     form = concordanceForm()
     sortForm = concordanceSortForm()
 
-    if form.language1.data == None:
-        form.translation1.choices = [(tran.id, tran.translation) for tran
-            in Translation.query.filter_by(language_id=1).all()]
-    else:
-        form.translation1.choices = [(tran.id, tran.translation) for tran
-            in Translation.query.filter_by(language_id=form.language1.data).all()]
+    languageChoices = [(lang.id, lang.language) for lang in Language.query.all()]
+    choices = [(None, 'none'), (0, 'verse'), (32, '3R'), (31, '2R'), (30, '1R'),
+                (2, 'KWIC'), (11, '1L'), (12, '2L'), (13, '3L')]
 
     ###The concordance holder to be filled with search results
     concordanceList = []
 
     if form.validate_on_submit() and form.submit.data:
 
-        translation_id = form.translation1.data
+        # translation_id = form.translation1.data
+        language_id = request.form['language1']
+        translation_id = request.form['translation1']
         searchItem = form.search.data
         searchOption = form.searchOptions.data
         case = form.caseSensitive.data
 
-        return redirect(url_for('functions.concordance',
-                         translation_id=translation_id, searchItem=searchItem,
-                         searchOption=searchOption, case=case, page=1))
+        return redirect(url_for('functions.concordance', languageChoices=languageChoices,
+                        choices=choices, language_id=language_id, translation_id=translation_id,
+                        searchItem=searchItem, searchOption=searchOption,
+                        case=case))
 
     if translation_id != None:
 
@@ -497,7 +498,10 @@ def concordance(translation_id=None, searchItem=None, searchOption=None, case=No
                     break
             if skip == True:
                 return render_template('concordance.html', form=form,
-                                        sortForm=sortForm, concLength=0)
+                                        sortForm=sortForm,
+                                        languageChoices=languageChoices,
+                                        choices=choices,
+                                        concLength=0)
 
             ###Catch incorrect regex
             try:
@@ -513,6 +517,8 @@ def concordance(translation_id=None, searchItem=None, searchOption=None, case=No
             except:
                 errorMessage = 'Sorry It seems that your regular expression is incorrect. Try again. '
                 return render_template('concordance.html', form=form,
+                                        languageChoices=languageChoices,
+                                        choices=choices,
                                         sortForm=sortForm, errorMessage=errorMessage)
 
         else:
@@ -627,21 +633,43 @@ def concordance(translation_id=None, searchItem=None, searchOption=None, case=No
 
         print("concordance ready") ###delete
         if concLength == 0:
-            return render_template('concordance.html', form=form, sortForm=sortForm,
-                                    conc=concordanceList, concLength=concLength, translation_id=translation_id)
+            return render_template('concordance.html',
+                                    form=form,
+                                    sortForm=sortForm,
+                                    conc=concordanceList,
+                                    concLength=concLength,
+                                    languageChoices=languageChoices,
+                                    choices=choices,
+                                    language_id=language_id,
+                                    translation_id=translation_id,
+                                    searchItem=searchItem,
+                                    searchOption=searchOption,
+                                    case=case)
 
     if sortForm.validate_on_submit() and sortForm.sort.data:
 
         verseList = [[[verse[0], verse[1].split(), verse[2], verse[3].split(),
                     verse[4]], None, None, None, None, None, None] for verse in concordanceList]
 
-        colors = {sortForm.option1.name: 'DeepPink', sortForm.option2.name: 'Lime',
-                  sortForm.option3.name: 'Turquoise', sortForm.option4.name: 'Indigo',
-                  sortForm.option5.name: 'Blue', sortForm.option6.name: 'Gold'}
+        # colors = {sortForm.option1.name: 'DeepPink', sortForm.option2.name: 'Lime',
+        #           sortForm.option3.name: 'Turquoise', sortForm.option4.name: 'Indigo',
+        #           sortForm.option5.name: 'Blue', sortForm.option6.name: 'Gold'}
+
+        colors = {'option1': 'DeepPink', 'option2': 'Lime', 'option3': 'Turquoise',
+                    'option4': 'Indigo', 'option5': 'Blue', 'option6': 'Gold'}
+
+        for option in list(form):
+            print(option.data)
+        print('\n')
+        print(request.form)
+        print('\n')
+        for option in list(sortForm):
+            print(option.data)
 
         options = list(sortForm)[:-2]
 
         for option in options:
+
             if option.data != 'None':
                 for verse in verseList:
                     if int(option.data) == 0:
@@ -688,7 +716,11 @@ def concordance(translation_id=None, searchItem=None, searchOption=None, case=No
         #                             translation_id=translation_id)
 
     if concordanceList == []:
-        return render_template('concordance.html', form=form, sortForm=sortForm)
+        return render_template('concordance.html',
+                                form=form,
+                                sortForm=sortForm,
+                                choices=choices,
+                                languageChoices=languageChoices)
     else:
 
         #Split the words into pages
@@ -709,11 +741,19 @@ def concordance(translation_id=None, searchItem=None, searchOption=None, case=No
         else:
             concPaginated[1] = concordanceList
 
-        return render_template('concordance.html', form=form,
-                                conc=concPaginated, concLength=concLength,
-                                sortForm=sortForm, translation_id=translation_id,
-                                searchItem=searchItem, searchOption=searchOption,
-                                case=case, page=page, pages=pages)
+        return render_template('concordance.html',
+                                form=form,
+                                sortForm=sortForm,
+                                conc=concPaginated,
+                                concLength=concLength,
+                                pages=pages,
+                                languageChoices=languageChoices,
+                                choices=choices,
+                                language_id=language_id,
+                                translation_id=translation_id,
+                                searchItem=searchItem,
+                                searchOption=searchOption,
+                                case=case)
 
 
 ###TO DO: Some verse numbers have letters (3a, 3b)

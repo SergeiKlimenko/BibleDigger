@@ -67,9 +67,6 @@ class wordListForm(FlaskForm):
 
 class concordanceForm(FlaskForm):
 
-    language1 = SelectField('language', choices=languageChoices, coerce=int, validators=[DataRequired()])
-    translation1 = SelectField('translation', coerce=int, validators=[DataRequired()], validate_choice=False)
-
     search = StringField('What are you looking for?')
 
     searchOptions = RadioField('Search options', choices=[('word', 'whole word'),
@@ -80,17 +77,23 @@ class concordanceForm(FlaskForm):
 
     submit = SubmitField('OK')
 
+    choices = [(None, 'none'), (0, 'verse'), (32, '3R'), (31, '2R'), (30, '1R'),
+             (2, 'KWIC'), (11, '1L'), (12, '2L'), (13, '3L')]
+
+    option8 = SelectField('Level8', choices=choices, validate_choice=False)
 
 class concordanceSortForm(FlaskForm):
 
-    choices = [(None, 'none'), (0, 'verse'), (32, '3R'), (31, '2R'), (30, '1R'),
-                (2, 'KWIC'), (11, '1L'), (12, '2L'), (13, '3L')]
-
-    option1 = SelectField('Level1', choices=choices, validate_choice=False)
-    option2 = SelectField('Level2', choices=choices, validate_choice=False)
-    option3 = SelectField('Level3', choices=choices, validate_choice=False)
-    option4 = SelectField('Level4', choices=choices, validate_choice=False)
-    option5 = SelectField('Level5', choices=choices, validate_choice=False)
-    option6 = SelectField('Level6', choices=choices, validate_choice=False)
+    # choices = [(None, 'none'), (0, 'verse'), (32, '3R'), (31, '2R'), (30, '1R'),
+    #              (2, 'KWIC'), (11, '1L'), (12, '2L'), (13, '3L')]
+    # # #
+    # option1 = SelectField('Level1', choices=choices, validate_choice=False)
+    # option2 = SelectField('Level2', choices=choices, validate_choice=False)
+    # option3 = SelectField('Level3', choices=choices, validate_choice=False)
+    # option4 = SelectField('Level4', choices=choices, validate_choice=False)
+    # option5 = SelectField('Level5', choices=choices, validate_choice=False)
+    # option6 = SelectField('Level6', choices=choices, validate_choice=False)
+    # option7 = SelectField('Level7', choices=choices, validate_choice=False)
+    # option8 = SelectField('Level8', choices=choices, validate_choice=False)
 
     sort = SubmitField('OK')
