@@ -1,7 +1,7 @@
 from flask import render_template, url_for, flash, redirect, request, Blueprint, jsonify, session
 from bibledigger import db
 from .forms import browseForm, verseSearchForm, parallelVerseSearchForm, \
-                   wordListForm, concordanceForm, concordanceSortForm
+                   wordListForm, concordanceForm
 from bibledigger.models import Book, Language, Translation, Text
 import json
 
@@ -450,7 +450,6 @@ def wordList(translation_id=None, searchItem=None, searchOption=None, case=None,
 def concordance(language_id=None, translation_id=None, searchItem=None, searchOption=None, case=None):
 
     form = concordanceForm()
-    sortForm = concordanceSortForm()
 
     languageChoices = [(lang.id, lang.language) for lang in Language.query.all()]
     choices = [(None, 'none'), (0, 'verse'), (32, '3R'), (31, '2R'), (30, '1R'),
@@ -460,7 +459,6 @@ def concordance(language_id=None, translation_id=None, searchItem=None, searchOp
     concordanceList = []
 
     if form.validate_on_submit() and form.submit.data:
-
         # translation_id = form.translation1.data
         language_id = request.form['language1']
         translation_id = request.form['translation1']
@@ -472,6 +470,8 @@ def concordance(language_id=None, translation_id=None, searchItem=None, searchOp
                         choices=choices, language_id=language_id, translation_id=translation_id,
                         searchItem=searchItem, searchOption=searchOption,
                         case=case))
+    else:
+        pass
 
     if translation_id != None:
 
@@ -497,15 +497,15 @@ def concordance(language_id=None, translation_id=None, searchItem=None, searchOp
                     skip = False
                     break
             if skip == True:
-                return render_template('concordance.html', form=form,
-                                        sortForm=sortForm,
+                return render_template('concordance.html',
+                                        form=form,
                                         languageChoices=languageChoices,
                                         choices=choices,
                                         concLength=0)
 
             ###Catch incorrect regex
             try:
-                if case == False or form.caseSensitive.data == False:
+                if case == 'False': #or form.caseSensitive.data == False:
                     for symbol in searchItem:
                         symInd = searchItem.index(symbol)
                         if (searchItem[symInd-1] == '\\' and symInd == 1) or \
@@ -514,18 +514,20 @@ def concordance(language_id=None, translation_id=None, searchItem=None, searchOp
                         else:
                             searchItem = searchItem[:symInd] + searchItem[symInd].lower() + searchItem[symInd+1:]
                 searchRegex = re.compile(searchItem)
+                print(searchItem)###delete
+                print(searchRegex)###delete
             except:
                 errorMessage = 'Sorry It seems that your regular expression is incorrect. Try again. '
                 return render_template('concordance.html', form=form,
                                         languageChoices=languageChoices,
                                         choices=choices,
-                                        sortForm=sortForm, errorMessage=errorMessage)
+                                        errorMessage=errorMessage)
 
         else:
             for symbol in reSpecialSymbols:
                 searchItem = searchItem.replace(symbol, '\\' + symbol)
 
-            if case == False or form.caseSensitive.data == False:
+            if case == 'False': # or form.caseSensitive.data == False:
                 searchRegex = re.compile(searchItem.lower())
             else:
                 searchRegex = re.compile(searchItem)
@@ -536,7 +538,7 @@ def concordance(language_id=None, translation_id=None, searchItem=None, searchOp
         middleSymbols = '—/\\+=_'
 
         verseCounter = 1
-
+        print(searchRegex)###delete
         for verse in text:
             verseText = verse[3]
             ###Add space between non-alphanumeric symbols and words
@@ -564,7 +566,7 @@ def concordance(language_id=None, translation_id=None, searchItem=None, searchOp
             for symbol in middleSymbols:
                 verseText = verseText.replace(symbol, ' ' + symbol + ' ')
 
-            if case == False or form.caseSensitive.data == False:
+            if case == 'False': #or form.caseSensitive.data == False:
                 found = list(re.finditer(searchRegex, verseText.lower()))
             else:
                 found = list(re.finditer(searchRegex, verseText))
@@ -635,7 +637,6 @@ def concordance(language_id=None, translation_id=None, searchItem=None, searchOp
         if concLength == 0:
             return render_template('concordance.html',
                                     form=form,
-                                    sortForm=sortForm,
                                     conc=concordanceList,
                                     concLength=concLength,
                                     languageChoices=languageChoices,
@@ -646,27 +647,55 @@ def concordance(language_id=None, translation_id=None, searchItem=None, searchOp
                                     searchOption=searchOption,
                                     case=case)
 
-    if sortForm.validate_on_submit() and sortForm.sort.data:
+    if concordanceList == []:
+        return render_template('concordance.html',
+                                form=form,
+                                choices=choices,
+                                languageChoices=languageChoices)
+    else:
+
+        #Split the words into pages
+        pages = concLength // 100 + (concLength % 100 > 0)
+
+        concPaginated = {}
+
+        if pages > 1:
+            pageStep1 = 0
+            pageStep2 = 100
+            for i in range(pages):
+                if i + 1 == pages:
+                    concPaginated[i+1] = concordanceList[pageStep1:]
+                else:
+                    concPaginated[i+1] = concordanceList[pageStep1:pageStep2]
+                    pageStep1 += 100
+                    pageStep2 += 100
+        else:
+            concPaginated[1] = concordanceList
+
+        return render_template('concordance.html',
+                                form=form,
+                                conc=concPaginated,
+                                concLength=concLength,
+                                pages=pages,
+                                languageChoices=languageChoices,
+                                choices=choices,
+                                language_id=language_id,
+                                translation_id=translation_id,
+                                searchItem=searchItem,
+                                searchOption=searchOption,
+                                case=case)
+
+
+@functions.route('/<conc>/<options>')
+def sort(conc, options):
+
+    colors = {'option1': 'DeepPink', 'option2': 'Lime', 'option3': 'Turquoise',
+                        'option4': 'Indigo', 'option5': 'Blue', 'option6': 'Gold'}
+
+    for i in len(conc):
 
         verseList = [[[verse[0], verse[1].split(), verse[2], verse[3].split(),
-                    verse[4]], None, None, None, None, None, None] for verse in concordanceList]
-
-        # colors = {sortForm.option1.name: 'DeepPink', sortForm.option2.name: 'Lime',
-        #           sortForm.option3.name: 'Turquoise', sortForm.option4.name: 'Indigo',
-        #           sortForm.option5.name: 'Blue', sortForm.option6.name: 'Gold'}
-
-        colors = {'option1': 'DeepPink', 'option2': 'Lime', 'option3': 'Turquoise',
-                    'option4': 'Indigo', 'option5': 'Blue', 'option6': 'Gold'}
-
-        for option in list(form):
-            print(option.data)
-        print('\n')
-        print(request.form)
-        print('\n')
-        for option in list(sortForm):
-            print(option.data)
-
-        options = list(sortForm)[:-2]
+                        verse[4]], None, None, None, None, None, None] for verse in conc[i+1]]
 
         for option in options:
 
@@ -706,61 +735,18 @@ def concordance(language_id=None, translation_id=None, searchItem=None, searchOp
             if verseList[0][index+1] != None:
                 verseList.sort(key=lambda tup: tup[index+1])
 
-        concordanceList = [[entry[0][0], ' '.join(entry[0][1]), entry[0][2],
+        conc[i+1] = [[entry[0][0], ' '.join(entry[0][1]), entry[0][2],
                             ' '.join(entry[0][3]), entry[0][4]] for entry in verseList]
 
-        concLength = len(concordanceList)
-
-        # return render_template('concordance.html', form=form, sortForm=sortForm,
-        #                             conc=concordanceList, concLength=concLength,
-        #                             translation_id=translation_id)
-
-    if concordanceList == []:
-        return render_template('concordance.html',
-                                form=form,
-                                sortForm=sortForm,
-                                choices=choices,
-                                languageChoices=languageChoices)
-    else:
-
-        #Split the words into pages
-        pages = concLength // 100 + (concLength % 100 > 0)
-
-        concPaginated = {}
-
-        if pages > 1:
-            pageStep1 = 0
-            pageStep2 = 100
-            for i in range(pages):
-                if i + 1 == pages:
-                    concPaginated[i+1] = concordanceList[pageStep1:]
-                else:
-                    concPaginated[i+1] = concordanceList[pageStep1:pageStep2]
-                    pageStep1 += 100
-                    pageStep2 += 100
-        else:
-            concPaginated[1] = concordanceList
-
-        return render_template('concordance.html',
-                                form=form,
-                                sortForm=sortForm,
-                                conc=concPaginated,
-                                concLength=concLength,
-                                pages=pages,
-                                languageChoices=languageChoices,
-                                choices=choices,
-                                language_id=language_id,
-                                translation_id=translation_id,
-                                searchItem=searchItem,
-                                searchOption=searchOption,
-                                case=case)
+        return conc
 
 
 ###TO DO: Some verse numbers have letters (3a, 3b)
-###TO DO: Shitty vese numbering (21, 2, 3,.. 20, 22 in Afrikaans NLV)
+###TO DO: Shitty verse numbering (21, 2, 3,.. 20, 22 in Afrikaans NLV)
 ###TO DO: Move scripts to separate files
 ###TO DO: Fix translation names in the database
 ###TO DO: Concordance: separate colons ("22 :14")
 ###TO DO: Pagination or lazy loading
 ###TO DO: JavaScript for dropdown lists
 ###TO DO: Separate punctuation from words for all languages
+###TO DO: Concordance: case sensitivity is not working!!

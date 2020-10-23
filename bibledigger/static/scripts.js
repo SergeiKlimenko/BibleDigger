@@ -67,7 +67,6 @@ function populateList(list1, list2, list2Name, anchor=1, input=0, list3=0, list4
 
 function renderPagConc(conc, page, baseLink) {
 
-
     var pageNumber1, pageNumber2;
     pageNumber1 = document.getElementById('pageNumber1');
     pageNumber2 = document.getElementById('pageNumber2');
@@ -155,5 +154,21 @@ function renderPagConc(conc, page, baseLink) {
         next2.setAttribute('aria-disabled', 'true');
         last2.setAttribute('aria-disabled', 'true');
     };
+};
 
+
+function sort(conc) {
+
+    const colors = {'option1': 'DeepPink', 'option2': 'Lime', 'option3': 'Turquoise',
+                  'option4': 'Indigo', 'option5': 'Blue', 'option6': 'Gold'};
+
+    var concArray = [];
+
+    for (i of Object.keys(conc)) {
+        const verseList = conc[i].map(verse => [[verse[0], verse[1].split(), verse[2], verse[3].split(),
+                                    verse[4]], null, null, null, null, null, null]);
+        concArray = concArray.concat(verseList);
+    };
+
+    console.log(concArray);
 };

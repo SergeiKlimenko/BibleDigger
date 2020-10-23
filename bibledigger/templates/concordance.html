@@ -57,7 +57,10 @@
         $('#language1').selectpicker('val', {{ language_id }});
         populateList(lang_select, tran_select, 'translation1', lang_select.value, [{{ translation_id }}]);
         $('#search').attr('value', {{ searchItem|tojson }});
-        $("#caseSensitive").attr('checked', "{{ case }}".toLowerCase());
+        let caseSensitive = document.getElementById('caseSensitive');
+        if (caseSensitive.hasAttribute('checked').toString() != "{{ case }}".toLowerCase()) {
+            caseSensitive.toggleAttribute('checked');
+        };
         $('input[value="{{ searchOption }}"]').attr('checked', 'checked');
     {% else %}
         populateList(lang_select, tran_select, 'translation1');
@@ -70,7 +73,6 @@
 {% block form2 %}
 <nav class="navbar navbar-expand-lg sticky-top bg-dark shadow text-light">
 <form method="POST" class="form-inline">
-  {{ sortForm.csrf_token }}
 
 <div class="form-row justify-content-between">
 
@@ -134,28 +136,27 @@
 
     <div class="col">
     <div style="width=50%">
-      {{ wtf.form_field(sortForm.sort, class="form-control form-control-sm") }}
+      <button type="button" class="form-control form-control-sm" id="sort">Sort</button>
     </div>
 
-    <div class="form-group">
-      {{ wtf.form_field(form.option8, class="form-control form-control-sm my-select") }}
-    </div>
 </div>
 </div>
 </form>
 </nav>
 
   <script>
-    $('.my-select').addClass('selectpicker');
-    $('.my-select').attr('data-width', 'auto');
-    $('.my-select').attr('data-style', '');
-
     var sortSubmit = document.getElementById('sort');
     sortSubmit.onclick = function() {
         var options = [];
         for (var i = 0; i < 6; i++) {
             options.push(document.getElementById(`option${i+1}`).value);
         };
+        {% if conc is not defined %}
+        {% set conc = 0 %}
+        {% endif %}
+        var conc = {{ conc|tojson }};
+
+        sort(conc);
     };
   </script>
 {% endblock %}
