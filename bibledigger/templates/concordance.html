@@ -145,18 +145,18 @@
 </nav>
 
   <script>
-    var sortSubmit = document.getElementById('sort');
+    {% if conc is not defined %}
+    {% set conc = 0 %}
+    {% endif %}
+    const link = `/browse/1/{{ language_id }}/{{ translation_id }}`;
+    const sortSubmit = document.getElementById('sort');
+    let concProc = {{ conc|tojson }};
     sortSubmit.onclick = function() {
-        var options = [];
-        for (var i = 0; i < 6; i++) {
+        let options = [];
+        for (let i = 0; i < 6; i++) {
             options.push(document.getElementById(`option${i+1}`).value);
         };
-        {% if conc is not defined %}
-        {% set conc = 0 %}
-        {% endif %}
-        var conc = {{ conc|tojson }};
-
-        sort(conc);
+        concProc = sortConc({{ conc|tojson }}, options, link);
     };
   </script>
 {% endblock %}
@@ -247,60 +247,58 @@
 
     <script>
 
-        var link = `/browse/1/{{ language_id }}/{{ translation_id }}`;
-
         renderPagConc({{ conc|tojson }}, 1, link);
 
         var pageValue = parseInt(pageNumber1.value);
 
         pageNumber1.onchange = function() {
               pageValue = parseInt(pageNumber1.value);
-                renderPagConc({{ conc|tojson }}, pageValue, link);
+                renderPagConc(concProc, pageValue, link);
         };
 
         pageNumber2.onchange = function() {
               pageValue = parseInt(pageNumber2.value);
-                renderPagConc({{ conc|tojson }}, pageValue, link);
+                renderPagConc(concProc, pageValue, link);
         };
 
         previous1.onclick = function() {
             pageValue -= 1;
-            renderPagConc({{ conc|tojson }}, pageValue, link);
+            renderPagConc(concProc, pageValue, link);
         };
 
         previous2.onclick = function() {
             pageValue -= 1;
-            renderPagConc({{ conc|tojson }}, pageValue, link);
+            renderPagConc(concProc, pageValue, link);
         };
 
         next1.onclick = function() {
             pageValue += 1;
-            renderPagConc({{ conc|tojson }}, pageValue, link);
+            renderPagConc(concProc, pageValue, link);
         };
 
         next2.onclick = function() {
             pageValue += 1;
-            renderPagConc({{ conc|tojson }}, pageValue, link);
+            renderPagConc(concProc, pageValue, link);
         };
 
         first1.onclick = function() {
             pageValue = 1;
-            renderPagConc({{ conc|tojson }}, pageValue, link);
+            renderPagConc(concProc, pageValue, link);
         };
 
         first2.onclick = function() {
             pageValue = 1;
-            renderPagConc({{ conc|tojson }}, pageValue, link);
+            renderPagConc(concProc, pageValue, link);
         };
 
         last1.onclick = function() {
-            pageValue = Object.keys({{ conc|tojson }}).length;
-            renderPagConc({{ conc|tojson }}, pageValue, link);
+            pageValue = Object.keys(conc).length;
+            renderPagConc(concProc, pageValue, link);
         };
 
         last2.onclick = function() {
             pageValue = Object.keys({{ conc|tojson }}).length;
-            renderPagConc({{ conc|tojson }}, pageValue, link);
+            renderPagConc(concProc, pageValue, link);
         };
     </script>
 

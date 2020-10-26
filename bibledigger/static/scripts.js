@@ -157,18 +157,77 @@ function renderPagConc(conc, page, baseLink) {
 };
 
 
-function sort(conc) {
+function sortConc(conc, options, baseLink) {
 
     const colors = {'option1': 'DeepPink', 'option2': 'Lime', 'option3': 'Turquoise',
                   'option4': 'Indigo', 'option5': 'Blue', 'option6': 'Gold'};
-
     var concArray = [];
+    const concPages = Object.keys(conc);
 
-    for (i of Object.keys(conc)) {
-        const verseList = conc[i].map(verse => [[verse[0], verse[1].split(), verse[2], verse[3].split(),
-                                    verse[4]], null, null, null, null, null, null]);
+    for (i of concPages) {
+        const verseList = conc[i].map(verse => [[verse[0], verse[1].trim().replace('  ', ' ').split(' '), verse[2], verse[3].trim().replace('  ', ' ').split(' '), verse[4]], null, null, null, null, null, null]);
         concArray = concArray.concat(verseList);
     };
 
-    console.log(concArray);
+    for (option of options) {
+        let optionIndex = options.indexOf(option);
+        let optionColor = colors[`option${optionIndex+1}`];
+        if (option !== 'None') {
+            for (verse of concArray) {
+                if (parseInt(option) === 0) {
+                    verse[optionIndex+1] = verse[0][4];
+                    verse[0][0] = `<span class="${optionColor}">${verse[0][0]}</span>`;
+                } else if (parseInt(option) === 2) {
+                    verse[optionIndex+1] = verse[0][2].toLowerCase();
+                    verse[0][2] = `<span class="${optionColor}">${verse[0][2]}</span>`;
+                } else {
+                    try {
+                        let kwicIndex;
+                        if (option[0] === '3') {
+                            kwicIndex = parseInt(option[1]);
+                            verse[optionIndex+1] = verse[0][3][kwicIndex].toLowerCase();
+                            verse[0][3] = verse[0][3].slice(0, kwicIndex).concat(`<span class="${optionColor}">${verse[0][3][kwicIndex]}</span>`).concat(verse[0][3].slice(kwicIndex+1));
+
+                        } else if (option[0] === '1') {
+                            kwicIndex = verse[0][1].length - parseInt(option[1]);
+                            verse[optionIndex+1] = verse[0][1][kwicIndex].toLowerCase();
+                            if ((verse[0][1].length - kwicIndex) !== 1) {
+                                verse[0][1] = verse[0][1].slice(0, kwicIndex).concat(`<span class="${optionColor}">${verse[0][1][kwicIndex]}</span>`).concat(verse[0][1].slice(kwicIndex+1));
+                            } else if ((verse[0][1].length - kwicIndex) === 1) {
+                                verse[0][1] = verse[0][1].slice(0, kwicIndex).concat(`<span class="${optionColor}">${verse[0][1][kwicIndex]}</span>`);
+                            }
+                        }
+                    } catch (RangeError) {
+                        verse[optionIndex+1] = ' ';
+                    }
+                };
+            };
+        };
+    };
+
+    for (var index = 0; index < concArray[0].slice(1).length; index++ ) {
+        if (concArray[0][index+1] !== null) {
+            concArray.sort((a, b) => a[index+1] < b[index+1] ? -1 : a[index+1] > b[index+1] ? 1 : 0);
+        };
+    };
+
+    const concPrePag = concArray.map(verse => [verse[0][0], verse[0][1].join(' '), verse[0][2], verse[0][3].join(' '), verse[0][4]]);
+
+    if (concPages.length > 1) {
+        let pageStep1 = 0;
+        let pageStep2 = 100;
+        for (i of concPages) {
+            if (parseInt(i) === concPages.length) {
+                conc[i] = concPrePag.slice(pageStep1);
+            } else {
+                conc[i] = concPrePag.slice(pageStep1, pageStep2);
+                pageStep1 += 100;
+                pageStep2 += 100;
+            }
+        };
+    } else {
+        conc[1] = concPrePag;
+    };
+    renderPagConc(conc, 1, baseLink);
+    return conc;
 };
