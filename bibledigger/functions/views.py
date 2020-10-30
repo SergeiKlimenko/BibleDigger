@@ -299,12 +299,14 @@ def wordList(translation_id=None, searchItem=None, searchOption=None, case=None,
 
     form = wordListForm()
 
-    if form.language1.data == None:
-        form.translation1.choices = [(tran.id, tran.translation) for tran
-            in Translation.query.filter_by(language_id=1).all()]
-    else:
-        form.translation1.choices = [(tran.id, tran.translation) for tran
-            in Translation.query.filter_by(language_id=form.language1.data).all()]
+    languageChoices = [(lang.id, lang.language) for lang in Language.query.all()]
+
+    # if form.language1.data == None:
+    #     form.translation1.choices = [(tran.id, tran.translation) for tran
+    #         in Translation.query.filter_by(language_id=1).all()]
+    # else:
+    #     form.translation1.choices = [(tran.id, tran.translation) for tran
+    #         in Translation.query.filter_by(language_id=form.language1.data).all()]
 
     if form.validate_on_submit():
 
@@ -433,15 +435,27 @@ def wordList(translation_id=None, searchItem=None, searchOption=None, case=None,
         else:
             wordsPaginated[1] = words
 
-        return render_template('wordlist.html', form=form, words=wordsPaginated,
-                                wordsLength=wordsLength, translation_id=translation_id,
-                                searchItem=searchItem, searchOption=searchOption,
-                                case=case, freqMin=freqMin, freqMax=freqMax,
-                                order=order, page=page, pages=pages)
+        return render_template('wordlist.html',
+                                form=form,
+                                languageChoices=languageChoices,
+                                words=wordsPaginated,
+                                wordsLength=wordsLength,
+                                translation_id=translation_id,
+                                searchItem=searchItem,
+                                searchOption=searchOption,
+                                case=case,
+                                freqMin=freqMin,
+                                freqMax=freqMax,
+                                order=order,
+                                page=page,
+                                pages=pages)
 
     else:
         wordsLength = -1
-        return render_template('wordlist.html', form=form, wordsLength=wordsLength)
+        return render_template('wordlist.html',
+                                form=form,
+                                languageChoices=languageChoices,
+                                wordsLength=wordsLength)
 
 
 @functions.route('/concordance/', methods=['GET', 'POST'])

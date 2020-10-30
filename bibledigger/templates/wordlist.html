@@ -7,16 +7,26 @@
   {{form.csrf_token}}
   <div class="form-group">
     <div class="form-row">
+
       <div class="col">
-        {{ wtf.form_field(form.language1, class="form-control form-control-sm") }}
-      </div>
+        <select class="selectpicker" data-live-search="true" data-live-search-normalize="true" data-width="90px" data-style='' data-style-base='form-control form-control-sm' id="language1" name="language1">
+          {% for language in languageChoices %}
+            <option value="{{ language[0] }}">{{ language[1] }}</option>
+          {% endfor %}
+        </select>
+      </div
+
       <div class="col">
-        {{ wtf.form_field(form.translation1, class="form-control form-control-sm") }}
+        <select class="selectpicker" data-live-search="true" data-live-search-normalize="true" data-width="90px" data-style='' data-style-base='form-control form-control-sm' id="translation1" name="translation1">
       </div>
+
     </div>
   </div>
+
   <div class="form-group">
     {{ wtf.form_field(form.search, class="form-control form-control-sm") }}
+  </div>
+  <div class="form-group">
     {{ wtf.form_field(form.caseSensitive, class="form-control form-control-sm")}}
     {{ wtf.form_field(form.searchOptions, class="form-control form-control-sm")}}
   </div>
@@ -38,29 +48,27 @@
   </div>
   </form>
 
+  <script src="{{url_for('static', filename='scripts.js')}}"></script>
   <script>
-        var lang_select = document.getElementById("language1");
-        var tran_select = document.getElementById("translation1");
 
-        lang_select.onchange = function()  {
+    lang_select.onchange = function() {
+        populateList(lang_select, tran_select, 'translation1', lang_select.value);
+    };
 
-            language1 = lang_select.value;
+    {% if language_id is defined %}
+        $('#language1').selectpicker('val', {{ language_id }});
+        populateList(lang_select, tran_select, 'translation1', lang_select.value, [{{ translation_id }}]);
+        $('#search').attr('value', {{ searchItem|tojson }});
+        let caseSensitive = document.getElementById('caseSensitive');
+        if (caseSensitive.hasAttribute('checked').toString() != "{{ case }}".toLowerCase()) {
+            caseSensitive.toggleAttribute('checked');
+        };
+        $('input[value="{{ searchOption }}"]').attr('checked', 'checked');
+    {% else %}
+        populateList(lang_select, tran_select, 'translation1');
+    {% endif %}
 
-            fetch('/translation1/' + language1).then(function(response) {
-
-                response.json().then(function(data) {
-                    var optionHTML = '';
-
-                    for (var translation of data.translations) {
-                        optionHTML += '<option value="' + translation.id + '">' + translation.translation + '</option>';
-                    }
-
-                    tran_select.innerHTML = optionHTML;
-                })
-
-            });
-        }
-    </script>
+  </script>
 
 {% endblock %}
 

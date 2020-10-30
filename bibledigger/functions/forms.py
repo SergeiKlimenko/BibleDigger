@@ -23,6 +23,7 @@ class FieldsRequiredForm(FlaskForm):
 
 class browseForm(FlaskForm):
 
+    language1 = SelectField('language', choices=languageChoices, coerce=int, validators=[DataRequired()])
     submit = SubmitField('OK')
 
 
@@ -58,10 +59,6 @@ class parallelVerseSearchForm(FlaskForm):
 
 
 class wordListForm(FlaskForm):
-
-    language1 = SelectField('language', choices=languageChoices, coerce=int, validators=[DataRequired()])
-    translation1 = SelectField('translation', coerce=int, validators=[DataRequired()], validate_choice=False)
-
 
     search = StringField('What are you looking for?')
     caseSensitive = BooleanField('Case sensitive')
