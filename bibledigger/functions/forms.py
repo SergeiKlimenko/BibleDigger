@@ -16,7 +16,7 @@ class FieldsRequiredForm(FlaskForm):
 
     class Meta:
         def render_field(self, field, render_kw):
-            if type(field) != BooleanField:
+            if type(field) != BooleanField and type(field) != IntegerField and field.id != 'wordListSearch':
                 render_kw.setdefault('required', True)
             return super().render_field(field, render_kw)
 
@@ -58,9 +58,9 @@ class parallelVerseSearchForm(FlaskForm):
     submit = SubmitField('OK')
 
 
-class wordListForm(FlaskForm):
+class wordListForm(FieldsRequiredForm):
 
-    search = StringField('What are you looking for?')
+    search = StringField('What are you looking for?', id="wordListSearch")
     caseSensitive = BooleanField('Case sensitive')
 
     searchOptions = RadioField('Search options', choices=[('all', 'all'), ('start', 'starting with'),

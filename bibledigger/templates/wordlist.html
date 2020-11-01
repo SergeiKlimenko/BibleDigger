@@ -14,23 +14,23 @@
             <option value="{{ language[0] }}">{{ language[1] }}</option>
           {% endfor %}
         </select>
-      </div
+      </div>
 
       <div class="col">
-        <select class="selectpicker" data-live-search="true" data-live-search-normalize="true" data-width="90px" data-style='' data-style-base='form-control form-control-sm' id="translation1" name="translation1">
+        <select class="selectpicker" data-live-search="true" data-live-search-normalize="true" data-width="90px" data-style='' data-style-base='form-control form-control-sm' id="translation1" name="translation1"></select>
       </div>
 
     </div>
   </div>
 
-  <div class="form-group">
+  <div class="form-group mb-0">
     {{ wtf.form_field(form.search, class="form-control form-control-sm") }}
   </div>
-  <div class="form-group">
+  <div class="form-group mb-0">
     {{ wtf.form_field(form.caseSensitive, class="form-control form-control-sm")}}
     {{ wtf.form_field(form.searchOptions, class="form-control form-control-sm")}}
   </div>
-  <div class="form-group">
+  <div class="form-group mb-0">
     <div class="form-row">
       <div class="col">
         {{ wtf.form_field(form.freqMin, class="form-control form-control-sm") }}
@@ -40,7 +40,7 @@
       </div>
     </div>
   </div>
-  <div class="form-group">
+  <div class="form-group mb-0">
     {{ wtf.form_field(form.orderOptions, class="form-control form-control-sm")}}
   </div>
   <div class="form-group">
@@ -58,12 +58,19 @@
     {% if language_id is defined %}
         $('#language1').selectpicker('val', {{ language_id }});
         populateList(lang_select, tran_select, 'translation1', lang_select.value, [{{ translation_id }}]);
-        $('#search').attr('value', {{ searchItem|tojson }});
+        $('#wordListSearch').attr('value', {{ searchItem|tojson }});
         let caseSensitive = document.getElementById('caseSensitive');
         if (caseSensitive.hasAttribute('checked').toString() != "{{ case }}".toLowerCase()) {
             caseSensitive.toggleAttribute('checked');
         };
         $('input[value="{{ searchOption }}"]').attr('checked', 'checked');
+        $('input[value="{{ order }}"]').attr('checked', 'checked');
+        if ({{ freqMin|tojson }} !== 0) {
+            $('#freqMin').attr('value', {{ freqMin|tojson }});
+        };
+        if ({{ freqMax|tojson }} !== 0) {
+            $('#freqMax').attr('value', {{ freqMax|tojson }});
+        };
     {% else %}
         populateList(lang_select, tran_select, 'translation1');
     {% endif %}
@@ -74,122 +81,144 @@
 
 
 {% block content %}
+<div class="container mt-4 mb-3 ml-1">
   {% if wordsLength == 0 %}
     <h3>Nothing found</h3>
     <p>Please, try to change search criteria</p>
   {% elif wordsLength > 0 %}
-    <div class="row">
-      <p>Number of words found: {{ wordsLength }}</p>
+    <div class="row justify-content-center">
+      {% if wordsLength == 1 %}
+        <p><b>Found: 1 result / {{ pages }} page</b></p>
+      {% elif wordsLength > 1 and pages == 1 %}
+        <p><b>Found: {{ wordsLength }} results / {{ pages }} page</b></p>
+      {% else %}
+        <p><b>Found: {{ wordsLength }} results / {{ pages }} pages</b></p>
+      {% endif %}
     </div>
 
     <nav class="table-responsive mb-2s">
-      <ul class="pagination mb-0">
-        {% if page == 1 %}
-          <li class="page-item disabled">
-        {% else %}
-          <li class="page-item">
-        {% endif %}
-          <a class="page-link" href="{{ url_for('functions.wordList',
-            translation_id=translation_id, searchItem=searchItem, searchOption=searchOption,
-            case=case, freqMin=freqMin, freqMax=freqMax, order=order, page=page-1) }}" aria-label="Previous">
-         <span aria-hidden="true">&laquo;</span>
-       </a>
+      <ul class="pagination mb-0 justify-content-center">
+        <li class="page-item disabled">
+         <a class="page-link" tabindex="-1" aria-disabled="true" id="first1">First</a>
         </li>
-        {% for i in range(pages) %}
-          {% if i+1 == page %}
-            <li class="page-item active" aria-current="page">
-              <a class="page-link" href="{{ url_for('functions.wordList',
-                translation_id=translation_id, searchItem=searchItem, searchOption=searchOption,
-                case=case, freqMin=freqMin, freqMax=freqMax, order=order, page=i+1) }}">{{ i+1 }} <span class="sr-only">(current)</span></a>
-            </li>
-          {% else %}
-            <li class="page-item">
-              <a class="page-link" href="{{ url_for('functions.wordList',
-                translation_id=translation_id, searchItem=searchItem, searchOption=searchOption,
-                case=case, freqMin=freqMin, freqMax=freqMax, order=order, page=i+1) }}">{{ i+1 }}</a>
-            </li>
-          {% endif %}
-        {% endfor %}
-        {% if page == pages %}
-          <li class="page-item disabled">
-        {% else %}
-          <li class="page-item">
-        {% endif %}
-          <a class="page-link" href="{{ url_for('functions.wordList',
-            translation_id=translation_id, searchItem=searchItem, searchOption=searchOption,
-            case=case, freqMin=freqMin, freqMax=freqMax, order=order, page=page+1) }}" aria-label="Next">
-         <span aria-hidden="true">&raquo;</span>
-       </a>
+
+        <li class="page-item disabled">
+         <a class="page-link" tabindex="-1" aria-disabled="true" id="previous1">Previous</a>
+        </li>
+
+        <div class="input-group mb-3" style="width: 60px">
+          <input type="text" class="form-control" value="1" aria-describedby="basic-addon1" id="pageNumber1">
+        </div>
+
+        <li class="page-item">
+          <a class="page-link" id="next1">Next</a>
+        </li>
+
+        <li class="page-item">
+         <a class="page-link" tabindex="-1" aria-disabled="true" id="last1">Last</a>
         </li>
       </ul>
     </nav>
 
-    <div class="row">
-      <div class="col-1">
-        <p>rank</p>
-      </div>
-      <div class="col-2">
-        <p>word</p>
-      </div>
-      <div class="col-2">
-        <p>frequency</p>
-      </div>
+    <div id="render">
     </div>
-    {% for (rank, frequency, word) in words[page] %}
-      <div class="row">
-        <div class="col-1">
-          <p>{{ rank }}</p>
-        </div>
-        <div class="col-2">
-          <p><a href="{{ url_for('functions.concordance',  translation_id=translation_id, searchItem=word, searchOption='word', case=case) }}">{{ word }}</a></p>
-        </div>
-        <div class="col-2">
-          <p>{{ frequency }}</p>
-        </div>
-      </div>
-    {% endfor %}
+
+
+    <div class="row justify-content-center">
+      {% if wordsLength == 1 %}
+        <p><b>Found: 1 result / {{ pages }} page</b></p>
+      {% elif wordsLength > 1 and pages == 1 %}
+        <p><b>Found: {{ wordsLength }} results / {{ pages }} page</b></p>
+      {% else %}
+        <p><b>Found: {{ wordsLength }} results / {{ pages }} pages</b></p>
+      {% endif %}
+    </div>
 
     <nav class="table-responsive mb-2s">
-      <ul class="pagination mb-0">
-        {% if page == 1 %}
-          <li class="page-item disabled">
-        {% else %}
-          <li class="page-item">
-        {% endif %}
-          <a class="page-link" href="{{ url_for('functions.wordList',
-            translation_id=translation_id, searchItem=searchItem, searchOption=searchOption,
-            case=case, freqMin=freqMin, freqMax=freqMax, order=order, page=page-1) }}" aria-label="Previous">
-         <span aria-hidden="true">&laquo;</span>
-       </a>
+      <ul class="pagination mb-0 justify-content-center">
+        <li class="page-item disabled">
+         <a class="page-link" tabindex="-1" aria-disabled="true" id="first2">First</a>
         </li>
-        {% for i in range(pages) %}
-          {% if i+1 == page %}
-            <li class="page-item active" aria-current="page">
-              <a class="page-link" href="{{ url_for('functions.wordList',
-                translation_id=translation_id, searchItem=searchItem, searchOption=searchOption,
-                case=case, freqMin=freqMin, freqMax=freqMax, order=order, page=i+1) }}">{{ i+1 }} <span class="sr-only">(current)</span></a>
-            </li>
-          {% else %}
-            <li class="page-item">
-              <a class="page-link" href="{{ url_for('functions.wordList',
-                translation_id=translation_id, searchItem=searchItem, searchOption=searchOption,
-                case=case, freqMin=freqMin, freqMax=freqMax, order=order, page=i+1) }}">{{ i+1 }}</a>
-            </li>
-          {% endif %}
-        {% endfor %}
-        {% if page == pages %}
-          <li class="page-item disabled">
-        {% else %}
-          <li class="page-item">
-        {% endif %}
-          <a class="page-link" href="{{ url_for('functions.wordList',
-            translation_id=translation_id, searchItem=searchItem, searchOption=searchOption,
-            case=case, freqMin=freqMin, freqMax=freqMax, order=order, page=page+1) }}" aria-label="Next">
-         <span aria-hidden="true">&raquo;</span>
-       </a>
+
+        <li class="page-item disabled">
+         <a class="page-link" tabindex="-1" aria-disabled="true" id="previous2">Previous</a>
+        </li>
+
+        <div class="input-group mb-3" style="width: 60px">
+          <input type="text" class="form-control" value="1" aria-describedby="basic-addon1" id="pageNumber2">
+        </div>
+
+        <li class="page-item">
+          <a class="page-link" id="next2">Next</a>
+        </li>
+
+        <li class="page-item">
+         <a class="page-link" tabindex="-1" aria-disabled="true" id="last2">Last</a>
         </li>
       </ul>
     </nav>
+
+    <script src="{{url_for('static', filename='scripts.js')}}"></script>
+    <script>
+
+        const WordListProc = {{ words|tojson }};
+        const link = `/concordance/${document.getElementById('language1').value}/{{ translation_id }}/WORD/word/{{ case }}`;
+
+        render({{ words|tojson }}, 1, link);
+
+        var pageValue = parseInt(pageNumber1.value);
+
+        pageNumber1.onchange = function() {
+              pageValue = parseInt(pageNumber1.value);
+                render(WordListProc, pageValue, link);
+        };
+
+        pageNumber2.onchange = function() {
+              pageValue = parseInt(pageNumber2.value);
+                render(WordListProc, pageValue, link);
+        };
+
+        previous1.onclick = function() {
+            pageValue -= 1;
+            render(WordListProc, pageValue, link);
+        };
+
+        previous2.onclick = function() {
+            pageValue -= 1;
+            render(WordListProc, pageValue, link);
+        };
+
+        next1.onclick = function() {
+            pageValue += 1;
+            render(WordListProc, pageValue, link);
+        };
+
+        next2.onclick = function() {
+            pageValue += 1;
+            render(WordListProc, pageValue, link);
+        };
+
+        first1.onclick = function() {
+            pageValue = 1;
+            render(WordListProc, pageValue, link);
+        };
+
+        first2.onclick = function() {
+            pageValue = 1;
+            render(WordListProc, pageValue, link);
+        };
+
+        last1.onclick = function() {
+            pageValue = Object.keys({{ words|tojson }}).length;
+            render(WordListProc, pageValue, link);
+        };
+
+        last2.onclick = function() {
+            pageValue = Object.keys({{ words|tojson }}).length;
+            render(WordListProc, pageValue, link);
+        };
+    </script>
+
   {% endif %}
-
+</div>
 {% endblock %}

@@ -7,24 +7,25 @@
       position: relative;
       padding-top: 75px;
     }
+
   </style>
 {% endblock %}
 
 {% block form %}
-<ul class="nav nav-tabs">
+<ul class="nav nav-pills nav-fill">
   {% if parallelOrNot == 1 %}
     <li class="nav-item">
-      <a class="nav-link active" href="{{ url_for('functions.browse', parallelOrNot=1) }}">single</a>
+      <a class="nav-link active bg-secondary" href="{{ url_for('functions.browse', parallelOrNot=1) }}">single</a>
     </li>
     <li class="nav-item">
-      <a class="nav-link" href="{{ url_for('functions.browse', parallelOrNot=2) }}">parallel</a>
+      <a class="nav-link text-light" href="{{ url_for('functions.browse', parallelOrNot=2) }}">parallel</a>
     </li>
   {% elif parallelOrNot == 2 %}
     <li class="nav-item">
-      <a class="nav-link" href="{{ url_for('functions.browse', parallelOrNot=1) }}">single</a>
+      <a class="nav-link text-light" href="{{ url_for('functions.browse', parallelOrNot=1) }}">single</a>
     </li>
     <li class="nav-item">
-      <a class="nav-link active" href="{{ url_for('functions.browse', parallelOrNot=2) }}">parallel</a>
+      <a class="nav-link active bg-secondary" href="{{ url_for('functions.browse', parallelOrNot=2) }}">parallel</a>
     </li>
   {% endif %}
 </ul>
@@ -142,7 +143,7 @@
 
 {% block content %}
 
-<div class="container">
+<div class="container mt-4 mb-3">
   {% if textLength == 0 %}
   <h1>The book you are looking for is not included in this translation</h1>
   {% else %}

@@ -14,11 +14,6 @@ def browse(parallelOrNot, language_id=None, translation_id=None, verseCode=None)
 
     form = browseForm()
 
-    ###TO DO: Make a new db with translation names edited as below:
-    #translationList = [(tran.id,
-    #    tran.translation.split('--')[1].split('_(')[0].replace('_', ' '))
-    #    for tran in Translation.query.filter_by(language_id=8).all()]
-
     ######delete
     languageChoices = [(lang.id, lang.language) for lang in Language.query.all()]
 
@@ -33,9 +28,13 @@ def browse(parallelOrNot, language_id=None, translation_id=None, verseCode=None)
                 book_code=book).join(Book).with_entities(Text.id, \
                 Book.title, Text.chapter, Text.verse, Text.text).all()
             textLength = len(tran1Text)
-            return render_template('browse.html', form=form, texts=tran1Text,
-                textLength=textLength, parallelOrNot=parallelOrNot,
-                languageChoices=languageChoices, input=[language1, translation1, book])
+            return render_template('browse.html',
+                                    form=form,
+                                    texts=tran1Text,
+                                    textLength=textLength,
+                                    parallelOrNot=parallelOrNot,
+                                    languageChoices=languageChoices,
+                                    input=[language1, translation1, book])
 
         elif parallelOrNot == 2:
             language2 = request.form['language2']
@@ -48,9 +47,13 @@ def browse(parallelOrNot, language_id=None, translation_id=None, verseCode=None)
                 a.book_code = b.book_code AND a.chapter = b.chapter \
                 AND a.verse = b.verse) c LEFT JOIN books d ON c.book_code = d.code"))
             textLength = len(list(bothTranslations))
-            return render_template('browse.html', form=form,
-                texts=bothTranslations, textLength=textLength, parallelOrNot=parallelOrNot,
-                languageChoices=languageChoices, input=[language1, translation1, book, language2, translation2])
+            return render_template('browse.html',
+                                    form=form,
+                                    texts=bothTranslations,
+                                    textLength=textLength,
+                                    parallelOrNot=parallelOrNot,
+                                    languageChoices=languageChoices,
+                                    input=[language1, translation1, book, language2, translation2])
 
     if translation_id != None:
         book_code = Book.query.with_entities(Book.code).filter_by(title=' '.join(verseCode.split()[:-1])).first()[0]
@@ -59,12 +62,19 @@ def browse(parallelOrNot, language_id=None, translation_id=None, verseCode=None)
             Book.title, Text.chapter, Text.verse, Text.text).all()
         textLength = len(tran1Text)
 
-        return render_template('browse.html', form=form, texts=tran1Text,
-            textLength=textLength, parallelOrNot=parallelOrNot, verseCode=verseCode,
-            languageChoices=languageChoices, input=[language_id, translation_id, book_code])
+        return render_template('browse.html',
+                                form=form,
+                                texts=tran1Text,
+                                textLength=textLength,
+                                parallelOrNot=parallelOrNot,
+                                verseCode=verseCode,
+                                languageChoices=languageChoices,
+                                input=[language_id, translation_id, book_code])
 
-    return render_template('browse.html', form=form, parallelOrNot=parallelOrNot,
-        languageChoices=languageChoices)
+    return render_template('browse.html',
+                            form=form,
+                            parallelOrNot=parallelOrNot,
+                            languageChoices=languageChoices)
 
 
 @functions.route('/<target>/<anchor>')
@@ -181,20 +191,24 @@ def verseSearch(parallelOrNot, verseList=None):
             verseList.append(verse)
 
         if anotherVerse == True:
-            return redirect(url_for('functions.verseSearch', verseList=verseList,
-                parallelOrNot=parallelOrNot))
+            return redirect(url_for('functions.verseSearch',
+                                    verseList=verseList,
+                                    parallelOrNot=parallelOrNot))
 
         else:
 
             verseList.append('delete')
 
-            return redirect(url_for('functions.verseSearch', verseList=verseList,
-                parallelOrNot=parallelOrNot))
+            return redirect(url_for('functions.verseSearch',
+                                    verseList=verseList,
+                                    parallelOrNot=parallelOrNot))
             #return render_template('versesearch.html', form=form,
             #    anotherVerse=anotherVerse, verseToRender=verseToRender, parallelOrNot=parallelOrNot)
 
     if verseList == None:
-        return render_template('versesearch.html', form=form, parallelOrNot=parallelOrNot)
+        return render_template('versesearch.html',
+                                form=form,
+                                parallelOrNot=parallelOrNot)
 
     else:
         if verseList.endswith("'delete']"):
@@ -250,13 +264,19 @@ def verseSearch(parallelOrNot, verseList=None):
                         str(verse.verse), verse.text1, verse.text2, language1,
                         translation1, language2, translation2))
 
-            return render_template('versesearch.html', form=form,
-                anotherVerse=False, verseToRender=verseToRender, parallelOrNot=parallelOrNot)
+            return render_template('versesearch.html',
+                                    form=form,
+                                    anotherVerse=False,
+                                    verseToRender=verseToRender,
+                                    parallelOrNot=parallelOrNot)
 
         else:
             verseList = processVerseList(verseList, True)
-            return render_template('versesearch.html', form=form,
-                anotherVerse=True, verseToRender=verseList, parallelOrNot=parallelOrNot)
+            return render_template('versesearch.html',
+                                    form=form,
+                                    anotherVerse=True,
+                                    verseToRender=verseList,
+                                    parallelOrNot=parallelOrNot)
 
 
 @functions.route('/chapter/<book>/<translation_id>')
@@ -292,10 +312,10 @@ def verse(translation_id, book, chapter):
 
 
 @functions.route('/wordlist/', methods=['GET', 'POST'])
-@functions.route('''/wordlist/<int:translation_id>/<searchItem>/<searchOption>/
-                     <case>/<int:freqMin>/<int:freqMax>/<order>/<int:page>''', methods=['GET', 'POST'])
-def wordList(translation_id=None, searchItem=None, searchOption=None, case=None,
-              freqMin=None, freqMax=None, order=None, page=None):
+@functions.route('''/wordlist/<int:language_id>/<int:translation_id>/<searchItem>/<searchOption>/
+                     <case>/<int:freqMin>/<int:freqMax>/<order>''', methods=['GET', 'POST'])
+def wordList(language_id=None, translation_id=None, searchItem=None, searchOption=None, case=None,
+              freqMin=None, freqMax=None, order=None):
 
     form = wordListForm()
 
@@ -310,8 +330,10 @@ def wordList(translation_id=None, searchItem=None, searchOption=None, case=None,
 
     if form.validate_on_submit():
 
-        translation_id=form.translation1.data
-        searchItem=form.search.data.replace('/', '%2F').replace('.', '%2E')
+        # translation_id=form.translation1.data ###delete
+        language_id = request.form['language1']
+        translation_id = request.form['translation1']
+        searchItem=form.search.data.replace('/', '%2F').replace('.', '%2E').replace('#', '%23')
         searchOption=form.searchOptions.data
         if searchOption == 'all':
             searchItem = "None"
@@ -323,23 +345,22 @@ def wordList(translation_id=None, searchItem=None, searchOption=None, case=None,
         if freqMax == None:
             freqMax = 0
         order=form.orderOptions.data
-        page=1
 
         return redirect(url_for('functions.wordList',
+                                language_id=language_id,
                                 translation_id=translation_id,
                                 searchItem=searchItem,
                                 searchOption=searchOption,
                                 case=case,
                                 freqMin=freqMin,
                                 freqMax=freqMax,
-                                order=order,
-                                page=page))
+                                order=order))
 
     if translation_id != None:
 
         fullText = Text.query.filter_by(translation_id=translation_id).with_entities(Text.text).all()
 
-        searchItem = searchItem.replace('%2F', '/').replace('%2E', '.')
+        searchItem = searchItem.replace('%2F', '/').replace('%2E', '.').replace('%23', '#')
         print(searchItem)
         print(searchOption)
 
@@ -380,7 +401,7 @@ def wordList(translation_id=None, searchItem=None, searchOption=None, case=None,
             sortedWordList.sort(key=lambda tup: tup[0], reverse=True)
         elif order == 'word':
             sortedWordList.sort(key=lambda tup: tup[0], reverse=True)
-            sortedWordList.sort(key=lambda tup: tup[1])
+            sortedWordList.sort(key=lambda tup: tup[1].lower())
 
         words = []
 
@@ -440,6 +461,7 @@ def wordList(translation_id=None, searchItem=None, searchOption=None, case=None,
                                 languageChoices=languageChoices,
                                 words=wordsPaginated,
                                 wordsLength=wordsLength,
+                                language_id=language_id,
                                 translation_id=translation_id,
                                 searchItem=searchItem,
                                 searchOption=searchOption,
@@ -447,7 +469,6 @@ def wordList(translation_id=None, searchItem=None, searchOption=None, case=None,
                                 freqMin=freqMin,
                                 freqMax=freqMax,
                                 order=order,
-                                page=page,
                                 pages=pages)
 
     else:
@@ -476,7 +497,7 @@ def concordance(language_id=None, translation_id=None, searchItem=None, searchOp
         # translation_id = form.translation1.data
         language_id = request.form['language1']
         translation_id = request.form['translation1']
-        searchItem = form.search.data
+        searchItem = form.search.data.replace('/', '%2F').replace('.', '%2E').replace('#', '%23')
         searchOption = form.searchOptions.data
         case = form.caseSensitive.data
 
@@ -492,6 +513,8 @@ def concordance(language_id=None, translation_id=None, searchItem=None, searchOp
         text = list(db.engine.execute(f'SELECT b.title, a.chapter, a.verse, a.text \
             FROM texts a LEFT JOIN books b ON a.book_code = b.code WHERE \
             translation_id = {translation_id}'))
+
+        searchItem = searchItem.replace('%2F', '/').replace('%2E', '.').replace('%23', '#')
 
         if searchItem == None: ###Edit
             searchItem = form.search.data
@@ -757,6 +780,7 @@ def concordance(language_id=None, translation_id=None, searchItem=None, searchOp
 
 ###TO DO: Some verse numbers have letters (3a, 3b)
 ###TO DO: Shitty verse numbering (21, 2, 3,.. 20, 22 in Afrikaans NLV)
+###TO DO: Remove footnotes with # from some verses
 ###TO DO: Move scripts to separate files
 ###TO DO: Fix translation names in the database
 ###TO DO: Concordance: separate colons ("22 :14")
@@ -764,3 +788,8 @@ def concordance(language_id=None, translation_id=None, searchItem=None, searchOp
 ###TO DO: JavaScript for dropdown lists
 ###TO DO: Separate punctuation from words for all languages
 ###TO DO: Concordance: case sensitivity is not working!!
+
+###TO DO: Make a new db with translation names edited as below:
+#translationList = [(tran.id,
+#    tran.translation.split('--')[1].split('_(')[0].replace('_', ' '))
+#    for tran in Translation.query.filter_by(language_id=8).all()]
