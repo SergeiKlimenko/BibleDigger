@@ -29,12 +29,12 @@ class browseForm(FlaskForm):
 
 class verseSearchForm(FlaskForm):
 
-    language1 = SelectField('language', choices=languageChoices, coerce=int, validators=[DataRequired()])
-    translation1 = SelectField('translation', coerce=int, validators=[DataRequired()], validate_choice=False)
+    # language1 = SelectField('language', choices=languageChoices, coerce=int, validators=[DataRequired()])
+    # translation1 = SelectField('translation', coerce=int, validators=[DataRequired()], validate_choice=False)
 
-    book = SelectField('book', validators=[DataRequired()])
-    chapter = SelectField('chapter', coerce=int, validate_choice=False)
-    verse = SelectField('verse', coerce=int, validate_choice=False)
+    # book = SelectField('book', validators=[DataRequired()])
+    # chapter = SelectField('chapter', coerce=int, validate_choice=False)
+    # verse = SelectField('verse', coerce=int, validate_choice=False)
 
     anotherVerse = BooleanField('Add another verse?')
 
@@ -43,15 +43,15 @@ class verseSearchForm(FlaskForm):
 
 class parallelVerseSearchForm(FlaskForm):
 
-    language1 = SelectField('language', choices=languageChoices, coerce=int, validators=[DataRequired()])
-    translation1 = SelectField('translation', coerce=int, validators=[DataRequired()], validate_choice=False)
+    # language1 = SelectField('language', choices=languageChoices, coerce=int, validators=[DataRequired()])
+    # translation1 = SelectField('translation', coerce=int, validators=[DataRequired()], validate_choice=False)
 
-    language2 = SelectField('language', choices=languageChoices, coerce=int)
-    translation2 = SelectField('translation', coerce=int, validate_choice=False)
+    # language2 = SelectField('language', choices=languageChoices, coerce=int)
+    # translation2 = SelectField('translation', coerce=int, validate_choice=False)
 
-    book = SelectField('book', validators=[DataRequired()])
-    chapter = SelectField('chapter', coerce=int, validate_choice=False)
-    verse = SelectField('verse', coerce=int, validate_choice=False)
+    # book = SelectField('book', validators=[DataRequired()])
+    # chapter = SelectField('chapter', coerce=int, validate_choice=False)
+    # verse = SelectField('verse', coerce=int, validate_choice=False)
 
     anotherVerse = BooleanField('Add another verse?')
 

@@ -7,7 +7,12 @@ var lang_select2 = document.getElementById("language2");
 var tran_select2 = document.getElementById("translation2");
 
 
-function populateList(list1, list2, list2Name, anchor=1, input=0, list3=0, list4=0, list5=0) {
+if (document.getElementsByClassName('nav-item nav-link active')[0] !== undefined) {
+    document.getElementsByClassName('nav-item nav-link active')[0].classList.remove('active');
+};
+
+
+function populateList(list1, list2, list2Name, anchor=1, input=0, list3=0, list4=0, list5=0, book=null, chapter=null) {
 
     var l2Name;
     if (list2Name.startsWith('translation')) {
@@ -16,12 +21,18 @@ function populateList(list1, list2, list2Name, anchor=1, input=0, list3=0, list4
         l2Name = list2Name;
     };
 
-    fetch(`/${l2Name}/` + anchor).then(function(response) {
+    var route = `/${l2Name}/` + anchor;
+    if (list2Name === 'chapter') {
+        route += `/${book_select.value}`;
+    } else if (list2Name === 'verse') {
+        route += `/${book_select.value}/${chapter_select.value}`;
+    };
+
+    fetch(route).then(function(response) {
 
         response.json().then(function(data) {
 
             var optionHTML = '';
-
             for (var item of data.items) {
                 optionHTML += '<option value="' + item.id + '">' + item.item + '</option>';
             }
@@ -33,20 +44,27 @@ function populateList(list1, list2, list2Name, anchor=1, input=0, list3=0, list4
             var itemId;
             if (input === 0) {
                 itemId = list2[0].value;
-                if (anchor !== 1) {
+                if (list2Name === 'book') {
+                    book = itemId;
+                } else if (list2Name === 'chapter') {
+                    chapter = itemId;
+                } else {
                     anchor = itemId;
                 };
+
             } else {
                 if (list2Name.startsWith('translation')) {
                     itemId = input[0];
+                    anchor = itemId;
                 } else if (list2Name === 'book') {
                     itemId = input[1];
+                    book = itemId;
                 } else if (list2Name === 'chapter') {
                     itemId = input[2];
+                    chapter = itemId;
                 } else if (list2Name === 'verse') {
                     itemId = input[3];
                 };
-                anchor = itemId;
             };
 
             $(`#${list2Name}`).selectpicker('val', itemId);
@@ -55,9 +73,9 @@ function populateList(list1, list2, list2Name, anchor=1, input=0, list3=0, list4
                     book_select, chapter_select, verse_select);
             } else if (list2Name === 'book' && chapter_select !== null) {
                 populateList(book_select, chapter_select, 'chapter', anchor, input,
-                    chapter_select, verse_select);
+                    chapter_select, verse_select, list5=0, book);
             } else if (list2Name === 'chapter') {
-                populateList(chapter_select, verse_select, 'verse', anchor, input);
+                populateList(chapter_select, verse_select, 'verse', anchor, input, list3=0, list4=0, list5=0, book,  chapter);
             };
         });
     });
@@ -81,6 +99,7 @@ function render(aggreg, page, baseLink) {
 
     var html = ``;
 
+    // Concordance
     if (aggreg[1][0].length === 6 || aggreg[1][0].length === 5) {
         for (line of aggreg[page]) {
             var link = baseLink;
@@ -107,33 +126,62 @@ function render(aggreg, page, baseLink) {
               </div>
             `
         };
+    // WordList
     } else if (aggreg[1][0].length === 3) {
-        html += `<div class="row">
-                  <div class="col-1">
-                    <p>rank</p>
-                  </div>
-                  <div class="col-2">
-                    <p>word</p>
-                  </div>
-                  <div class="col-2">
-                    <p>frequency</p>
-                  </div>
-                </div>
-                `;
-        for (item of aggreg[page]) {
-            var link = baseLink.replace('WORD', `${item[2]}`);
+        if (aggreg[1].length > 1) {
             html += `<div class="row">
-                      <div class="col-1">
-                        <p>${item[0]}</p>
+                      <div class="col">
+                        <div class="col-1">
+                          <p>rank</p>
+                        </div>
+                        <div class="col-2">
+                          <p>word</p>
+                        </div>
+                        <div class="col-2">
+                          <p>frequency</p>
+                        </div>
                       </div>
-                      <div class="col-2">
-                        <p><a href=${link}>${item[2]}</a></p>
-                      </div>
-                      <div class="col-2">
-                        <p>${item[1]}</p>
+                      <div class="col">
+                        <div class="col-1">
+                          <p>rank</p>
+                        </div>
+                        <div class="col-2">
+                          <p>word</p>
+                        </div>
+                        <div class="col-2">
+                          <p>frequency</p>
+                        </div>
                       </div>
                     </div>
                     `;
+        } else {
+            html += `<div class="row">
+                      <div class="col-1">
+                        <p>rank</p>
+                      </div>
+                      <div class="col-2">
+                        <p>word</p>
+                      </div>
+                      <div class="col-2">
+                        <p>frequency</p>
+                      </div>
+                    </div>
+                    `;
+            for (item of aggreg[page]) {
+                var link = baseLink.replace('WORD', `${item[2]}`);
+                html += `<div class="row">
+                          <div class="col-1">
+                            <p>${item[0]}</p>
+                          </div>
+                          <div class="col-2">
+                            <p><a href=${link}>${item[2]}</a></p>
+                          </div>
+                          <div class="col-2">
+                            <p>${item[1]}</p>
+                          </div>
+                        </div>
+                        `;
+            };
         };
     };
 

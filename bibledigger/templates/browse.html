@@ -7,7 +7,6 @@
       position: relative;
       padding-top: 75px;
     }
-
   </style>
 {% endblock %}
 
@@ -33,11 +32,12 @@
   <form method="POST">
     {{form.csrf_token}}
     {% if parallelOrNot == 1 %}
-    <p>Select a translation</p>
+
     <div class="form-group">
-      <div class="form-row">
+      <div class="form-row mt-4">
 
         <div class="col">
+          <label for="language1">Language</label>
           <select class="selectpicker" data-live-search="true" data-live-search-normalize="true" data-width="90px" data-style='' data-style-base='form-control form-control-sm' id="language1" name="language1">
             {% for language in languageChoices %}
               <option value="{{ language[0] }}">{{ language[1] }}</option>
@@ -46,6 +46,7 @@
         </div>
 
         <div class="col">
+          <label for="translation1">Translation</label>
           <select class="selectpicker" data-live-search="true" data-live-search-normalize="true" data-width="90px" data-style='' data-style-base='form-control form-control-sm' id="translation1" name="translation1">
           </select>
         </div>
@@ -53,11 +54,12 @@
       </div>
     </div>
     {% elif parallelOrNot == 2 %}
-      <p>Primary translation</p>
+
       <div class="form-group">
-        <div class="form-row">
+        <div class="form-row mt-4">
 
           <div class="col">
+            <label for="language1">Language 1</label>
             <select class="selectpicker" data-live-search="true" data-live-search-normalize="true" data-width="90px" data-style='' data-style-base='form-control form-control-sm' id="language1" name="language1">
               {% for language in languageChoices %}
                 <option value="{{ language[0] }}">{{ language[1] }}</option>
@@ -66,6 +68,7 @@
           </div>
 
           <div class="col">
+            <label for="translation1">Translation 1</label>
             <select class="selectpicker" data-live-search="true" data-live-search-normalize="true" data-width="90px" data-style='' data-style-base='form-control form-control-sm' id="translation1" name="translation1">
             </select>
           </div>
@@ -74,11 +77,11 @@
       </div>
       <hr>
 
-    <p>Secondary translation</p>
       <div class="form-group">
         <div class="form-row">
 
           <div class="col">
+            <label for="language2">Language 2</label>
             <select class="selectpicker" data-live-search="true" data-live-search-normalize="true" data-width="90px" data-style='' data-style-base='form-control form-control-sm' id="language2" name="language2">
               {% for language in languageChoices %}
                 <option value="{{ language[0] }}">{{ language[1] }}</option>
@@ -87,6 +90,7 @@
           </div>
 
           <div class="col">
+            <label for="translation2">Translation 2</label>
             <select class="selectpicker" data-live-search="true" data-live-search-normalize="true" data-width="90px" data-style='' data-style-base='form-control form-control-sm' id="translation2" name="translation2">
             </select>
           </div>
@@ -97,6 +101,7 @@
       <hr>
 
       <div class="form-group">
+        <label for="book">Book</label>
         <select class="selectpicker" data-live-search="true" data-live-search-normalize="true" data-width="190px" data-style='' data-style-base='form-control form-control-sm' id="book" name="book">
         </select>
       </div>
@@ -111,6 +116,9 @@
 
   <script src="{{url_for('static', filename='scripts.js')}}"></script>
   <script>
+
+      document.getElementById('browse').classList.add('active');
+
       lang_select.onchange = function() {
           populateList(lang_select, tran_select, 'translation1', lang_select.value);
       };

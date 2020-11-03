@@ -29,50 +29,95 @@
   <form method="POST">
     {{ form.csrf_token }}
     {% if parallelOrNot == 1 %}
-      <p>Select a translation</p>
-      <div class="form-row">
+
+      <div class="form-row mt-4">
+
         <div class="col">
-          {{ wtf.form_field(form.language1, class="form-control form-control-sm") }}
+          <label for="language1">Language</label>
+          <select class="selectpicker" data-live-search="true" data-live-search-normalize="true" data-width="90px" data-style='' data-style-base='form-control form-control-sm' id="language1" name="language1">
+            {% for language in languageChoices %}
+              <option value="{{ language[0] }}">{{ language[1] }}</option>
+            {% endfor %}
+          </select>
           </div>
+
         <div class="col">
-          {{ wtf.form_field(form.translation1, class="form-control form-control-sm") }}
+          <label for="translation1">Translation</label>
+          <select class="selectpicker" data-live-search="true" data-live-search-normalize="true" data-width="90px" data-style='' data-style-base='form-control form-control-sm' id="translation1" name="translation1">
+          </select>
         </div>
+
       </div>
     {% elif parallelOrNot == 2 %}
-      <p>Primary translation</p>
-      <div class="form-row">
+
+      <div class="form-row mt-4">
+
         <div class="col">
-          {{ wtf.form_field(form.language1, class="form-control form-control-sm") }}
+          <label for="language1">Language 1</label>
+          <select class="selectpicker" data-live-search="true" data-live-search-normalize="true" data-width="90px" data-style='' data-style-base='form-control form-control-sm' id="language1" name="language1">
+            {% for language in languageChoices %}
+              <option value="{{ language[0] }}">{{ language[1] }}</option>
+            {% endfor %}
+          </select>
         </div>
+
         <div class="col">
-          {{ wtf.form_field(form.translation1, class="form-control form-control-sm") }}
+          <label for="translation1">Translation 1</label>
+          <select class="selectpicker" data-live-search="true" data-live-search-normalize="true" data-width="90px" data-style='' data-style-base='form-control form-control-sm' id="translation1" name="translation1">
+          </select>
         </div>
+
       </div>
       <hr>
 
       <div class="form-group">
-      <p>Secondary translation</p>
+
       <div class="form-row">
+
         <div class="col">
-          {{ wtf.form_field(form.language2, class="form-control form-control-sm") }}
+          <label for="language2">Language 2</label>
+          <select class="selectpicker" data-live-search="true" data-live-search-normalize="true" data-width="90px" data-style='' data-style-base='form-control form-control-sm' id="language2" name="language2">
+            {% for language in languageChoices %}
+              <option value="{{ language[0] }}">{{ language[1] }}</option>
+            {% endfor %}
+          </select>
         </div>
+
         <div class="col">
-        {{ wtf.form_field(form.translation2, class="form-control form-control-sm") }}
+          <label for="translation2">Translation 2</label>
+          <select class="selectpicker" data-live-search="true" data-live-search-normalize="true" data-width="90px" data-style='' data-style-base='form-control form-control-sm' id="translation2" name="translation2">
+          </select>
         </div>
+
       </div>
       </div>
     {% endif %}
     <hr>
+
     <div class="form-group">
       <div class="form-row">
+
         <div class="col">
-          {{ wtf.form_field(form.book, class="form-control form-control-sm") }}
+          <label for="book">Book</label>
+          <select class="selectpicker" data-live-search="true" data-live-search-normalize="true" data-width="90px" data-style='' data-style-base='form-control form-control-sm' id="book" name="book">
+          </select>
         </div>
+
         <div class="col">
-        {{ wtf.form_field(form.chapter, class="form-control form-control-sm") }}
-        </div>
-        <div class="col">
-        {{ wtf.form_field(form.verse, class="form-control form-control-sm") }}
+          <div class="form-row">
+
+            <div class="col">
+              <label for="chapter">Ch.</label>
+              <select class="selectpicker" data-live-search="true" data-live-search-normalize="true" data-width="45px" data-style='' data-style-base='form-control form-control-sm' id="chapter" name="chapter">
+              </select>
+            </div>
+
+            <div class="col">
+              <label for="verse">V.</label>
+              <select class="selectpicker" data-live-search="true" data-live-search-normalize="true" data-width="45px" data-style='' data-style-base='form-control form-control-sm' id="verse" name="verse">
+              </select>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -85,212 +130,59 @@
     </div>
   </form>
 
+  <script src="{{url_for('static', filename='scripts.js')}}"></script>
   <script>
-        var lang_select = document.getElementById("language1");
-        var tran_select = document.getElementById("translation1");
-        var book_select = document.getElementById("book");
-        var chapter_select = document.getElementById("chapter");
-        var verse_select = document.getElementById("verse");
 
+      document.getElementById('verseSearch').classList.add('active');
+
+      lang_select.onchange = function() {
+          populateList(lang_select, tran_select, 'translation1', lang_select.value, 0, book_select, chapter_select, verse_select);
+      };
+      tran_select.onchange = function() {
+          populateList(tran_select, book_select, 'book', tran_select.value, 0, chapter_select, verse_select);
+      };
+      book_select.onchange = function() {
+          populateList(book_select, chapter_select, 'chapter', tran_select.value, 0, verse_select);
+      };
+      chapter_select.onchange = function() {
+          populateList(chapter_select, verse_select, 'verse', tran_select.value);
+      };
+
+      if (lang_select2 !== null) {
+          lang_select2.onchange = function() {
+          populateList(lang_select2, tran_select2, 'translation2', lang_select2.value);
+          };
+      };
+
+
+      {% if verseToRender is defined %}
+          var inputList = {{ verseToRender|tojson }};
+
+          let anotherVerse = document.getElementById('anotherVerse');
+          if (anotherVerse.hasAttribute('checked').toString() != "{{ anotherVerse }}".toLowerCase()) {
+              anotherVerse.toggleAttribute('checked');
+          };
+
+          $('#language1').selectpicker('val', inputList[0][3][1]);
+          populateList(lang_select, tran_select, 'translation1', lang_select.value, [inputList[0][4][1], inputList[0][0][1], inputList[0][1], inputList[0][2]]);
+          if (lang_select2 !== null) {
+              $('#language2').selectpicker('val', inputList[0][5][1]);
+              populateList(lang_select2, tran_select2, 'translation2', lang_select2.value, [inputList[0][6][1]]);
+          }
+      {% else %}
+          populateList(lang_select, tran_select, 'translation1');
+          if (lang_select2 !== null) {
+              populateList(lang_select2, tran_select2, 'translation2');
+          };
+      {% endif %}
+
+
+  </script>
 
-        lang_select.onchange = function()  {
-
-            language1 = lang_select.value;
-
-            fetch('/translation1/' + language1).then(function(response) {
-
-                response.json().then(function(data) {
-                    var optionHTML = '';
-
-                    for (var translation of data.translations) {
-                        optionHTML += '<option value="' + translation.id + '">' + translation.translation + '</option>';
-                    }
-
-                    tran_select.innerHTML = optionHTML;
-
-                    translation1 = tran_select.value;
-
-                    fetch('/book/' + translation1).then(function(response) {
-
-                        response.json().then(function(data) {
-                            var optionHTML = '';
-
-                            for (var book of data.books) {
-                                optionHTML += '<option value="' + book.id + '">' + book.book + '</option>';
-                            }
-
-                            book_select.innerHTML = optionHTML;
-
-                            book = book_select.value;
-
-                            fetch('/chapter/' + book + '/' + translation1).then(function(response) {
-
-                                response.json().then(function(data) {
-                                    var optionHTML = '';
-
-                                    for (var chapter of data.chapters) {
-                                        optionHTML += '<option value="' + chapter.id + '">' + chapter.chapter + '</option>';
-                                    }
-
-                                    chapter_select.innerHTML = optionHTML;
-
-                                    chapter = chapter_select.value;
-
-                                    fetch('/verse/' + chapter + '/' + book + '/' + translation1).then(function(response) {
-
-                                        response.json().then(function(data) {
-                                            var optionHTML = '';
-
-                                            for (var verse of data.verses) {
-                                                optionHTML += '<option value="' + verse.id + '">' + verse.verse + '</option>';
-                                            }
-
-                                            verse_select.innerHTML = optionHTML;
-                                        })
-                                    });
-                                })
-                            });
-                        })
-                    });
-                })
-            });
-        }
-
-
-        tran_select.onchange = function()  {
-
-            translation1 = tran_select.value;
-
-            fetch('/book/' + translation1).then(function(response) {
-
-                response.json().then(function(data) {
-                    var optionHTML = '';
-
-                    for (var book of data.books) {
-                        optionHTML += '<option value="' + book.id + '">' + book.book + '</option>';
-                    }
-
-                    book_select.innerHTML = optionHTML;
-
-                    book = book_select.value;
-
-                    fetch('/chapter/' + book + '/' + translation1).then(function(response) {
-
-                        response.json().then(function(data) {
-                            var optionHTML = '';
-
-                            for (var chapter of data.chapters) {
-                                optionHTML += '<option value="' + chapter.id + '">' + chapter.chapter + '</option>';
-                            }
-
-                            chapter_select.innerHTML = optionHTML;
-
-                            chapter = chapter_select.value;
-
-                            fetch('/verse/' + chapter + '/' + book + '/' + translation1).then(function(response) {
-
-                                response.json().then(function(data) {
-                                    var optionHTML = '';
-
-                                    for (var verse of data.verses) {
-                                        optionHTML += '<option value="' + verse.id + '">' + verse.verse + '</option>';
-                                    }
-
-                                    verse_select.innerHTML = optionHTML;
-                                })
-                            });
-                        })
-                    });
-                })
-            });
-        }
-
-        book_select.onchange = function()  {
-
-            book = book_select.value;
-            translation1 = tran_select.value;
-
-            fetch('/chapter/' + book + '/' + translation1).then(function(response) {
-
-                response.json().then(function(data) {
-                    var optionHTML = '';
-
-                    for (var chapter of data.chapters) {
-                        optionHTML += '<option value="' + chapter.id + '">' + chapter.chapter + '</option>';
-                    }
-
-                    chapter_select.innerHTML = optionHTML;
-
-                    chapter = chapter_select.value;
-
-                    fetch('/verse/' + chapter + '/' + book + '/' + translation1).then(function(response) {
-
-                        response.json().then(function(data) {
-                            var optionHTML = '';
-
-                            for (var verse of data.verses) {
-                                optionHTML += '<option value="' + verse.id + '">' + verse.verse + '</option>';
-                            }
-
-                            verse_select.innerHTML = optionHTML;
-                        })
-                    });
-                })
-            });
-        }
-
-        chapter_select.onchange = function()  {
-
-            chapter = chapter_select.value;
-            book = book_select.value;
-            translation1 = tran_select.value;
-
-            fetch('/verse/' + chapter + '/' + book + '/' + translation1).then(function(response) {
-
-                response.json().then(function(data) {
-                    var optionHTML = '';
-
-                    for (var verse of data.verses) {
-                        optionHTML += '<option value="' + verse.id + '">' + verse.verse + '</option>';
-                    }
-
-                    verse_select.innerHTML = optionHTML;
-                })
-
-            });
-        }
-    </script>
-
-
-    {% if parallelOrNot == 2 %}
-      <script>
-            var lang_select2 = document.getElementById("language2");
-            var tran_select2 = document.getElementById("translation2");
-
-            lang_select2.onchange = function()  {
-
-                language2 = lang_select2.value;
-
-                fetch('/translation1/' + language2).then(function(response) {
-
-                    response.json().then(function(data) {
-                        var optionHTML = '';
-
-                        for (var translation of data.translations) {
-                            optionHTML += '<option value="' + translation.id + '">' + translation.translation + '</option>';
-                        }
-
-                        tran_select2.innerHTML = optionHTML;
-                    })
-
-                });
-            }
-        </script>
-    {% endif %}
 {% endblock %}
 
 {% block content %}
-<div class="container">
+<div class="container mt-4 mb-3">
   {% if anotherVerse == False %}
     {% for verse in verseToRender %}
       <div class="row">
@@ -298,27 +190,27 @@
         </div>
         {% if parallelOrNot == 1 %}
           <div class="col">
-            <p>{{ verse[2] + ": " + verse[3] }}</p>
+            <p>{{ verse[3][0] + ": " + verse[4][0] }}</p>
           </div>
         {% elif parallelOrNot == 2 %}
           <div class="col">
-            <p>{{ verse[3] + ": " + verse[4] }}</p>
+            <p>{{ verse[3][0] + ": " + verse[4][0] }}</p>
           </div>
           <div class="col">
-            <p>{{ verse[5] + ": " + verse[6] }}</p>
+            <p>{{ verse[5][0] + ": " + verse[6][0] }}</p>
           </div>
         {% endif %}
       </div>
       <div class="row">
         <div class="col-2">
-          <p>{{ verse[0] }}</p>
+          <p>{{ verse[0][0] }}</p>
         </div>
         <div class="col">
-          <p>{{ verse[1] }}</p>
+          <p>{{ verse[-1] }}</p>
         </div>
         {% if parallelOrNot == 2 %}
           <div class="col">
-            <p>{{ verse[2] }}</p>
+            <p>{{ verse[7] }}</p>
           </div>
         {% endif %}
       </div>
@@ -329,14 +221,14 @@
     {% for verse in verseToRender %}
     <div class="row">
       <div class="col-2">
-        <p>{{ verse[0] + " " + verse[1]|string + ":" + verse[2]|string }}</p>
+        <p>{{ verse[0][0] + " " + verse[1]|string + ":" + verse[2]|string }}</p>
       </div>
       <div class="col">
-        <p>{{ verse[3] + ": " + verse[4] }}</p>
+        <p>{{ verse[3][0] + ": " + verse[4][0] }}</p>
       </div>
     {% if parallelOrNot == 2 %}
       <div class="col">
-        <p>{{ verse[5] + ": " + verse[6] }}</p>
+        <p>{{ verse[5][0] + ": " + verse[6][0] }}</p>
       </div>
     {% endif %}
     </div>

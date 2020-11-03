@@ -9,6 +9,7 @@
     <div class="form-row">
 
       <div class="col">
+        <label for="language1">Language</label>
         <select class="selectpicker" data-live-search="true" data-live-search-normalize="true" data-width="90px" data-style='' data-style-base='form-control form-control-sm' id="language1" name="language1">
           {% for language in languageChoices %}
             <option value="{{ language[0] }}">{{ language[1] }}</option>
@@ -17,6 +18,7 @@
       </div>
 
       <div class="col">
+        <label for="translation1">Translation</label>
         <select class="selectpicker" data-live-search="true" data-live-search-normalize="true" data-width="90px" data-style='' data-style-base='form-control form-control-sm' id="translation1" name="translation1"></select>
       </div>
 
@@ -51,6 +53,8 @@
   <script src="{{url_for('static', filename='scripts.js')}}"></script>
   <script>
 
+    document.getElementById('wordList').classList.add('active');
+
     lang_select.onchange = function() {
         populateList(lang_select, tran_select, 'translation1', lang_select.value);
     };
@@ -83,8 +87,8 @@
 {% block content %}
 <div class="container mt-4 mb-3 ml-1">
   {% if wordsLength == 0 %}
-    <h3>Nothing found</h3>
-    <p>Please, try to change search criteria</p>
+    <h1>Sorry</h1>
+    <h3>Nothing found. Please, try to change your search criteria.</h3>
   {% elif wordsLength > 0 %}
     <div class="row justify-content-center">
       {% if wordsLength == 1 %}

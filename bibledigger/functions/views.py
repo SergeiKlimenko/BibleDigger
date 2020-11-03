@@ -78,7 +78,9 @@ def browse(parallelOrNot, language_id=None, translation_id=None, verseCode=None)
 
 
 @functions.route('/<target>/<anchor>')
-def newList(target, anchor):
+@functions.route('/<target>/<anchor>/<book>')
+@functions.route('/<target>/<anchor>/<book>/<chapter>')
+def newList(target, anchor, book=None, chapter=None):
     if target == 'translation':
         items = list(db.engine.execute(f"SELECT DISTINCT id, translation \
             FROM translations WHERE language_id = {anchor}"))
@@ -86,6 +88,14 @@ def newList(target, anchor):
         items = list(db.engine.execute(f"SELECT DISTINCT a.book_code, b.title \
             FROM texts a LEFT JOIN books b ON a.book_code = b.code \
               WHERE translation_id = {anchor}"))
+    elif target == 'chapter':
+        items = list(db.engine.execute(f"SELECT DISTINCT chapter, chapter \
+            FROM texts WHERE translation_id = {anchor} AND \
+            book_code = '{book}' ORDER BY id"))
+    elif target == 'verse':
+        items = list(db.engine.execute(f"SELECT DISTINCT verse, verse \
+            FROM texts WHERE translation_id = {anchor} AND \
+            book_code = '{book}' AND chapter = '{chapter}' ORDER BY id"))
 
     itemArray = []
 
@@ -100,12 +110,14 @@ def newList(target, anchor):
 
 @functions.route('/verseSearch/<int:parallelOrNot>/', methods=['GET', 'POST'])
 @functions.route('/verseSearch/<int:parallelOrNot>/<verseList>', methods=['GET', 'POST'])
-def verseSearch(parallelOrNot, verseList=None):
+def verseSearch(parallelOrNot, verseList=None, input=None):
 
     if parallelOrNot == 1:
         form = verseSearchForm()
     elif parallelOrNot == 2:
         form = parallelVerseSearchForm()
+
+    languageChoices = [(lang.id, lang.language) for lang in Language.query.all()]
 
     #Convert string representation of verse list from route into list
     def processVerseList(verseList, fullProcess):
@@ -118,67 +130,30 @@ def verseSearch(parallelOrNot, verseList=None):
                     WHERE id = {verse[3]}").fetchone().language
                 translation1 = db.engine.execute(f"SELECT translation FROM translations \
                     WHERE id = {verse[4]}").fetchone().translation
-                verse[0] = book
-                verse[3] = language1
-                verse[4] = translation1
+                verse[0] = (book, verse[0])
+                verse[3] = (language1, verse[3])
+                verse[4] = (translation1, verse[4])
                 if parallelOrNot == 2:
                     language2 = db.engine.execute(f"SELECT language FROM languages \
                         WHERE id = {verse[5]}").fetchone().language
                     translation2 = db.engine.execute(f"SELECT translation FROM translations \
                         WHERE id = {verse[6]}").fetchone().translation
-                    verse[5] = language2
-                    verse[6] = translation2
+                    verse[5] = (language2, verse[5])
+                    verse[6] = (translation2, verse[6])
 
         return verseList
-
-    if form.language1.data == None:
-        form.translation1.choices = [(tran.id, tran.translation) for tran
-            in Translation.query.filter_by(language_id=1).all()]
-        if parallelOrNot == 2:
-            form.translation2.choices = [(tran.id, tran.translation) for tran
-                in Translation.query.filter_by(language_id=1).all()]
-        form.book.choices = [(book.book_code, book.title) for book
-            in Text.query.filter_by(translation_id=1).distinct(Text.book_code).
-            join(Book).with_entities(Text.book_code, Book.title).all()]
-        form.chapter.choices = [(verse.chapter, verse.chapter) for verse
-            in list(db.engine.execute("SELECT DISTINCT chapter FROM texts \
-            WHERE translation_id = 1 AND book_code = 'GEN' ORDER BY id"))]
-        form.verse.choices = [(verse.verse, verse.verse) for verse
-            in list(db.engine.execute(f"SELECT DISTINCT verse FROM texts \
-            WHERE translation_id = 1 AND book_code = 'GEN' AND chapter = 1 \
-            ORDER BY id"))]
-
-    else:
-        form.translation1.choices = [(tran.id, tran.translation) for tran
-            in Translation.query.filter_by(language_id=form.language1.data).all()]
-        if parallelOrNot == 2:
-            form.translation2.choices = [(tran.id, tran.translation) for tran
-                in Translation.query.filter_by(language_id=form.language2.data).all()]
-        form.book.choices = [(book.book_code, book.title) for book
-            in Text.query.filter_by(translation_id=form.translation1.data).
-            distinct(Text.book_code).join(Book).with_entities(Text.book_code,
-            Book.title).all()]
-        form.chapter.choices = [(verse.chapter, verse.chapter) for verse
-            in list(db.engine.execute(f"SELECT DISTINCT chapter FROM texts \
-            WHERE translation_id = {form.translation1.data} AND \
-            book_code = '{form.book.data}' ORDER BY id"))]
-        form.verse.choices = [(verse.verse, verse.verse) for verse
-            in list(db.engine.execute(f"SELECT DISTINCT verse FROM texts \
-            WHERE translation_id = {form.translation1.data} AND book_code = \
-            '{form.book.data}' AND chapter = {form.chapter.data} \
-            ORDER BY id"))]
 
     if form.validate_on_submit():
 
         anotherVerse = form.anotherVerse.data
 
         if parallelOrNot == 1:
-            verse = [form.book.data, form.chapter.data, form.verse.data,
-                form.language1.data, form.translation1.data]
+            verse = [request.form['book'], request.form['chapter'], request.form['verse'],
+                request.form['language1'], request.form['translation1']]
         elif parallelOrNot == 2:
-            verse = [form.book.data, form.chapter.data, form.verse.data,
-                form.language1.data, form.translation1.data, form.language2.data,
-                form.translation2.data]
+            verse = [request.form['book'], request.form['chapter'], request.form['verse'],
+                request.form['language1'], request.form['translation1'], request.form['language2'],
+                request.form['translation2']]
 
         if verseList == None:
             verseList = []
@@ -193,6 +168,7 @@ def verseSearch(parallelOrNot, verseList=None):
         if anotherVerse == True:
             return redirect(url_for('functions.verseSearch',
                                     verseList=verseList,
+                                    languageChoices=languageChoices,
                                     parallelOrNot=parallelOrNot))
 
         else:
@@ -201,13 +177,13 @@ def verseSearch(parallelOrNot, verseList=None):
 
             return redirect(url_for('functions.verseSearch',
                                     verseList=verseList,
+                                    languageChoices=languageChoices,
                                     parallelOrNot=parallelOrNot))
-            #return render_template('versesearch.html', form=form,
-            #    anotherVerse=anotherVerse, verseToRender=verseToRender, parallelOrNot=parallelOrNot)
 
     if verseList == None:
         return render_template('versesearch.html',
                                 form=form,
+                                languageChoices=languageChoices,
                                 parallelOrNot=parallelOrNot)
 
     else:
@@ -218,14 +194,7 @@ def verseSearch(parallelOrNot, verseList=None):
 
             verseToRender =[]
 
-            print('\n')
-            print("We're here")
-            print(verseList) ###delete
-            print('\n')
-
             for item in verseList:
-
-                print(item)###Delete
 
                 language1 = db.engine.execute(f"SELECT language FROM languages \
                     WHERE id = {item[3]}").fetchone().language
@@ -241,8 +210,8 @@ def verseSearch(parallelOrNot, verseList=None):
                         a.book_code = '{item[0]}' and a.chapter = '{item[1]}' and \
                         a.verse = '{item[2]}'").fetchone()
 
-                    verseToRender.append((verse.title + " " + verse.chapter + ":" +
-                        str(verse.verse), verse.text1, language1, translation1))
+                    verseToRender.append(((verse.title + " " + verse.chapter + ":" +
+                        str(verse.verse), item[0]), item[1], item[2], (language1, item[3]), (translation1, item[4]), verse.text1))
 
                 elif parallelOrNot == 2:
 
@@ -260,55 +229,26 @@ def verseSearch(parallelOrNot, verseList=None):
                     translation2 = db.engine.execute(f"SELECT translation FROM \
                         translations WHERE id = {item[6]}").fetchone().translation
 
-                    verseToRender.append((verse.title + " " + verse.chapter + ":" +
-                        str(verse.verse), verse.text1, verse.text2, language1,
-                        translation1, language2, translation2))
+                    verseToRender.append(((verse.title + " " + verse.chapter + ":" +
+                        str(verse.verse), item[0]), item[1], item[2], (language1, item[3]),
+                        (translation1, item[4]), (language2, item[5]), (translation2, item[6]), verse.text2, verse.text1))
 
             return render_template('versesearch.html',
                                     form=form,
+                                    languageChoices=languageChoices,
                                     anotherVerse=False,
                                     verseToRender=verseToRender,
                                     parallelOrNot=parallelOrNot)
 
         else:
             verseList = processVerseList(verseList, True)
+            print(verseList)
             return render_template('versesearch.html',
                                     form=form,
+                                    languageChoices=languageChoices,
                                     anotherVerse=True,
                                     verseToRender=verseList,
                                     parallelOrNot=parallelOrNot)
-
-
-@functions.route('/chapter/<book>/<translation_id>')
-def chapter(translation_id, book):
-    chapters = list(db.engine.execute(f"SELECT DISTINCT chapter \
-        FROM texts WHERE translation_id = {translation_id} AND \
-        book_code = '{book}' ORDER BY id"))
-    chapterArray = []
-
-    for chapter in chapters:
-        chapterObj = {}
-        chapterObj['id'] = chapter[0]
-        chapterObj['chapter'] = chapter[0]
-        chapterArray.append(chapterObj)
-
-    return jsonify({'chapters': chapterArray})
-
-
-@functions.route('/verse/<chapter>/<book>/<translation_id>')
-def verse(translation_id, book, chapter):
-    verses = list(db.engine.execute(f"SELECT DISTINCT verse \
-        FROM texts WHERE translation_id = {translation_id} AND \
-        book_code = '{book}' AND chapter = '{chapter}' ORDER BY id"))
-    verseArray = []
-
-    for verse in verses:
-        verseObj = {}
-        verseObj['id'] = verse[0]
-        verseObj['verse'] = verse[0]
-        verseArray.append(verseObj)
-
-    return jsonify({'verses': verseArray})
 
 
 @functions.route('/wordlist/', methods=['GET', 'POST'])
@@ -333,7 +273,7 @@ def wordList(language_id=None, translation_id=None, searchItem=None, searchOptio
         # translation_id=form.translation1.data ###delete
         language_id = request.form['language1']
         translation_id = request.form['translation1']
-        searchItem=form.search.data.replace('/', '%2F').replace('.', '%2E').replace('#', '%23')
+        searchItem=form.search.data.replace('/', '%2F').replace('.', '%2E').replace('#', '%23').replace("’", '%27')
         searchOption=form.searchOptions.data
         if searchOption == 'all':
             searchItem = "None"
@@ -360,7 +300,7 @@ def wordList(language_id=None, translation_id=None, searchItem=None, searchOptio
 
         fullText = Text.query.filter_by(translation_id=translation_id).with_entities(Text.text).all()
 
-        searchItem = searchItem.replace('%2F', '/').replace('%2E', '.').replace('%23', '#')
+        searchItem = searchItem.replace('%2F', '/').replace('%2E', '.').replace('%23', '#').replace('%27', "’")
         print(searchItem)
         print(searchOption)
 
@@ -369,6 +309,7 @@ def wordList(language_id=None, translation_id=None, searchItem=None, searchOptio
         for verse in fullText:
 
             verse = verse[0].replace('—', ' ').split()
+
             strippedVerse = []
             for word in verse:
                 if case == 'True':
@@ -497,7 +438,7 @@ def concordance(language_id=None, translation_id=None, searchItem=None, searchOp
         # translation_id = form.translation1.data
         language_id = request.form['language1']
         translation_id = request.form['translation1']
-        searchItem = form.search.data.replace('/', '%2F').replace('.', '%2E').replace('#', '%23')
+        searchItem = form.search.data.replace('/', '%2F').replace('.', '%2E').replace('#', '%23').replace("’", '%27')
         searchOption = form.searchOptions.data
         case = form.caseSensitive.data
 
@@ -514,7 +455,7 @@ def concordance(language_id=None, translation_id=None, searchItem=None, searchOp
             FROM texts a LEFT JOIN books b ON a.book_code = b.code WHERE \
             translation_id = {translation_id}'))
 
-        searchItem = searchItem.replace('%2F', '/').replace('%2E', '.').replace('%23', '#')
+        searchItem = searchItem.replace('%2F', '/').replace('%2E', '.').replace('%23', '#').replace('%27', "’")
 
         if searchItem == None: ###Edit
             searchItem = form.search.data
