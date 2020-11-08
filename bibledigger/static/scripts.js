@@ -117,7 +117,7 @@ function render(aggreg, page, baseLink) {
                 <div class="col">
                   <p style="text-align: right">${line[1]}</p>
                 </div>
-                <div class="col-1">
+                <div class="col-sm-auto">
                   <p style="text-align: center">${line[2]}</p>
                 </div>
                 <div class="col">
@@ -128,61 +128,81 @@ function render(aggreg, page, baseLink) {
         };
     // WordList
     } else if (aggreg[1][0].length === 3) {
-        if (aggreg[1].length > 1) {
-            html += `<div class="row">
-                      <div class="col">
-                        <div class="col-1">
-                          <p>rank</p>
-                        </div>
-                        <div class="col-2">
-                          <p>word</p>
-                        </div>
-                        <div class="col-2">
-                          <p>frequency</p>
-                        </div>
-                      </div>
-                      <div class="col">
-                        <div class="col-1">
-                          <p>rank</p>
-                        </div>
-                        <div class="col-2">
-                          <p>word</p>
-                        </div>
-                        <div class="col-2">
-                          <p>frequency</p>
-                        </div>
-                      </div>
+
+      var wordListPage = {};
+
+      for (item of aggreg[page]) {
+          var link = baseLink.replace('WORD', `${item[2]}`);
+          wordListPage[`${aggreg[page].indexOf(item)}`] = `<div class="row">
+                    <div class="col-1">
+                      <p>${item[0]}</p>
                     </div>
-                    `;
-        } else {
-            html += `<div class="row">
+                    <div class="col-6">
+                      <p><a href=${link}>${item[2]}</a></p>
+                    </div>
+                    <div class="col-2">
+                      <p>${item[1]}</p>
+                    </div>
+                  </div>
+                  `;
+      };
+
+      var header = `<div class="row">
                       <div class="col-1">
-                        <p>rank</p>
+                        <p><b>rank</b></p>
+                      </div>
+                      <div class="col-6">
+                        <p><b>word</b></p>
                       </div>
                       <div class="col-2">
-                        <p>word</p>
-                      </div>
-                      <div class="col-2">
-                        <p>frequency</p>
+                        <p><b>frequency</b></p>
                       </div>
                     </div>
                     `;
-            for (item of aggreg[page]) {
-                var link = baseLink.replace('WORD', `${item[2]}`);
-                html += `<div class="row">
-                          <div class="col-1">
-                            <p>${item[0]}</p>
-                          </div>
-                          <div class="col-2">
-                            <p><a href=${link}>${item[2]}</a></p>
-                          </div>
-                          <div class="col-2">
-                            <p>${item[1]}</p>
-                          </div>
-                        </div>
-                        `;
-            };
-        };
+
+      if (aggreg[1].length > 1) {
+          html += `<div class="row">
+                    <div class="col">
+                      ${header}
+                    </div>
+                    <div class="col">
+                      ${header}
+                    </div>
+                  </div>
+                  `;
+
+          var halfStart;
+          var oddEvenLength = Object.keys(wordListPage).length % 2;
+          if (oddEvenLength === 0) {
+              halfStart = Object.keys(wordListPage).length / 2;
+          } else if (oddEvenLength === 1) {
+              halfStart = Math.ceil(Object.keys(wordListPage).length / 2);
+          };
+
+          for (var i = 0; i < halfStart; i++) {
+              if (oddEvenLength === 1 && i === halfStart - 1) {
+                  html += `<div class="row">
+                            <div class="col">
+                              ${wordListPage[i]}
+                            </div>
+                            <div class="col">
+                            </div>
+                          </div>`;
+              } else {html += `<div class="row">
+                                  <div class="col">
+                                    ${wordListPage[i]}
+                                  </div>
+                                  <div class="col">
+                                    ${wordListPage[halfStart + i]}
+                                  </div>
+                                </div>`;
+              };
+          };
+
+      } else {
+          html += header;
+          html += wordListPage[0];
+      };
     };
 
     var renderElement = document.getElementById('render');

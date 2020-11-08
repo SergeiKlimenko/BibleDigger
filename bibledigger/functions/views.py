@@ -4,6 +4,7 @@ from .forms import browseForm, verseSearchForm, parallelVerseSearchForm, \
                    wordListForm, concordanceForm
 from bibledigger.models import Book, Language, Translation, Text
 import json
+import re
 
 functions = Blueprint('functions', __name__)
 
@@ -261,16 +262,8 @@ def wordList(language_id=None, translation_id=None, searchItem=None, searchOptio
 
     languageChoices = [(lang.id, lang.language) for lang in Language.query.all()]
 
-    # if form.language1.data == None:
-    #     form.translation1.choices = [(tran.id, tran.translation) for tran
-    #         in Translation.query.filter_by(language_id=1).all()]
-    # else:
-    #     form.translation1.choices = [(tran.id, tran.translation) for tran
-    #         in Translation.query.filter_by(language_id=form.language1.data).all()]
-
     if form.validate_on_submit():
 
-        # translation_id=form.translation1.data ###delete
         language_id = request.form['language1']
         translation_id = request.form['translation1']
         searchItem=form.search.data.replace('/', '%2F').replace('.', '%2E').replace('#', '%23').replace("’", '%27')
@@ -285,6 +278,20 @@ def wordList(language_id=None, translation_id=None, searchItem=None, searchOptio
         if freqMax == None:
             freqMax = 0
         order=form.orderOptions.data
+
+        if searchItem == '' and searchOption != 'all':
+            return render_template('wordlist.html',
+                                    form=form,
+                                    languageChoices=languageChoices,
+                                    wordsLength=0,
+                                    language_id=language_id,
+                                    translation_id=translation_id,
+                                    searchItem=searchItem,
+                                    searchOption=searchOption,
+                                    case=case,
+                                    freqMin=freqMin,
+                                    freqMax=freqMax,
+                                    order=order)
 
         return redirect(url_for('functions.wordList',
                                 language_id=language_id,
@@ -301,8 +308,6 @@ def wordList(language_id=None, translation_id=None, searchItem=None, searchOptio
         fullText = Text.query.filter_by(translation_id=translation_id).with_entities(Text.text).all()
 
         searchItem = searchItem.replace('%2F', '/').replace('%2E', '.').replace('%23', '#').replace('%27', "’")
-        print(searchItem)
-        print(searchOption)
 
         verseList = []
 
@@ -312,13 +317,10 @@ def wordList(language_id=None, translation_id=None, searchItem=None, searchOptio
 
             strippedVerse = []
             for word in verse:
-                if case == 'True':
-                    ###TO DO: Add spaces for punctuation symbols, rather then strip them
-                    strippedVerse.append(word.strip(',.()[];:""“”?!—/\\-+=_<>¿»«').
-                        strip(",.()[];:''‘’‛“”?!—/\\-+=_<>"))
-                elif case == 'False':
-                    strippedVerse.append(word.lower().strip(',.()[];:""“”?!—/\\-+=_<>¿»«').
-                        strip(",.()[];:''‘’‛“”?!—/\\-+=_<>"))
+                ###TO DO: Add spaces for punctuation symbols, rather then strip them
+                strippedVerse.append(word.strip(',.()[];:""“”?!—/\\-+=_<>¿»«').
+                    strip(",.()[];:''‘’‛“”?!—/\\-+=_<>"))
+
             verseList += strippedVerse
 
         from collections import Counter
@@ -346,30 +348,31 @@ def wordList(language_id=None, translation_id=None, searchItem=None, searchOptio
 
         words = []
 
-        if case == False:
-            searchItem = searchItem.lower()
-
         ###TO DO: test thoroughly. A lot of bugs!!!
         if searchOption == 'all':
             words = sortedWordList
-        elif searchOption == 'start':
+        else:
             for word in sortedWordList:
-                if word[1].startswith(searchItem):
-                    words.append(word)
-        elif searchOption == 'end':
-            for word in sortedWordList:
-                if word[1].endswith(searchItem):
-                    words.append(word)
-        elif searchOption == 'cont':
-            for word in sortedWordList:
-                if searchItem in word[1]:
-                    words.append(word)
-        elif searchOption == 'regex':
-            import re
-            regex = re.compile(searchItem)
-            for word in sortedWordList:
-                if re.search(regex, word[1]):
-                    words.append(word)
+                if case == 'False':
+                    searchThis = searchItem.lower()
+                    testWord = word[1].lower()
+                else:
+                    searchThis = searchItem
+                    testWord = word[1]
+
+                if searchOption == 'start':
+                    if testWord.startswith(searchThis):
+                        words.append(word)
+                elif searchOption == 'end':
+                    if testWord.endswith(searchThis):
+                        words.append(word)
+                elif searchOption == 'cont':
+                    if searchThis in testWord:
+                        words.append(word)
+                elif searchOption == 'regex':
+                    regex = re.compile(searchThis)
+                    if re.search(regex, testWord):
+                        words.append(word)
 
         #Add ranks to the wordlist
         rank = 1
@@ -462,8 +465,6 @@ def concordance(language_id=None, translation_id=None, searchItem=None, searchOp
         ###Strip the search item to avoid searching just for whitespaces
         searchItem = searchItem.strip()
 
-        import re
-
         reSpecialSymbols = r'\\.^$*+?{}[]|()'
 
         ###Check if search item is regex to compile it accordingly
@@ -516,7 +517,7 @@ def concordance(language_id=None, translation_id=None, searchItem=None, searchOp
         middleSymbols = '—/\\+=_'
 
         verseCounter = 1
-        print(searchRegex)###delete
+
         for verse in text:
             verseText = verse[3]
             ###Add space between non-alphanumeric symbols and words
@@ -524,8 +525,8 @@ def concordance(language_id=None, translation_id=None, searchItem=None, searchOp
                 verseText = verseText.replace(symbol, symbol + ' ')
             for symbol in rightSymbols:
                 ###Skip adding spaces to numbers with ',' and '.'
-                if symbol in ',.':
-                    for commaDot in (',', '\.'):
+                if symbol in ',.:':
+                    for commaDot in (',', '\.', ':'):
                         if symbol == commaDot.strip('\\'):
                             listRE = list(re.finditer(commaDot, verseText))
                             counter = 0
@@ -538,11 +539,19 @@ def concordance(language_id=None, translation_id=None, searchItem=None, searchOp
                                 else:
                                     verseText = verseText[:start] + ' ' + verseText[start:]
                                     counter += 1
-                #################################################
                 else:
                     verseText = verseText.replace(symbol, ' ' + symbol)
+                #################################################
             for symbol in middleSymbols:
                 verseText = verseText.replace(symbol, ' ' + symbol + ' ')
+            ###insert a space into combinations like ':a', ';118:6'
+            if re.search(':\w', verseText):
+                for i in re.findall(':\w', verseText):
+                    if not i[1].isnumeric():
+                        verseText = verseText.replace(i, f'{i[0]} {i[1]}')
+            if re.search(';\w', verseText):
+                for i in re.findall(';\w', verseText):
+                    verseText = verseText.replace(i, f'{i[0]} {i[1]}')
 
             if case == 'False': #or form.caseSensitive.data == False:
                 found = list(re.finditer(searchRegex, verseText.lower()))
@@ -664,71 +673,12 @@ def concordance(language_id=None, translation_id=None, searchItem=None, searchOp
                                 case=case)
 
 
-# @functions.route('/<conc>/<options>')
-# def sort(conc, options):
-#
-#     colors = {'option1': 'DeepPink', 'option2': 'Lime', 'option3': 'Turquoise',
-#                         'option4': 'Indigo', 'option5': 'Blue', 'option6': 'Gold'}
-#
-#     for i in len(conc):
-#
-#         verseList = [[[verse[0], verse[1].split(), verse[2], verse[3].split(),
-#                         verse[4]], None, None, None, None, None, None] for verse in conc[i+1]]
-#
-#         for option in options:
-#
-#             if option.data != 'None':
-#                 for verse in verseList:
-#                     if int(option.data) == 0:
-#                         verse[options.index(option)+1] = verse[0][4]
-#                         verse[0][0] = f'<span class="{colors[option.name]}">{verse[0][0]}</span>'
-#                     elif int(option.data) == 2:
-#                         verse[options.index(option)+1] = verse[0][2].lower()
-#                         verse[0][2] = f'<span class="{colors[option.name]}">{verse[0][2]}</span>'
-#                     else:
-#                         try:
-#                             if option.data[0] == '3':
-#                                 kwicIndex = int(option.data[1])
-#                                 verse[options.index(option)+1] = verse[0][3][kwicIndex].lower()
-#                                 verse[0][3] = verse[0][3][:kwicIndex] + \
-#                                     [f'<span class="{colors[option.name]}">\
-#                                     {verse[0][3][kwicIndex]}</span>'] \
-#                                     + verse[0][3][kwicIndex+1:]
-#                             elif option.data[0] == '1':
-#                                 kwicIndex = int("-"+option.data[1])
-#                                 verse[options.index(option)+1] = verse[0][1][kwicIndex].lower()
-#                                 if kwicIndex != -1:
-#                                     verse[0][1] = verse[0][1][:kwicIndex] + \
-#                                         [f'<span class="{colors[option.name]}">\
-#                                         {verse[0][1][kwicIndex]}</span>'] + \
-#                                         verse[0][1][kwicIndex+1:]
-#                                 elif kwicIndex == -1:
-#                                     verse[0][1] = verse[0][1][:kwicIndex] + \
-#                                         [f'<span class="{colors[option.name]}">\
-#                                         {verse[0][1][kwicIndex]}</span>']
-#                         except IndexError:
-#                             verse[options.index(option)+1] = ' '
-#
-#         for index in range(len(verseList[0][1:])):
-#             if verseList[0][index+1] != None:
-#                 verseList.sort(key=lambda tup: tup[index+1])
-#
-#         conc[i+1] = [[entry[0][0], ' '.join(entry[0][1]), entry[0][2],
-#                             ' '.join(entry[0][3]), entry[0][4]] for entry in verseList]
-#
-#         return conc
-
-
 ###TO DO: Some verse numbers have letters (3a, 3b)
 ###TO DO: Shitty verse numbering (21, 2, 3,.. 20, 22 in Afrikaans NLV)
 ###TO DO: Remove footnotes with # from some verses
-###TO DO: Move scripts to separate files
 ###TO DO: Fix translation names in the database
 ###TO DO: Concordance: separate colons ("22 :14")
-###TO DO: Pagination or lazy loading
-###TO DO: JavaScript for dropdown lists
 ###TO DO: Separate punctuation from words for all languages
-###TO DO: Concordance: case sensitivity is not working!!
 
 ###TO DO: Make a new db with translation names edited as below:
 #translationList = [(tran.id,
