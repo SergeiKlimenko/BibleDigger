@@ -5,7 +5,7 @@
 {% block form %}
   <form method="POST">
   {{form.csrf_token}}
-  <div class="form-group">
+  <div class="form-group text">
     <div class="form-row">
 
       <div class="col">
@@ -25,14 +25,14 @@
     </div>
   </div>
 
-  <div class="form-group mb-0">
+  <div class="form-group mb-0 text">
     {{ wtf.form_field(form.search, class="form-control form-control-sm") }}
   </div>
-  <div class="form-group mb-0">
+  <div class="form-group mb-0 text">
     {{ wtf.form_field(form.caseSensitive, class="form-control form-control-sm")}}
     {{ wtf.form_field(form.searchOptions, class="form-control form-control-sm")}}
   </div>
-  <div class="form-group mb-0">
+  <div class="form-group mb-0 text">
     <div class="form-row">
       <div class="col">
         {{ wtf.form_field(form.freqMin, class="form-control form-control-sm") }}
@@ -42,10 +42,10 @@
       </div>
     </div>
   </div>
-  <div class="form-group mb-0">
+  <div class="form-group mb-0 text">
     {{ wtf.form_field(form.orderOptions, class="form-control form-control-sm")}}
   </div>
-  <div class="form-group">
+  <div class="form-group text">
     {{ wtf.form_field(form.submit, class="form-control form-control-sm") }}
   </div>
   </form>
@@ -86,7 +86,7 @@
 
 
 {% block content %}
-<div class="container mt-4 mb-3 ml-1">
+<div class="container mt-4 mb-3 ml-1 text">
   {% if wordsLength == 0 %}
     <h1>Sorry</h1>
     <h3>Nothing found. Please, try to change your search criteria.</h3>
@@ -172,15 +172,36 @@
         render({{ words|tojson }}, 1, link);
 
         var pageValue = parseInt(pageNumber1.value);
+        var pages = parseInt({{ pages }});
 
         pageNumber1.onchange = function() {
-              pageValue = parseInt(pageNumber1.value);
-                render(WordListProc, pageValue, link);
+            if (parseInt(pageNumber1.value) || pageNumber1.value === '0') {
+                if (parseInt(pageNumber1.value) > pages) {
+                    pageValue = pages
+                } else if (parseInt(pageNumber1.value) <= 0) {
+                    pageValue = 1
+                } else {
+                    pageValue = parseInt(pageNumber1.value);
+                };
+                if (pageValue >= 0 && pageValue <= pages) {
+                    render(WordListProc, pageValue, link);
+                };
+            };
         };
 
         pageNumber2.onchange = function() {
-              pageValue = parseInt(pageNumber2.value);
-                render(WordListProc, pageValue, link);
+            if (parseInt(pageNumber2.value) || pageNumber2.value === '0') {
+                if (parseInt(pageNumber2.value) > pages) {
+                    pageValue = pages
+                } else if (parseInt(pageNumber2.value) <= 0) {
+                    pageValue = 1
+                } else {
+                    pageValue = parseInt(pageNumber2.value);
+                };
+                if (pageValue >= 0 && pageValue <= pages) {
+                    render(WordListProc, pageValue, link);
+                };
+            };
         };
 
         previous1.onclick = function() {

@@ -677,8 +677,8 @@ def concordance(language_id=None, translation_id=None, searchItem=None, searchOp
 ###TO DO: Shitty verse numbering (21, 2, 3,.. 20, 22 in Afrikaans NLV)
 ###TO DO: Remove footnotes with # from some verses
 ###TO DO: Fix translation names in the database
-###TO DO: Concordance: separate colons ("22 :14")
 ###TO DO: Separate punctuation from words for all languages
+###TO DO: Page number input bug in concordance
 
 ###TO DO: Make a new db with translation names edited as below:
 #translationList = [(tran.id,

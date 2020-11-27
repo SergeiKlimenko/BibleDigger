@@ -22,31 +22,31 @@
     <div class="form-row">
 
       <div class="col">
-        <label for="language1">Language</label>
-        <select class="selectpicker" data-live-search="true" data-live-search-normalize="true" data-width="90px" data-style='' data-style-base='form-control form-control-sm' id="language1" name="language1">
+        <label for="language1" class="text">Language</label>
+        <select class="selectpicker text" data-live-search="true" data-live-search-normalize="true" data-width="90px" data-style='' data-style-base='form-control form-control-sm' id="language1" name="language1">
           {% for language in languageChoices %}
-            <option value="{{ language[0] }}">{{ language[1] }}</option>
+            <option value="{{ language[0] }}" class="text">{{ language[1] }}</option>
           {% endfor %}
         </select>
       </div>
 
       <div class="col">
-        <label for="translation1">Translation</label>
-        <select class="selectpicker" data-live-search="true" data-live-search-normalize="true" data-width="90px" data-style='' data-style-base='form-control form-control-sm' id="translation1" name="translation1">
+        <label for="translation1" class="text">Translation</label>
+        <select class="selectpicker text" data-live-search="true" data-live-search-normalize="true" data-width="90px" data-style='' data-style-base='form-control form-control-sm' id="translation1" name="translation1">
         </select>
       </div>
 
     </div>
   </div>
 
-  <div class="form-group">
+  <div class="form-group text">
     {{ wtf.form_field(form.search, class="form-control form-control-sm") }}
   </div>
-  <div class="form-group">
+  <div class="form-group text">
     {{ wtf.form_field(form.caseSensitive, class="form-control form-control-sm") }}
     {{ wtf.form_field(form.searchOptions, class="form-control form-control-sm") }}
   </div>
-  <div class="form-group">
+  <div class="form-group text">
     {{ wtf.form_field(form.submit, class="form-control form-control-sm") }}
   </div>
   </form>
@@ -78,72 +78,72 @@
 {% endblock %}
 
 {% block form2 %}
-<nav class="navbar navbar-expand-lg sticky-top bg-dark shadow text-light" style="top: 56px">
+<nav class="navbar navbar-expand-lg sticky-top shadow text-light" style="top: 56px; background-color: #D09556">
 
 <form method="POST">
 <div class="form-row justify-content-between">
 
-<div class="col-inline align-text-bottom">
+<div class="col-inline text align-middle">
     <p>Sorting options: </p>
 </div>
 
 <div class="col-inline">
-    <label for="option1">1</label>
-    <select class="selectpicker" data-style='' data-style-base='form-control form-control-sm' data-width="auto" id="option1" name="option1">
+    <label for="option1" class="text">1</label>
+    <select class="selectpicker text" data-style='' data-style-base='form-control form-control-sm' data-width="auto" id="option1" name="option1">
       {% for choice in choices %}
-        <option value="{{ choice[0] }}">{{ choice[1] }}</option>
+        <option value="{{ choice[0] }}" class="text">{{ choice[1] }}</option>
       {% endfor %}
     </select>
 </div>
 
 <div class="col-inline">
-    <label for="option2">2</label>
-    <select class="selectpicker" data-style='' data-style-base='form-control form-control-sm' data-width="auto" id="option2" name="option2">
+    <label for="option2" class="text">2</label>
+    <select class="selectpicker text" data-style='' data-style-base='form-control form-control-sm' data-width="auto" id="option2" name="option2">
       {% for choice in choices %}
-        <option value="{{ choice[0] }}">{{ choice[1] }}</option>
+        <option value="{{ choice[0] }}" class="text">{{ choice[1] }}</option>
       {% endfor %}
     </select>
 </div>
 
     <div class="col-inline">
-    <label for="option3">3</label>
-    <select class="selectpicker" data-style='' data-style-base='form-control form-control-sm' data-width="auto" id="option3" name="option3">
+    <label for="option3" class="text">3</label>
+    <select class="selectpicker text" data-style='' data-style-base='form-control form-control-sm' data-width="auto" id="option3" name="option3">
       {% for choice in choices %}
-        <option value="{{ choice[0] }}">{{ choice[1] }}</option>
+        <option value="{{ choice[0] }}" class="text">{{ choice[1] }}</option>
       {% endfor %}
     </select>
 </div>
 
     <div class="col-inline">
-    <label for="option4">4</label>
-    <select class="selectpicker" data-style='' data-style-base='form-control form-control-sm' data-width="auto" id="option4" name="option4">
+    <label for="option4" class="text">4</label>
+    <select class="selectpicker text" data-style='' data-style-base='form-control form-control-sm' data-width="auto" id="option4" name="option4">
       {% for choice in choices %}
-        <option value="{{ choice[0] }}">{{ choice[1] }}</option>
+        <option value="{{ choice[0] }}" class="text">{{ choice[1] }}</option>
       {% endfor %}
     </select>
 </div>
 
     <div class="col-inline">
-    <label for="option5">5</label>
-    <select class="selectpicker" data-style='' data-style-base='form-control form-control-sm' data-width="auto" id="option5" name="option5">
+    <label for="option5" class="text">5</label>
+    <select class="selectpicker text" data-style='' data-style-base='form-control form-control-sm' data-width="auto" id="option5" name="option5">
       {% for choice in choices %}
-        <option value="{{ choice[0] }}">{{ choice[1] }}</option>
+        <option value="{{ choice[0] }}" class="text">{{ choice[1] }}</option>
       {% endfor %}
     </select>
 </div>
 
     <div class="col-inline">
-    <label for="option6">6</label>
-    <select class="selectpicker" data-style='' data-style-base='form-control form-control-sm' data-width="auto" id="option6" name="option6">
+    <label for="option6" class="text">6</label>
+    <select class="selectpicker text" data-style='' data-style-base='form-control form-control-sm' data-width="auto" id="option6" name="option6">
       {% for choice in choices %}
-        <option value="{{ choice[0] }}">{{ choice[1] }}</option>
+        <option value="{{ choice[0] }}" class="text">{{ choice[1] }}</option>
       {% endfor %}
     </select>
 </div>
 
     <div class="col">
     <div style="width=50%">
-      <button type="button" class="form-control form-control-sm" id="sort">Sort</button>
+      <button type="button" class="form-control form-control-sm text" id="sort">Sort</button>
     </div>
 
 </div>
@@ -180,10 +180,12 @@
   {% if concLength is not defined %}
     {% set concLength = None %}
   {% elif concLength == 0 %}
-  <h1>Sorry</h1>
-  <h3>Nothing found. Please, try to change your search criteria.</h3>
+  <div class="text">
+    <h1>Sorry</h1>
+    <h3>Nothing found. Please, try to change your search criteria.</h3>
+  </div>
   {% else %}
-    <div class="row justify-content-center">
+    <div class="row justify-content-center text">
     {% if concLength == 1 %}
       <p><b>Found: 1 result / {{ pages }} page</b></p>
     {% elif concLength > 1 and pages == 1 %}
@@ -196,31 +198,31 @@
     <nav class="table-responsive mb-2s">
       <ul class="pagination mb-0 justify-content-center">
         <li class="page-item disabled">
-         <a class="page-link" aria-disabled="true" id="first1">First</a>
+         <a class="page-link text" aria-disabled="true" id="first1">First</a>
         </li>
 
         <li class="page-item disabled">
-         <a class="page-link" aria-disabled="true" id="previous1">Previous</a>
+         <a class="page-link text" aria-disabled="true" id="previous1">Previous</a>
         </li>
 
-        <div class="input-group mb-3" style="width: 60px">
-          <input type="text" class="form-control" value="1" aria-describedby="basic-addon1" id="pageNumber1">
+        <div class="input-group mb-3" style="width: 65px">
+          <input type="text" class="form-control text" style="text-align: center" value="1" aria-describedby="basic-addon1" id="pageNumber1">
         </div>
 
         <li class="page-item">
-          <a class="page-link" aria-disabled="true" id="next1">Next</a>
+          <a class="page-link text" aria-disabled="true" id="next1">Next</a>
         </li>
 
         <li class="page-item">
-         <a class="page-link" aria-disabled="true" id="last1">Last</a>
+         <a class="page-link text" aria-disabled="true" id="last1">Last</a>
         </li>
       </ul>
     </nav>
 
-    <div id="render">
+    <div class="text" id="render">
     </div>
 
-    <div class="row justify-content-center">
+    <div class="row justify-content-center text">
     {% if concLength == 1 %}
       <p><b>Found: 1 result / {{ pages }} page</b></p>
     {% elif concLength > 1 and pages == 1 %}
@@ -233,23 +235,23 @@
     <nav class="table-responsive mb-2s">
       <ul class="pagination mb-0 justify-content-center">
         <li class="page-item disabled">
-         <a class="page-link" aria-disabled="true" id="first2">First</a>
+         <a class="page-link text" aria-disabled="true" id="first2">First</a>
         </li>
 
         <li class="page-item disabled">
-         <a class="page-link" aria-disabled="true" id="previous2">Previous</a>
+         <a class="page-link text" aria-disabled="true" id="previous2">Previous</a>
         </li>
 
-        <div class="input-group mb-3" style="width: 60px">
-          <input type="text" class="form-control" value="1" aria-describedby="basic-addon1" id="pageNumber2">
+        <div class="input-group mb-3" style="width: 65px">
+          <input type="text" class="form-control text" style="text-align: center" value="1" aria-describedby="basic-addon1" id="pageNumber2">
         </div>
 
         <li class="page-item">
-          <a class="page-link" aria-disabled="true" id="next2">Next</a>
+          <a class="page-link text" aria-disabled="true" id="next2">Next</a>
         </li>
 
         <li class="page-item">
-         <a class="page-link" aria-disabled="true" id="last2">Last</a>
+         <a class="page-link text" aria-disabled="true" id="last2">Last</a>
         </li>
       </ul>
     </nav>
@@ -261,15 +263,36 @@
         render({{ conc|tojson }}, 1, link);
 
         var pageValue = parseInt(pageNumber1.value);
+        var pages = parseInt({{ pages }});
 
         pageNumber1.onchange = function() {
-              pageValue = parseInt(pageNumber1.value);
-                render(concProc, pageValue, link);
+              if (parseInt(pageNumber1.value) || pageNumber1.value === '0') {
+                  if (parseInt(pageNumber1.value) > pages) {
+                      pageValue = pages
+                  } else if (parseInt(pageNumber1.value) <= 0) {
+                      pageValue = 1
+                  } else {
+                      pageValue = parseInt(pageNumber1.value);
+                  };
+                  if (pageValue >= 0 && pageValue <= pages) {
+                      render(concProc, pageValue, link);
+                  };
+              };
         };
 
         pageNumber2.onchange = function() {
-              pageValue = parseInt(pageNumber2.value);
-                render(concProc, pageValue, link);
+              if (parseInt(pageNumber2.value) || pageNumber2.value === '0') {
+                  if (parseInt(pageNumber2.value) > pages) {
+                      pageValue = pages
+                  } else if (parseInt(pageNumber2.value) <= 0) {
+                      pageValue = 1
+                  } else {
+                      pageValue = parseInt(pageNumber2.value);
+                  };
+                  if (pageValue >= 0 && pageValue <= pages) {
+                    render(concProc, pageValue, link);
+                  };
+              };
         };
 
         previous1.onclick = function() {

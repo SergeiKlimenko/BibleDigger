@@ -14,17 +14,17 @@
 <ul class="nav nav-pills nav-fill">
   {% if parallelOrNot == 1 %}
     <li class="nav-item">
-      <a class="nav-link active bg-secondary" href="{{ url_for('functions.browse', parallelOrNot=1) }}">single</a>
+      <a class="nav-link active shadow text-dark text" style="background-color: #EFDCE0" href="{{ url_for('functions.browse', parallelOrNot=1) }}">single</a>
     </li>
     <li class="nav-item">
-      <a class="nav-link text-light" href="{{ url_for('functions.browse', parallelOrNot=2) }}">parallel</a>
+      <a class="nav-link text-white text" href="{{ url_for('functions.browse', parallelOrNot=2) }}">parallel</a>
     </li>
   {% elif parallelOrNot == 2 %}
     <li class="nav-item">
-      <a class="nav-link text-light" href="{{ url_for('functions.browse', parallelOrNot=1) }}">single</a>
+      <a class="nav-link text-white text" href="{{ url_for('functions.browse', parallelOrNot=1) }}">single</a>
     </li>
     <li class="nav-item">
-      <a class="nav-link active bg-secondary" href="{{ url_for('functions.browse', parallelOrNot=2) }}">parallel</a>
+      <a class="nav-link active shadow text-dark text" style="background-color: #EFDCE0" href="{{ url_for('functions.browse', parallelOrNot=2) }}">parallel</a>
     </li>
   {% endif %}
 </ul>
@@ -37,17 +37,17 @@
       <div class="form-row mt-4">
 
         <div class="col">
-          <label for="language1">Language</label>
-          <select class="selectpicker" data-live-search="true" data-live-search-normalize="true" data-width="90px" data-style='' data-style-base='form-control form-control-sm' id="language1" name="language1">
+          <label for="language1" class="text">Language</label>
+          <select class="selectpicker text" data-live-search="true" data-live-search-normalize="true" data-width="90px" data-style='' data-style-base='form-control form-control-sm' id="language1" name="language1">
             {% for language in languageChoices %}
-              <option value="{{ language[0] }}">{{ language[1] }}</option>
+              <option value="{{ language[0] }}" class="text">{{ language[1] }}</option>
             {% endfor %}
           </select>
         </div>
 
         <div class="col">
-          <label for="translation1">Translation</label>
-          <select class="selectpicker" data-live-search="true" data-live-search-normalize="true" data-width="90px" data-style='' data-style-base='form-control form-control-sm' id="translation1" name="translation1">
+          <label for="translation1" class="text">Translation</label>
+          <select class="selectpicker text" data-live-search="true" data-live-search-normalize="true" data-width="90px" data-style='' data-style-base='form-control form-control-sm' id="translation1" name="translation1">
           </select>
         </div>
 
@@ -59,17 +59,17 @@
         <div class="form-row mt-4">
 
           <div class="col">
-            <label for="language1">Language 1</label>
-            <select class="selectpicker" data-live-search="true" data-live-search-normalize="true" data-width="90px" data-style='' data-style-base='form-control form-control-sm' id="language1" name="language1">
+            <label for="language1" class="text">1 Language</label>
+            <select class="selectpicker text" data-live-search="true" data-live-search-normalize="true" data-width="90px" data-style='' data-style-base='form-control form-control-sm' id="language1" name="language1">
               {% for language in languageChoices %}
-                <option value="{{ language[0] }}">{{ language[1] }}</option>
+                <option value="{{ language[0] }}" class="text">{{ language[1] }}</option>
               {% endfor %}
             </select>
           </div>
 
           <div class="col">
-            <label for="translation1">Translation 1</label>
-            <select class="selectpicker" data-live-search="true" data-live-search-normalize="true" data-width="90px" data-style='' data-style-base='form-control form-control-sm' id="translation1" name="translation1">
+            <label for="translation1" class="text">Translation</label>
+            <select class="selectpicker text" data-live-search="true" data-live-search-normalize="true" data-width="90px" data-style='' data-style-base='form-control form-control-sm' id="translation1" name="translation1">
             </select>
           </div>
 
@@ -81,17 +81,17 @@
         <div class="form-row">
 
           <div class="col">
-            <label for="language2">Language 2</label>
-            <select class="selectpicker" data-live-search="true" data-live-search-normalize="true" data-width="90px" data-style='' data-style-base='form-control form-control-sm' id="language2" name="language2">
+            <label for="language2" class="text">2 Language</label>
+            <select class="selectpicker text" data-live-search="true" data-live-search-normalize="true" data-width="90px" data-style='' data-style-base='form-control form-control-sm' id="language2" name="language2">
               {% for language in languageChoices %}
-                <option value="{{ language[0] }}">{{ language[1] }}</option>
+                <option value="{{ language[0] }}" class="text">{{ language[1] }}</option>
               {% endfor %}
             </select>
           </div>
 
           <div class="col">
-            <label for="translation2">Translation 2</label>
-            <select class="selectpicker" data-live-search="true" data-live-search-normalize="true" data-width="90px" data-style='' data-style-base='form-control form-control-sm' id="translation2" name="translation2">
+            <label for="translation2" class="text">Translation</label>
+            <select class="selectpicker text" data-live-search="true" data-live-search-normalize="true" data-width="90px" data-style='' data-style-base='form-control form-control-sm' id="translation2" name="translation2">
             </select>
           </div>
 
@@ -101,13 +101,13 @@
       <hr>
 
       <div class="form-group">
-        <label for="book">Book</label>
-        <select class="selectpicker" data-live-search="true" data-live-search-normalize="true" data-width="190px" data-style='' data-style-base='form-control form-control-sm' id="book" name="book">
+        <label for="book" class="text">Book</label>
+        <select class="selectpicker text" data-live-search="true" data-live-search-normalize="true" data-width="190px" data-style='' data-style-base='form-control form-control-sm' id="book" name="book">
         </select>
       </div>
       <hr>
 
-    <div class="form-group">
+    <div class="form-group text">
       {{ wtf.form_field(form.submit, class="form-control form-control-sm") }}
     </div>
 
@@ -151,7 +151,7 @@
 
 {% block content %}
 
-<div class="container mt-4 mb-3">
+<div class="container mt-4 mb-3 text">
   {% if textLength == 0 %}
   <h1>The book you are looking for is not included in this translation</h1>
   {% else %}
