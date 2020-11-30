@@ -10,7 +10,7 @@
   <ul class="nav nav-pills nav-fill">
   {% if parallelOrNot == 1 %}
     <li class="nav-item">
-      <a class="nav-link active text-dark text" style="background-color: #EFDCE0" href="{{ url_for('functions.verseSearch', parallelOrNot = 1) }}">single</a>
+      <a class="nav-link active text-dark text" style="background-color: #d3b577" href="{{ url_for('functions.verseSearch', parallelOrNot = 1) }}">single</a>
     </li>
     <li class="nav-item">
       <a class="nav-link text-white text" href="{{ url_for('functions.verseSearch', parallelOrNot = 2) }}">parallel</a>
@@ -20,7 +20,7 @@
       <a class="nav-link text-white text" href="{{ url_for('functions.verseSearch', parallelOrNot = 1) }}">single</a>
     </li>
     <li class="nav-item">
-      <a class="nav-link active text-dark text" style="background-color: #EFDCE0" href="{{ url_for('functions.verseSearch', parallelOrNot = 2) }}">parallel</a>
+      <a class="nav-link active text-dark text" style="background-color: #d3b577" href="{{ url_for('functions.verseSearch', parallelOrNot = 2) }}">parallel</a>
     </li>
   {% endif %}
   </ul>

@@ -318,8 +318,8 @@ def wordList(language_id=None, translation_id=None, searchItem=None, searchOptio
             strippedVerse = []
             for word in verse:
                 ###TO DO: Add spaces for punctuation symbols, rather then strip them
-                strippedVerse.append(word.strip(',.()[];:""“”?!—/\\-+=_<>¿»«').
-                    strip(",.()[];:''‘’‛“”?!—/\\-+=_<>"))
+                strippedVerse.append(word.strip(',.()[];:""„“”?!—/\\-+=_<>¿»«').
+                    strip(",.()[];:''‘’„‛“”?!—/\\-+=_<>"))
 
             verseList += strippedVerse
 
@@ -441,7 +441,7 @@ def concordance(language_id=None, translation_id=None, searchItem=None, searchOp
         # translation_id = form.translation1.data
         language_id = request.form['language1']
         translation_id = request.form['translation1']
-        searchItem = form.search.data.replace('/', '%2F').replace('.', '%2E').replace('#', '%23').replace("’", '%27')
+        searchItem = form.search.data.replace('/', '%2F').replace('.', '%2E').replace('#', '%23')
         searchOption = form.searchOptions.data
         case = form.caseSensitive.data
 
@@ -458,7 +458,7 @@ def concordance(language_id=None, translation_id=None, searchItem=None, searchOp
             FROM texts a LEFT JOIN books b ON a.book_code = b.code WHERE \
             translation_id = {translation_id}'))
 
-        searchItem = searchItem.replace('%2F', '/').replace('%2E', '.').replace('%23', '#').replace('%27', "’")
+        searchItem = searchItem.replace('%2F', '/').replace('%2E', '.').replace('%23', '#')
 
         if searchItem == None: ###Edit
             searchItem = form.search.data
@@ -512,7 +512,7 @@ def concordance(language_id=None, translation_id=None, searchItem=None, searchOp
                 searchRegex = re.compile(searchItem)
 
         ###Add space between non-alphanumeric symbols and words
-        leftSymbols = '(["“<\'‘‛¿»«'
+        leftSymbols = '(["“„<\'‘‛¿»«'
         rightSymbols = ',.)];:"”?!>\'’'
         middleSymbols = '—/\\+=_'
 
@@ -522,20 +522,38 @@ def concordance(language_id=None, translation_id=None, searchItem=None, searchOp
             verseText = verse[3]
             ###Add space between non-alphanumeric symbols and words
             for symbol in leftSymbols:
-                verseText = verseText.replace(symbol, symbol + ' ')
+                if symbol == '\'':
+                    listRE = list(re.finditer(symbol, verseText))
+                    counter = 0
+                    for item in listRE:
+                        start = item.start() + counter
+                        end = item.end() + counter
+                        if start != 0 and end != len(verseText) and \
+                            verseText[start-1].isalpha() and verseText[end].isalpha():
+                            continue
+                        else:
+                            verseText = verseText[:start+1] + ' ' + verseText[start+1:]
+                            counter += 1
+                else:
+                    verseText = verseText.replace(symbol, symbol + ' ')
             for symbol in rightSymbols:
-                ###Skip adding spaces to numbers with ',' and '.'
-                if symbol in ',.:':
-                    for commaDot in (',', '\.', ':'):
+                ###Skip adding spaces to numbers with ',', '.', and ':'. Skip adding spaces around apostrophe in the middle of a word
+                if symbol in ',.:\'':
+                    for commaDot in (',', '\.', ':', '\''):
                         if symbol == commaDot.strip('\\'):
                             listRE = list(re.finditer(commaDot, verseText))
                             counter = 0
                             for item in listRE:
                                 start = item.start() + counter
                                 end = item.end() + counter
-                                if start != 0 and end != len(verseText) and \
-                                    verseText[start-1].isnumeric() and verseText[end].isnumeric():
-                                    continue
+                                if start != 0 and end != len(verseText):
+                                    if symbol != '\'' and verseText[start-1].isnumeric() and verseText[end].isnumeric():
+                                        continue
+                                    elif symbol == '\'' and verseText[start-1].isalpha() and verseText[end].isalpha():
+                                        continue
+                                    else:
+                                        verseText = verseText[:start] + ' ' + verseText[start:]
+                                        counter += 1
                                 else:
                                     verseText = verseText[:start] + ' ' + verseText[start:]
                                     counter += 1
@@ -544,13 +562,16 @@ def concordance(language_id=None, translation_id=None, searchItem=None, searchOp
                 #################################################
             for symbol in middleSymbols:
                 verseText = verseText.replace(symbol, ' ' + symbol + ' ')
-            ###insert a space into combinations like ':a', ';118:6'
+            ###insert a space into combinations like ':a', ';118:6', 'a‛'
             if re.search(':\w', verseText):
                 for i in re.findall(':\w', verseText):
                     if not i[1].isnumeric():
                         verseText = verseText.replace(i, f'{i[0]} {i[1]}')
             if re.search(';\w', verseText):
                 for i in re.findall(';\w', verseText):
+                    verseText = verseText.replace(i, f'{i[0]} {i[1]}')
+            if re.search('\w‛', verseText):
+                for i in re.findall('\w‛', verseText):
                     verseText = verseText.replace(i, f'{i[0]} {i[1]}')
 
             if case == 'False': #or form.caseSensitive.data == False:
@@ -678,7 +699,7 @@ def concordance(language_id=None, translation_id=None, searchItem=None, searchOp
 ###TO DO: Remove footnotes with # from some verses
 ###TO DO: Fix translation names in the database
 ###TO DO: Separate punctuation from words for all languages
-###TO DO: Page number input bug in concordance
+###TO DO: Cymreg: ' is part of words
 
 ###TO DO: Make a new db with translation names edited as below:
 #translationList = [(tran.id,
