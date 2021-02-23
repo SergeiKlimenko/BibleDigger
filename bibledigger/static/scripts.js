@@ -12,7 +12,7 @@ if (document.getElementsByClassName('nav-item nav-link active')[0] !== undefined
 };
 
 
-function populateList(list1, list2, list2Name, anchor=1, input=0, list3=0, list4=0, list5=0, book=null, chapter=null) {
+function populateList(list1, list2, list2Name, anchor = 1, input = 0, list3 = 0, list4 = 0, list5 = 0, book = null, chapter = null) {
 
     var l2Name;
     if (list2Name.startsWith('translation')) {
@@ -73,9 +73,9 @@ function populateList(list1, list2, list2Name, anchor=1, input=0, list3=0, list4
                     book_select, chapter_select, verse_select);
             } else if (list2Name === 'book' && chapter_select !== null) {
                 populateList(book_select, chapter_select, 'chapter', anchor, input,
-                    chapter_select, verse_select, list5=0, book);
+                    chapter_select, verse_select, list5 = 0, book);
             } else if (list2Name === 'chapter') {
-                populateList(chapter_select, verse_select, 'verse', anchor, input, list3=0, list4=0, list5=0, book,  chapter);
+                populateList(chapter_select, verse_select, 'verse', anchor, input, list3 = 0, list4 = 0, list5 = 0, book, chapter);
             };
         });
     });
@@ -126,14 +126,17 @@ function render(aggreg, page, baseLink) {
               </div>
             `
         };
-    // WordList
+        // WordList
     } else if (aggreg[1][0].length === 3) {
 
-      var wordListPage = {};
+        var wordListPage = {};
 
-      for (item of aggreg[page]) {
-          var link = baseLink.replace('WORD', `${item[2]}`);
-          wordListPage[`${aggreg[page].indexOf(item)}`] = `<div class="row">
+        for (item of aggreg[page]) {
+            var WORD = `${item[2].replace('/', '%252F').replace('.', '%2E').replace('#', '%23').replace("’", '%27')}`;
+            var link = baseLink.replace('WORD', WORD);
+            console.log(WORD);
+
+            wordListPage[`${aggreg[page].indexOf(item)}`] = `<div class="row">
                     <div class="col-1">
                       <p>${item[0]}</p>
                     </div>
@@ -145,9 +148,9 @@ function render(aggreg, page, baseLink) {
                     </div>
                   </div>
                   `;
-      };
+        };
 
-      var header = `<div class="row">
+        var header = `<div class="row">
                       <div class="col-1">
                         <p><b>rank</b></p>
                       </div>
@@ -160,8 +163,8 @@ function render(aggreg, page, baseLink) {
                     </div>
                     `;
 
-      if (aggreg[1].length > 1) {
-          html += `<div class="row">
+        if (aggreg[1].length > 1) {
+            html += `<div class="row">
                     <div class="col">
                       ${header}
                     </div>
@@ -171,24 +174,25 @@ function render(aggreg, page, baseLink) {
                   </div>
                   `;
 
-          var halfStart;
-          var oddEvenLength = Object.keys(wordListPage).length % 2;
-          if (oddEvenLength === 0) {
-              halfStart = Object.keys(wordListPage).length / 2;
-          } else if (oddEvenLength === 1) {
-              halfStart = Math.ceil(Object.keys(wordListPage).length / 2);
-          };
+            var halfStart;
+            var oddEvenLength = Object.keys(wordListPage).length % 2;
+            if (oddEvenLength === 0) {
+                halfStart = Object.keys(wordListPage).length / 2;
+            } else if (oddEvenLength === 1) {
+                halfStart = Math.ceil(Object.keys(wordListPage).length / 2);
+            };
 
-          for (var i = 0; i < halfStart; i++) {
-              if (oddEvenLength === 1 && i === halfStart - 1) {
-                  html += `<div class="row">
+            for (var i = 0; i < halfStart; i++) {
+                if (oddEvenLength === 1 && i === halfStart - 1) {
+                    html += `<div class="row">
                             <div class="col">
                               ${wordListPage[i]}
                             </div>
                             <div class="col">
                             </div>
                           </div>`;
-              } else {html += `<div class="row">
+                } else {
+                    html += `<div class="row">
                                   <div class="col">
                                     ${wordListPage[i]}
                                   </div>
@@ -196,13 +200,13 @@ function render(aggreg, page, baseLink) {
                                     ${wordListPage[halfStart + i]}
                                   </div>
                                 </div>`;
-              };
-          };
+                };
+            };
 
-      } else {
-          html += header;
-          html += wordListPage[0];
-      };
+        } else {
+            html += header;
+            html += wordListPage[0];
+        };
     };
 
     var renderElement = document.getElementById('render');
@@ -255,13 +259,21 @@ function render(aggreg, page, baseLink) {
 
 function sortConc(conc, options, baseLink) {
 
-    const colors = {'option1': 'DeepPink', 'option2': 'Lime', 'option3': 'Turquoise',
-                  'option4': 'Indigo', 'option5': 'Blue', 'option6': 'Gold'};
+    const colors = {
+        'option1': 'DeepPink',
+        'option2': 'Lime',
+        'option3': 'Turquoise',
+        'option4': 'Indigo',
+        'option5': 'Blue',
+        'option6': 'Gold'
+    };
     var concArray = [];
     const concPages = Object.keys(conc);
 
     for (i of concPages) {
-        const verseList = conc[i].map(verse => [[verse[0], verse[1].trim().replace('  ', ' ').split(' '), verse[2], verse[3].trim().replace('  ', ' ').split(' '), verse[4]], null, null, null, null, null, null]);
+        const verseList = conc[i].map(verse => [
+            [verse[0], verse[1].trim().replace('  ', ' ').split(' '), verse[2], verse[3].trim().replace('  ', ' ').split(' '), verse[4]], null, null, null, null, null, null
+        ]);
         concArray = concArray.concat(verseList);
     };
 
@@ -271,39 +283,39 @@ function sortConc(conc, options, baseLink) {
         if (option !== 'None') {
             for (verse of concArray) {
                 if (parseInt(option) === 0) {
-                    verse[optionIndex+1] = verse[0][4];
+                    verse[optionIndex + 1] = verse[0][4];
                     verse[0][0] = `<span class="${optionColor}">${verse[0][0]}</span>`;
                 } else if (parseInt(option) === 2) {
-                    verse[optionIndex+1] = verse[0][2].toLowerCase();
+                    verse[optionIndex + 1] = verse[0][2].toLowerCase();
                     verse[0][2] = `<span class="${optionColor}">${verse[0][2]}</span>`;
                 } else {
                     try {
                         let kwicIndex;
                         if (option[0] === '3') {
                             kwicIndex = parseInt(option[1]);
-                            verse[optionIndex+1] = verse[0][3][kwicIndex].toLowerCase();
-                            verse[0][3] = verse[0][3].slice(0, kwicIndex).concat(`<span class="${optionColor}">${verse[0][3][kwicIndex]}</span>`).concat(verse[0][3].slice(kwicIndex+1));
+                            verse[optionIndex + 1] = verse[0][3][kwicIndex].toLowerCase();
+                            verse[0][3] = verse[0][3].slice(0, kwicIndex).concat(`<span class="${optionColor}">${verse[0][3][kwicIndex]}</span>`).concat(verse[0][3].slice(kwicIndex + 1));
 
                         } else if (option[0] === '1') {
                             kwicIndex = verse[0][1].length - parseInt(option[1]);
-                            verse[optionIndex+1] = verse[0][1][kwicIndex].toLowerCase();
+                            verse[optionIndex + 1] = verse[0][1][kwicIndex].toLowerCase();
                             if ((verse[0][1].length - kwicIndex) !== 1) {
-                                verse[0][1] = verse[0][1].slice(0, kwicIndex).concat(`<span class="${optionColor}">${verse[0][1][kwicIndex]}</span>`).concat(verse[0][1].slice(kwicIndex+1));
+                                verse[0][1] = verse[0][1].slice(0, kwicIndex).concat(`<span class="${optionColor}">${verse[0][1][kwicIndex]}</span>`).concat(verse[0][1].slice(kwicIndex + 1));
                             } else if ((verse[0][1].length - kwicIndex) === 1) {
                                 verse[0][1] = verse[0][1].slice(0, kwicIndex).concat(`<span class="${optionColor}">${verse[0][1][kwicIndex]}</span>`);
                             }
                         }
                     } catch (RangeError) {
-                        verse[optionIndex+1] = ' ';
+                        verse[optionIndex + 1] = ' ';
                     }
                 };
             };
         };
     };
 
-    for (var index = 0; index < concArray[0].slice(1).length; index++ ) {
-        if (concArray[0][index+1] !== null) {
-            concArray.sort((a, b) => a[index+1] < b[index+1] ? -1 : a[index+1] > b[index+1] ? 1 : 0);
+    for (var index = 0; index < concArray[0].slice(1).length; index++) {
+        if (concArray[0][index + 1] !== null) {
+            concArray.sort((a, b) => a[index + 1] < b[index + 1] ? -1 : a[index + 1] > b[index + 1] ? 1 : 0);
         };
     };
 

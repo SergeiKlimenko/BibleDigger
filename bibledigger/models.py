@@ -40,7 +40,7 @@ class Translation(db.Model):
     __tablename__ = 'translations'
 
     id = db.Column(db.Integer, primary_key=True)
-    translation = db.Column(db.Unicode, nullable=False, unique=True)
+    translation = db.Column(db.Unicode, nullable=False, unique=False)
     language_id = db.Column(db.Integer, db.ForeignKey('languages.id'), nullable=False)
     verses = db.relationship('Text', backref='translation')
     __table_args__ = (db.Index('language_id_index', "language_id"),)

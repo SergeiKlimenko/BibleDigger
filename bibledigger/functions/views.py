@@ -252,6 +252,22 @@ def verseSearch(parallelOrNot, verseList=None, input=None):
                                     parallelOrNot=parallelOrNot)
 
 
+def catchIncorrectRegex(searchItem, case):
+    try:
+        if case == 'False':
+            for symbol in searchItem:
+                symInd = searchItem.index(symbol)
+                if (searchItem[symInd-1] == '\\' and symInd == 1) or \
+                    (searchItem[symInd-1] == '\\' and searchItem[symInd-2] != '\\'):
+                    continue
+                else:
+                    searchItem = searchItem[:symInd] + searchItem[symInd].lower() + searchItem[symInd+1:]
+        searchRegex = re.compile(searchItem)
+        return searchRegex
+    except:
+        return False
+
+
 @functions.route('/wordlist/', methods=['GET', 'POST'])
 @functions.route('''/wordlist/<int:language_id>/<int:translation_id>/<searchItem>/<searchOption>/
                      <case>/<int:freqMin>/<int:freqMax>/<order>''', methods=['GET', 'POST'])
@@ -370,9 +386,16 @@ def wordList(language_id=None, translation_id=None, searchItem=None, searchOptio
                     if searchThis in testWord:
                         words.append(word)
                 elif searchOption == 'regex':
-                    regex = re.compile(searchThis)
-                    if re.search(regex, testWord):
+                    ###Catch incorrect regex
+                    searchRegex = catchIncorrectRegex(searchThis, case)
+                    if searchRegex == False:
+                        return render_template('wordlist.html', 
+                                                form=form,
+                                                languageChoices=languageChoices,
+                                                errorMessage='Sorry It seems that your regular expression is incorrect. Try again. ')
+                    if re.search(searchRegex, testWord):
                         words.append(word)
+                    
 
         #Add ranks to the wordlist
         rank = 1
@@ -441,13 +464,17 @@ def concordance(language_id=None, translation_id=None, searchItem=None, searchOp
         # translation_id = form.translation1.data
         language_id = request.form['language1']
         translation_id = request.form['translation1']
-        searchItem = form.search.data.replace('/', '%2F').replace('.', '%2E').replace('#', '%23')
+        searchItem = form.search.data.replace('/', '%2F').replace('.', '%2E').replace('#', '%23').replace("’", '%27')
         searchOption = form.searchOptions.data
         case = form.caseSensitive.data
 
-        return redirect(url_for('functions.concordance', languageChoices=languageChoices,
-                        choices=choices, language_id=language_id, translation_id=translation_id,
-                        searchItem=searchItem, searchOption=searchOption,
+        return redirect(url_for('functions.concordance', 
+                        languageChoices=languageChoices,
+                        choices=choices, 
+                        language_id=language_id, 
+                        translation_id=translation_id,
+                        searchItem=searchItem, 
+                        searchOption=searchOption,
                         case=case))
     else:
         pass
@@ -458,14 +485,15 @@ def concordance(language_id=None, translation_id=None, searchItem=None, searchOp
             FROM texts a LEFT JOIN books b ON a.book_code = b.code WHERE \
             translation_id = {translation_id}'))
 
-        searchItem = searchItem.replace('%2F', '/').replace('%2E', '.').replace('%23', '#')
+        searchItem = searchItem.replace('%2F', '/').replace('%2E', '.').replace('%23', '#').replace('%27', "’")
+        print(searchItem)###delete
 
         if searchItem == None: ###Edit
             searchItem = form.search.data
         ###Strip the search item to avoid searching just for whitespaces
         searchItem = searchItem.strip()
 
-        reSpecialSymbols = r'\\.^$*+?{}[]|()'
+        reSpecialSymbols = r'\.^$*+?{}[]|()'
 
         ###Check if search item is regex to compile it accordingly
         if searchOption == 'regex' or form.searchOptions.data == 'regex':
@@ -483,96 +511,107 @@ def concordance(language_id=None, translation_id=None, searchItem=None, searchOp
                                         concLength=0)
 
             ###Catch incorrect regex
-            try:
-                if case == 'False': #or form.caseSensitive.data == False:
-                    for symbol in searchItem:
-                        symInd = searchItem.index(symbol)
-                        if (searchItem[symInd-1] == '\\' and symInd == 1) or \
-                            (searchItem[symInd-1] == '\\' and searchItem[symInd-2] != '\\'):
-                            continue
-                        else:
-                            searchItem = searchItem[:symInd] + searchItem[symInd].lower() + searchItem[symInd+1:]
-                searchRegex = re.compile(searchItem)
-                print(searchItem)###delete
-                print(searchRegex)###delete
-            except:
-                errorMessage = 'Sorry It seems that your regular expression is incorrect. Try again. '
-                return render_template('concordance.html', form=form,
+            searchRegex = catchIncorrectRegex(searchItem, case)
+            if searchRegex == False:
+                return render_template('concordance.html', 
+                                        form=form,
                                         languageChoices=languageChoices,
                                         choices=choices,
-                                        errorMessage=errorMessage)
+                                        errorMessage='Sorry It seems that your regular expression is incorrect. Try again. ')
 
         else:
+            searchRegexToCompile = searchItem
             for symbol in reSpecialSymbols:
-                searchItem = searchItem.replace(symbol, '\\' + symbol)
-
+                searchRegexToCompile = searchRegexToCompile.replace(symbol, '\\' + symbol)
             if case == 'False': # or form.caseSensitive.data == False:
-                searchRegex = re.compile(searchItem.lower())
+                searchRegex = re.compile(searchRegexToCompile.lower())
             else:
-                searchRegex = re.compile(searchItem)
-
-        ###Add space between non-alphanumeric symbols and words
-        leftSymbols = '(["“„<\'‘‛¿»«'
-        rightSymbols = ',.)];:"”?!>\'’'
-        middleSymbols = '—/\\+=_'
+                searchRegex = re.compile(searchRegexToCompile)
 
         verseCounter = 1
 
+        ###Add space between non-alphanumeric symbols and words
+
+        symbols = ['"', '\\\\', ',', '\.', '\?', '!', ':', '\)', '\(', '-', ';', ']', '\[', "'", '\|', '\*', '/', '=', '_', '#', '>', '`', '<', '{', '}', '\+', '\$', '%', '&', '\^', '~', '@']
+
         for verse in text:
             verseText = verse[3]
-            ###Add space between non-alphanumeric symbols and words
-            for symbol in leftSymbols:
-                if symbol == '\'':
-                    listRE = list(re.finditer(symbol, verseText))
-                    counter = 0
-                    for item in listRE:
-                        start = item.start() + counter
-                        end = item.end() + counter
-                        if start != 0 and end != len(verseText) and \
-                            verseText[start-1].isalpha() and verseText[end].isalpha():
+            for symbol in symbols:
+                if re.search(symbol, verseText):
+                    for item in re.finditer(symbol, verseText):
+                        before = verseText[:item.start()]
+                        smbl = verseText[item.start():item.end()]
+                        after = verseText[item.end():]
+                        if item.start() != 0 and item.end() != len(verseText) and not verseText[item.start()-1].isspace() and not verseText[item.end()].isspace():
                             continue
-                        else:
-                            verseText = verseText[:start+1] + ' ' + verseText[start+1:]
-                            counter += 1
-                else:
-                    verseText = verseText.replace(symbol, symbol + ' ')
-            for symbol in rightSymbols:
-                ###Skip adding spaces to numbers with ',', '.', and ':'. Skip adding spaces around apostrophe in the middle of a word
-                if symbol in ',.:\'':
-                    for commaDot in (',', '\.', ':', '\''):
-                        if symbol == commaDot.strip('\\'):
-                            listRE = list(re.finditer(commaDot, verseText))
-                            counter = 0
-                            for item in listRE:
-                                start = item.start() + counter
-                                end = item.end() + counter
-                                if start != 0 and end != len(verseText):
-                                    if symbol != '\'' and verseText[start-1].isnumeric() and verseText[end].isnumeric():
-                                        continue
-                                    elif symbol == '\'' and verseText[start-1].isalpha() and verseText[end].isalpha():
-                                        continue
-                                    else:
-                                        verseText = verseText[:start] + ' ' + verseText[start:]
-                                        counter += 1
-                                else:
-                                    verseText = verseText[:start] + ' ' + verseText[start:]
-                                    counter += 1
-                else:
-                    verseText = verseText.replace(symbol, ' ' + symbol)
-                #################################################
-            for symbol in middleSymbols:
-                verseText = verseText.replace(symbol, ' ' + symbol + ' ')
-            ###insert a space into combinations like ':a', ';118:6', 'a‛'
-            if re.search(':\w', verseText):
-                for i in re.findall(':\w', verseText):
-                    if not i[1].isnumeric():
-                        verseText = verseText.replace(i, f'{i[0]} {i[1]}')
-            if re.search(';\w', verseText):
-                for i in re.findall(';\w', verseText):
-                    verseText = verseText.replace(i, f'{i[0]} {i[1]}')
-            if re.search('\w‛', verseText):
-                for i in re.findall('\w‛', verseText):
-                    verseText = verseText.replace(i, f'{i[0]} {i[1]}')
+                        elif item.start() != 0 and not verseText[item.start()-1].isspace():
+                            verseText = before + f' {smbl}' + after
+                        elif item.end() != len(verseText) and not verseText[item.end()].isspace():
+                            verseText = before + f'{smbl} ' + after
+
+
+        
+
+            ###
+        # leftSymbols = '(["“„<\'‘‛¿»«'
+        # rightSymbols = ',.)];:"”?!>\'’'
+        # middleSymbols = '—/\\+=_'   
+
+        # for verse in text:
+        #     verseText = verse[3]
+        #     ###Add space between non-alphanumeric symbols and words
+        #     for symbol in leftSymbols:
+        #         if symbol == '\'':
+        #             listRE = list(re.finditer(symbol, verseText))
+        #             counter = 0
+        #             for item in listRE:
+        #                 start = item.start() + counter
+        #                 end = item.end() + counter
+        #                 if start != 0 and end != len(verseText) and \
+        #                     verseText[start-1].isalpha() and verseText[end].isalpha():
+        #                     continue
+        #                 else:
+        #                     verseText = verseText[:start+1] + ' ' + verseText[start+1:]
+        #                     counter += 1
+        #         else:
+        #             verseText = verseText.replace(symbol, symbol + ' ')
+        #     for symbol in rightSymbols:
+        #         ###Skip adding spaces to numbers with ',', '.', and ':'. Skip adding spaces around apostrophe in the middle of a word
+        #         if symbol in ',.:\'':
+        #             for commaDot in (',', '\.', ':', '\''):
+        #                 if symbol == commaDot.strip('\\'):
+        #                     listRE = list(re.finditer(commaDot, verseText))
+        #                     counter = 0
+        #                     for item in listRE:
+        #                         start = item.start() + counter
+        #                         end = item.end() + counter
+        #                         if start != 0 and end != len(verseText):
+        #                             if symbol != '\'' and verseText[start-1].isnumeric() and verseText[end].isnumeric():
+        #                                 continue
+        #                             elif symbol == '\'' and verseText[start-1].isalpha() and verseText[end].isalpha():
+        #                                 continue
+        #                             else:
+        #                                 verseText = verseText[:start] + ' ' + verseText[start:]
+        #                                 counter += 1
+        #                         else:
+        #                             verseText = verseText[:start] + ' ' + verseText[start:]
+        #                             counter += 1
+        #         else:
+        #             verseText = verseText.replace(symbol, ' ' + symbol)
+        #         #################################################
+        #     for symbol in middleSymbols:
+        #         verseText = verseText.replace(symbol, ' ' + symbol + ' ')
+        #     ###insert a space into combinations like ':a', ';118:6', 'a‛'
+        #     if re.search(':\w', verseText):
+        #         for i in re.findall(':\w', verseText):
+        #             if not i[1].isnumeric():
+        #                 verseText = verseText.replace(i, f'{i[0]} {i[1]}')
+        #     if re.search(';\w', verseText):
+        #         for i in re.findall(';\w', verseText):
+        #             verseText = verseText.replace(i, f'{i[0]} {i[1]}')
+        #     if re.search('\w‛', verseText):
+        #         for i in re.findall('\w‛', verseText):
+        #             verseText = verseText.replace(i, f'{i[0]} {i[1]}')
 
             if case == 'False': #or form.caseSensitive.data == False:
                 found = list(re.finditer(searchRegex, verseText.lower()))
@@ -697,11 +736,9 @@ def concordance(language_id=None, translation_id=None, searchItem=None, searchOp
 ###TO DO: Some verse numbers have letters (3a, 3b)
 ###TO DO: Shitty verse numbering (21, 2, 3,.. 20, 22 in Afrikaans NLV)
 ###TO DO: Remove footnotes with # from some verses
-###TO DO: Fix translation names in the database
-###TO DO: Separate punctuation from words for all languages
+###TO DO: Separate punctuation from words for all languages (Adyghe)
 ###TO DO: Cymreg: ' is part of words
-
-###TO DO: Make a new db with translation names edited as below:
-#translationList = [(tran.id,
-#    tran.translation.split('--')[1].split('_(')[0].replace('_', ' '))
-#    for tran in Translation.query.filter_by(language_id=8).all()]
+###TO DO: Space between frequency and words in Wordlist
+###TO DO: Concordance: '\' becomes '\\\\'
+###TO DO: Change fonts
+###TO DO: Error when wrong regex in word list

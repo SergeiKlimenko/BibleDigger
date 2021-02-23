@@ -87,6 +87,11 @@
 
 {% block content %}
 <div class="container mt-4 mb-3 ml-1 text">
+    {% if errorMessage %}
+    <h1>{{ errorMessage[:5] }}</h1>
+    <h3>{{ errorMessage[6:] }}</h3>
+    {% else %}
+    
   {% if wordsLength == 0 %}
     <h1>Sorry</h1>
     <h3>Nothing found. Please, try to change your search criteria.</h3>
@@ -245,6 +250,7 @@
         };
     </script>
 
+  {% endif %}
   {% endif %}
 </div>
 {% endblock %}

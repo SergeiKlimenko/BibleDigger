@@ -5,7 +5,7 @@ from wtforms.validators import DataRequired, optional
 from  ..models import Book, Language, Translation, Text
 
 
-languageChoices = [(lang.id, lang.language) for lang in Language.query.all()]
+
 #bookChoices = [(book.code, book.title) for book in Book.query.all()]
 
 
@@ -22,6 +22,10 @@ class FieldsRequiredForm(FlaskForm):
 
 
 class browseForm(FlaskForm):
+    try:
+        languageChoices = [(lang.id, lang.language) for lang in Language.query.all()]
+    except:
+        languageChoices = []
 
     language1 = SelectField('language', choices=languageChoices, coerce=int, validators=[DataRequired()])
     submit = SubmitField('OK')
