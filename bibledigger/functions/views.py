@@ -243,7 +243,7 @@ def verseSearch(parallelOrNot, verseList=None, input=None):
 
         else:
             verseList = processVerseList(verseList, True)
-            print(verseList)
+            # print(verseList)###delete
             return render_template('versesearch.html',
                                     form=form,
                                     languageChoices=languageChoices,
@@ -531,24 +531,28 @@ def concordance(language_id=None, translation_id=None, searchItem=None, searchOp
         verseCounter = 1
 
         ###Add space between non-alphanumeric symbols and words
-
-        symbols = ['"', '\\\\', ',', '\.', '\?', '!', ':', '\)', '\(', '-', ';', ']', '\[', "'", '\|', '\*', '/', '=', '_', '#', '>', '`', '<', '{', '}', '\+', '\$', '%', '&', '\^', '~', '@']
+        symbols = ['\.', ',', '\?', '\)', '\(', '!', ':', '-', ';', '“', '”', '’', '‘', '\]', '\[', '—', "'", '–', '¿', '…', '¡', '»', '«', '\*', '/', '"', '―', '‹', '„', '›', '=', '‑', '#', '‐', '\|', '।', '>', '、', '،', '؟', '。', '<', '\+', '\}', '\{', '؛', '_', '）', '（', '！', '？', '：', '，', '；', '」', '「', '『', '』', '‚', '·', '］', '［', '\$', '%', '॰', '○', '&', '¶', '†', '၊', '〔', '〕', '។', '॥', '×', '《', '》', '။', '៖', '᙭', '‧', '•', '@', '᙮', '־', '၍', '၎', '၏', '၌', '．', '−', '‛', '៚', '៕', '፥', '።', '፤', '⌞', '⌟', '~', '׃', '།', '·', '＃', '・', '－', '፡', '༎', '՞', '՝', '։', '՛', '՜', '׆', '׀', '】', '【', '─', '§', '༌', '፦', '¬', '�', '۔', '՚', '་', '′', '‟', '±', '؞', '꤮', '‰', '£', '\\\\', '៘', '៙', '／', '～', '＝', '․', '⁄', '☽', '〚', '〛', '©', '⌃', '﴿', '﴾', '₦', '¢', '꤯', '‥', '༽', '༼', '‸', '᥄', '᥅', '∂', '¥', '⌊', '⌋', '๚', '྅', '႟', '⵰', '⧾', '⸃', '⸅', '⸀', '⸁', ';', '⟦', '⟧', '⸄', '⸂', '¦', '״', '׳', '╟', '╚', '۾', '۽', '€', '‒', '༄', '༅', '፣', '￥', '→', '♪', '＜', '〰', '｜', '＞', '※', '☆', '％', '＋', '＠', '㎞', '△', '🎼', '♥', '◎', '㎢', '＆', '★', '｣', '＊', '♫', '･', '〉', '〈', '∼']
 
         for verse in text:
             verseText = verse[3]
             for symbol in symbols:
                 if re.search(symbol, verseText):
+                    shiftIndex = 0
                     for item in re.finditer(symbol, verseText):
-                        before = verseText[:item.start()]
-                        smbl = verseText[item.start():item.end()]
-                        after = verseText[item.end():]
-                        if item.start() != 0 and item.end() != len(verseText) and not verseText[item.start()-1].isspace() and not verseText[item.end()].isspace():
+                        itemStart = item.start() + shiftIndex
+                        itemEnd = item.end() + shiftIndex
+                        before = verseText[:itemStart]
+                        smbl = verseText[itemStart:itemEnd]
+                        after = verseText[itemEnd:]
+                        ###Check if the symbol is at the start or end of the line or next to a space
+                        if itemStart != 0 and itemEnd != len(verseText) and ((verseText[itemStart-1].isalnum() and verseText[itemEnd].isalnum()) or (verseText[itemStart-1].isspace() and verseText[itemEnd].isspace())):
                             continue
-                        elif item.start() != 0 and not verseText[item.start()-1].isspace():
-                            verseText = before + f' {smbl}' + after
-                        elif item.end() != len(verseText) and not verseText[item.end()].isspace():
-                            verseText = before + f'{smbl} ' + after
-
+                        else:
+                            shiftIndex += 1
+                            if itemStart != 0 and not verseText[itemStart-1].isspace():
+                                verseText = before + f' {smbl}' + after
+                            elif itemEnd != len(verseText) and not verseText[itemEnd].isspace():
+                                verseText = before + f'{smbl} ' + after
 
         
 
@@ -621,7 +625,7 @@ def concordance(language_id=None, translation_id=None, searchItem=None, searchOp
             ###Skip processing verses without any search results
             if len(found) == 0:
                 continue
-
+            
             for item in found:
 
                 ###Skip empty searches consisting only of whitespace or regex only with dots
@@ -739,6 +743,9 @@ def concordance(language_id=None, translation_id=None, searchItem=None, searchOp
 ###TO DO: Separate punctuation from words for all languages (Adyghe)
 ###TO DO: Cymreg: ' is part of words
 ###TO DO: Space between frequency and words in Wordlist
-###TO DO: Concordance: '\' becomes '\\\\'
 ###TO DO: Change fonts
-###TO DO: Error when wrong regex in word list
+###TO DO: Genesis 21 instead of Genesis 1 in Afrikaans--Nuwe_Lewende_Vertaling_(NLV)_nlv!!!!!
+###TO DO: Jumping sorting form options in concordance
+###TO DO: Stretching of the form in concordance
+
+
