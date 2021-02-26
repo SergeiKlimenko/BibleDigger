@@ -271,6 +271,8 @@ def catchIncorrectRegex(searchItem, case):
 def separatePunctuation(string):
     symbols = ['\.', ',', '\?', '\)', '\(', '!', ':', '-', ';', '“', '”', '’', '‘', '\]', '\[', '—', "'", '–', '¿', '…', '¡', '»', '«', '\*', '/', '"', '―', '‹', '„', '›', '=', '‑', '#', '‐', '\|', '।', '>', '、', '،', '؟', '。', '<', '\+', '\}', '\{', '؛', '_', '）', '（', '！', '？', '：', '，', '；', '」', '「', '『', '』', '‚', '·', '］', '［', '\$', '%', '॰', '○', '&', '¶', '†', '၊', '〔', '〕', '។', '॥', '×', '《', '》', '။', '៖', '᙭', '‧', '•', '@', '᙮', '־', '၍', '၎', '၏', '၌', '．', '−', '‛', '៚', '៕', '፥', '።', '፤', '⌞', '⌟', '~', '׃', '།', '·', '＃', '・', '－', '፡', '༎', '՞', '՝', '։', '՛', '՜', '׆', '׀', '】', '【', '─', '§', '༌', '፦', '¬', '�', '۔', '՚', '་', '′', '‟', '±', '؞', '꤮', '‰', '£', '\\\\', '៘', '៙', '／', '～', '＝', '․', '⁄', '☽', '〚', '〛', '©', '⌃', '﴿', '﴾', '₦', '¢', '꤯', '‥', '༽', '༼', '‸', '᥄', '᥅', '∂', '¥', '⌊', '⌋', '๚', '྅', '႟', '⵰', '⧾', '⸃', '⸅', '⸀', '⸁', ';', '⟦', '⟧', '⸄', '⸂', '¦', '״', '׳', '╟', '╚', '۾', '۽', '€', '‒', '༄', '༅', '፣', '￥', '→', '♪', '＜', '〰', '｜', '＞', '※', '☆', '％', '＋', '＠', '㎞', '△', '🎼', '♥', '◎', '㎢', '＆', '★', '｣', '＊', '♫', '･', '〉', '〈', '∼']
 
+    string = string.replace('—', ' — ')
+
     for symbol in symbols:
         if re.search(symbol, string):
             shiftIndex = 0
@@ -284,12 +286,16 @@ def separatePunctuation(string):
                 if itemStart != 0 and itemEnd != len(string) and ((string[itemStart-1].isalnum() and string[itemEnd].isalnum()) or (string[itemStart-1].isspace() and string[itemEnd].isspace())):
                     continue
                 else:
-                    shiftIndex += 1
-                    if itemStart != 0 and not string[itemStart-1].isspace():
-                        string = before + f' {smbl}' + after
-                    elif itemEnd != len(string) and not string[itemEnd].isspace():
-                        string = before + f'{smbl} ' + after
-    return string.replace('—', ' — ')
+                    if itemStart != 0 and itemEnd != len(string) and not string[itemStart-1].isspace() and not string[itemEnd].isspace():
+                        shiftIndex += 2
+                        string = before + f' {smbl} ' + after
+                    else:
+                        shiftIndex += 1
+                        if itemStart != 0 and not string[itemStart-1].isspace():
+                            string = before + f' {smbl}' + after
+                        elif itemEnd != len(string) and not string[itemEnd].isspace():
+                            string = before + f'{smbl} ' + after
+    return string
 
 
 @functions.route('/wordlist/', methods=['GET', 'POST'])
@@ -773,5 +779,4 @@ def concordance(language_id=None, translation_id=None, searchItem=None, searchOp
 ###TO DO: Genesis 21 instead of Genesis 1 in Afrikaans--Nuwe_Lewende_Vertaling_(NLV)_nlv!!!!!
 ###TO DO: Jumping sorting form options in concordance
 ###TO DO: Stretching of the form in concordance
-###TO DO: Provide for separation of all punctuation signs in word list
 
