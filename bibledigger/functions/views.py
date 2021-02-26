@@ -268,6 +268,30 @@ def catchIncorrectRegex(searchItem, case):
         return False
 
 
+def separatePunctuation(string):
+    symbols = ['\.', ',', '\?', '\)', '\(', '!', ':', '-', ';', '“', '”', '’', '‘', '\]', '\[', '—', "'", '–', '¿', '…', '¡', '»', '«', '\*', '/', '"', '―', '‹', '„', '›', '=', '‑', '#', '‐', '\|', '।', '>', '、', '،', '؟', '。', '<', '\+', '\}', '\{', '؛', '_', '）', '（', '！', '？', '：', '，', '；', '」', '「', '『', '』', '‚', '·', '］', '［', '\$', '%', '॰', '○', '&', '¶', '†', '၊', '〔', '〕', '។', '॥', '×', '《', '》', '။', '៖', '᙭', '‧', '•', '@', '᙮', '־', '၍', '၎', '၏', '၌', '．', '−', '‛', '៚', '៕', '፥', '።', '፤', '⌞', '⌟', '~', '׃', '།', '·', '＃', '・', '－', '፡', '༎', '՞', '՝', '։', '՛', '՜', '׆', '׀', '】', '【', '─', '§', '༌', '፦', '¬', '�', '۔', '՚', '་', '′', '‟', '±', '؞', '꤮', '‰', '£', '\\\\', '៘', '៙', '／', '～', '＝', '․', '⁄', '☽', '〚', '〛', '©', '⌃', '﴿', '﴾', '₦', '¢', '꤯', '‥', '༽', '༼', '‸', '᥄', '᥅', '∂', '¥', '⌊', '⌋', '๚', '྅', '႟', '⵰', '⧾', '⸃', '⸅', '⸀', '⸁', ';', '⟦', '⟧', '⸄', '⸂', '¦', '״', '׳', '╟', '╚', '۾', '۽', '€', '‒', '༄', '༅', '፣', '￥', '→', '♪', '＜', '〰', '｜', '＞', '※', '☆', '％', '＋', '＠', '㎞', '△', '🎼', '♥', '◎', '㎢', '＆', '★', '｣', '＊', '♫', '･', '〉', '〈', '∼']
+
+    for symbol in symbols:
+        if re.search(symbol, string):
+            shiftIndex = 0
+            for item in re.finditer(symbol, string):
+                itemStart = item.start() + shiftIndex
+                itemEnd = item.end() + shiftIndex
+                before = string[:itemStart]
+                smbl = string[itemStart:itemEnd]
+                after = string[itemEnd:]
+                ###Check if the symbol is at the start or end of the line or next to a space
+                if itemStart != 0 and itemEnd != len(string) and ((string[itemStart-1].isalnum() and string[itemEnd].isalnum()) or (string[itemStart-1].isspace() and string[itemEnd].isspace())):
+                    continue
+                else:
+                    shiftIndex += 1
+                    if itemStart != 0 and not string[itemStart-1].isspace():
+                        string = before + f' {smbl}' + after
+                    elif itemEnd != len(string) and not string[itemEnd].isspace():
+                        string = before + f'{smbl} ' + after
+    return string.replace('—', ' — ')
+
+
 @functions.route('/wordlist/', methods=['GET', 'POST'])
 @functions.route('''/wordlist/<int:language_id>/<int:translation_id>/<searchItem>/<searchOption>/
                      <case>/<int:freqMin>/<int:freqMax>/<order>''', methods=['GET', 'POST'])
@@ -328,17 +352,17 @@ def wordList(language_id=None, translation_id=None, searchItem=None, searchOptio
         verseList = []
 
         for verse in fullText:
-
-            verse = verse[0].replace('—', ' ').split()
-
-            strippedVerse = []
-            for word in verse:
+            # verse = verse[0].replace('—', ' — ').split()
+            verse = separatePunctuation(verse[0]).split()
+            # strippedVerse = []
+            # for word in verse:
                 ###TO DO: Add spaces for punctuation symbols, rather then strip them
-                strippedVerse.append(word.strip(',.()[];:""„“”?!—/\\-+=_<>¿»«').
-                    strip(",.()[];:''‘’„‛“”?!—/\\-+=_<>"))
+                # strippedVerse.append(word.strip(',.()[];:""„“”?!—/\\-+=_<>¿»«').
+                    # strip(",.()[];:''‘’„‛“”?!—/\\-+=_<>"))
 
-            verseList += strippedVerse
+            # verseList += strippedVerse
 
+            verseList += verse
         from collections import Counter
         wordList = Counter(verseList)
 
@@ -530,31 +554,33 @@ def concordance(language_id=None, translation_id=None, searchItem=None, searchOp
 
         verseCounter = 1
 
-        ###Add space between non-alphanumeric symbols and words
-        symbols = ['\.', ',', '\?', '\)', '\(', '!', ':', '-', ';', '“', '”', '’', '‘', '\]', '\[', '—', "'", '–', '¿', '…', '¡', '»', '«', '\*', '/', '"', '―', '‹', '„', '›', '=', '‑', '#', '‐', '\|', '।', '>', '、', '،', '؟', '。', '<', '\+', '\}', '\{', '؛', '_', '）', '（', '！', '？', '：', '，', '；', '」', '「', '『', '』', '‚', '·', '］', '［', '\$', '%', '॰', '○', '&', '¶', '†', '၊', '〔', '〕', '។', '॥', '×', '《', '》', '။', '៖', '᙭', '‧', '•', '@', '᙮', '־', '၍', '၎', '၏', '၌', '．', '−', '‛', '៚', '៕', '፥', '።', '፤', '⌞', '⌟', '~', '׃', '།', '·', '＃', '・', '－', '፡', '༎', '՞', '՝', '։', '՛', '՜', '׆', '׀', '】', '【', '─', '§', '༌', '፦', '¬', '�', '۔', '՚', '་', '′', '‟', '±', '؞', '꤮', '‰', '£', '\\\\', '៘', '៙', '／', '～', '＝', '․', '⁄', '☽', '〚', '〛', '©', '⌃', '﴿', '﴾', '₦', '¢', '꤯', '‥', '༽', '༼', '‸', '᥄', '᥅', '∂', '¥', '⌊', '⌋', '๚', '྅', '႟', '⵰', '⧾', '⸃', '⸅', '⸀', '⸁', ';', '⟦', '⟧', '⸄', '⸂', '¦', '״', '׳', '╟', '╚', '۾', '۽', '€', '‒', '༄', '༅', '፣', '￥', '→', '♪', '＜', '〰', '｜', '＞', '※', '☆', '％', '＋', '＠', '㎞', '△', '🎼', '♥', '◎', '㎢', '＆', '★', '｣', '＊', '♫', '･', '〉', '〈', '∼']
+        # ###Add space between non-alphanumeric symbols and words
+        # symbols = ['\.', ',', '\?', '\)', '\(', '!', ':', '-', ';', '“', '”', '’', '‘', '\]', '\[', '—', "'", '–', '¿', '…', '¡', '»', '«', '\*', '/', '"', '―', '‹', '„', '›', '=', '‑', '#', '‐', '\|', '।', '>', '、', '،', '؟', '。', '<', '\+', '\}', '\{', '؛', '_', '）', '（', '！', '？', '：', '，', '；', '」', '「', '『', '』', '‚', '·', '］', '［', '\$', '%', '॰', '○', '&', '¶', '†', '၊', '〔', '〕', '។', '॥', '×', '《', '》', '။', '៖', '᙭', '‧', '•', '@', '᙮', '־', '၍', '၎', '၏', '၌', '．', '−', '‛', '៚', '៕', '፥', '።', '፤', '⌞', '⌟', '~', '׃', '།', '·', '＃', '・', '－', '፡', '༎', '՞', '՝', '։', '՛', '՜', '׆', '׀', '】', '【', '─', '§', '༌', '፦', '¬', '�', '۔', '՚', '་', '′', '‟', '±', '؞', '꤮', '‰', '£', '\\\\', '៘', '៙', '／', '～', '＝', '․', '⁄', '☽', '〚', '〛', '©', '⌃', '﴿', '﴾', '₦', '¢', '꤯', '‥', '༽', '༼', '‸', '᥄', '᥅', '∂', '¥', '⌊', '⌋', '๚', '྅', '႟', '⵰', '⧾', '⸃', '⸅', '⸀', '⸁', ';', '⟦', '⟧', '⸄', '⸂', '¦', '״', '׳', '╟', '╚', '۾', '۽', '€', '‒', '༄', '༅', '፣', '￥', '→', '♪', '＜', '〰', '｜', '＞', '※', '☆', '％', '＋', '＠', '㎞', '△', '🎼', '♥', '◎', '㎢', '＆', '★', '｣', '＊', '♫', '･', '〉', '〈', '∼']
+
+        # for verse in text:
+        #     verseText = verse[3]
+        #     for symbol in symbols:
+        #         if re.search(symbol, verseText):
+        #             shiftIndex = 0
+        #             for item in re.finditer(symbol, verseText):
+        #                 itemStart = item.start() + shiftIndex
+        #                 itemEnd = item.end() + shiftIndex
+        #                 before = verseText[:itemStart]
+        #                 smbl = verseText[itemStart:itemEnd]
+        #                 after = verseText[itemEnd:]
+        #                 ###Check if the symbol is at the start or end of the line or next to a space
+        #                 if itemStart != 0 and itemEnd != len(verseText) and ((verseText[itemStart-1].isalnum() and verseText[itemEnd].isalnum()) or (verseText[itemStart-1].isspace() and verseText[itemEnd].isspace())):
+        #                     continue
+        #                 else:
+        #                     shiftIndex += 1
+        #                     if itemStart != 0 and not verseText[itemStart-1].isspace():
+        #                         verseText = before + f' {smbl}' + after
+        #                     elif itemEnd != len(verseText) and not verseText[itemEnd].isspace():
+        #                         verseText = before + f'{smbl} ' + after
 
         for verse in text:
-            verseText = verse[3]
-            for symbol in symbols:
-                if re.search(symbol, verseText):
-                    shiftIndex = 0
-                    for item in re.finditer(symbol, verseText):
-                        itemStart = item.start() + shiftIndex
-                        itemEnd = item.end() + shiftIndex
-                        before = verseText[:itemStart]
-                        smbl = verseText[itemStart:itemEnd]
-                        after = verseText[itemEnd:]
-                        ###Check if the symbol is at the start or end of the line or next to a space
-                        if itemStart != 0 and itemEnd != len(verseText) and ((verseText[itemStart-1].isalnum() and verseText[itemEnd].isalnum()) or (verseText[itemStart-1].isspace() and verseText[itemEnd].isspace())):
-                            continue
-                        else:
-                            shiftIndex += 1
-                            if itemStart != 0 and not verseText[itemStart-1].isspace():
-                                verseText = before + f' {smbl}' + after
-                            elif itemEnd != len(verseText) and not verseText[itemEnd].isspace():
-                                verseText = before + f'{smbl} ' + after
-
-        
+            verseText = separatePunctuation(verse[3])
+            
 
             ###
         # leftSymbols = '(["“„<\'‘‛¿»«'
@@ -747,5 +773,5 @@ def concordance(language_id=None, translation_id=None, searchItem=None, searchOp
 ###TO DO: Genesis 21 instead of Genesis 1 in Afrikaans--Nuwe_Lewende_Vertaling_(NLV)_nlv!!!!!
 ###TO DO: Jumping sorting form options in concordance
 ###TO DO: Stretching of the form in concordance
-
+###TO DO: Provide for separation of all punctuation signs in word list
 
