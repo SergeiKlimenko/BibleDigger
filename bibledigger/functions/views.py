@@ -286,14 +286,16 @@ def separatePunctuation(string):
                 if itemStart != 0 and itemEnd != len(string) and ((string[itemStart-1].isalnum() and string[itemEnd].isalnum()) or (string[itemStart-1].isspace() and string[itemEnd].isspace())):
                     continue
                 else:
+                    print(symbol, len(string), ':::', string)
                     if itemStart != 0 and itemEnd != len(string) and not string[itemStart-1].isspace() and not string[itemEnd].isspace():
                         shiftIndex += 2
                         string = before + f' {smbl} ' + after
                     else:
-                        shiftIndex += 1
                         if itemStart != 0 and not string[itemStart-1].isspace():
+                            shiftIndex += 1
                             string = before + f' {smbl}' + after
                         elif itemEnd != len(string) and not string[itemEnd].isspace():
+                            shiftIndex += 1
                             string = before + f'{smbl} ' + after
     return string
 
