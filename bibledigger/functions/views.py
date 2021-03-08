@@ -243,7 +243,7 @@ def verseSearch(parallelOrNot, verseList=None, input=None):
 
         else:
             verseList = processVerseList(verseList, True)
-            # print(verseList)###delete
+
             return render_template('versesearch.html',
                                     form=form,
                                     languageChoices=languageChoices,
@@ -268,10 +268,37 @@ def catchIncorrectRegex(searchItem, case):
         return False
 
 
-def separatePunctuation(string):
-    symbols = ['\.', ',', '\?', '\)', '\(', '!', ':', '-', ';', '“', '”', '’', '‘', '\]', '\[', '—', "'", '–', '¿', '…', '¡', '»', '«', '\*', '/', '"', '―', '‹', '„', '›', '=', '‑', '#', '‐', '\|', '।', '>', '、', '،', '؟', '。', '<', '\+', '\}', '\{', '؛', '_', '）', '（', '！', '？', '：', '，', '；', '」', '「', '『', '』', '‚', '·', '］', '［', '\$', '%', '॰', '○', '&', '¶', '†', '၊', '〔', '〕', '។', '॥', '×', '《', '》', '။', '៖', '᙭', '‧', '•', '@', '᙮', '־', '၍', '၎', '၏', '၌', '．', '−', '‛', '៚', '៕', '፥', '።', '፤', '⌞', '⌟', '~', '׃', '།', '·', '＃', '・', '－', '፡', '༎', '՞', '՝', '։', '՛', '՜', '׆', '׀', '】', '【', '─', '§', '༌', '፦', '¬', '�', '۔', '՚', '་', '′', '‟', '±', '؞', '꤮', '‰', '£', '\\\\', '៘', '៙', '／', '～', '＝', '․', '⁄', '☽', '〚', '〛', '©', '⌃', '﴿', '﴾', '₦', '¢', '꤯', '‥', '༽', '༼', '‸', '᥄', '᥅', '∂', '¥', '⌊', '⌋', '๚', '྅', '႟', '⵰', '⧾', '⸃', '⸅', '⸀', '⸁', ';', '⟦', '⟧', '⸄', '⸂', '¦', '״', '׳', '╟', '╚', '۾', '۽', '€', '‒', '༄', '༅', '፣', '￥', '→', '♪', '＜', '〰', '｜', '＞', '※', '☆', '％', '＋', '＠', '㎞', '△', '🎼', '♥', '◎', '㎢', '＆', '★', '｣', '＊', '♫', '･', '〉', '〈', '∼']
+def separatePunctuation(string, language):
 
-    string = string.replace('—', ' — ')
+    symbols = ['\.', ',', '\?', '\)', '\(', '!', ':', '-', ';', '“', '”', '’', '‘', '\]', '\[', '—', "'", '–', '¿', '…', '»', '¡', '«', '\*', '/', '"', '―', '‹', '›', '\u200c', '„', '=', '‑', '\u200d', '\xad', '‐', '।', '\|', '>', '、', '،', '؟', '。', '<', '\+', '\{', '\}', '؛', '_', '（', '）', '#', '\u200b', '！', '？', '』', '『', '：', '」', '；', '「', '，', '‚', '·', '］', '［', '\u200f', '\$', '%', '॰', '○', '&', '¶', '†', '၊', '〕', '〔', '។', '\u200e', '॥', '×', '။', '《', '》', '៖', '᙭', '၏', '၎', '၍', '၌', '‧', '•', '@', '᙮', '־', '．', '−', '‛', '៕', '៚', '\x9d', '፤', '።', '⌟', '⌞', '\ufeff', '~', '\u2060', '׃', '།', '·', '＃', '・', '－', '፥', '፡', '\x92', '༎', '՝', '։', '՛', '՞', '՜', '׆', '׀', '【', '】', '─', '′', '\x85', '§', '༌', '፦', '¬', '�', '۔', '՚', '་', '‟', '\ue234', '\ue233', '\ue2fc', '\ue2fa', '\ue2fe', '\ue236', '\ue231', '\ue232', '\ue2fb', '\ue2f9', '±', '\x91', '؞', '꤮', '‰', '\uf21d', '£', '\x94', '\x93', '\\\\', '\x90', '\x8f', '\x81', '៙', '៘', '＝', '／', '～', '\uf0b7', '\uf171', '․', '⁄', '\uf219', '☽', '〛', '〚', '©', '⌃', '\x96', '﴿', '﴾', '₦', '\ue2db', '\ue2d9', '\ue2de', '¢', '꤯', '‥', '༽', '༼', '‸', '᥄', '᥅', '∂', '\uf218', '¥', '\x8d', '⌋', '⌊', '๚', '྅', '႟', '\n', '\x9b', '⵰', '⧾', '⸀', '⸁', '⸂', '⸃', '⟧', '⸅', '⟦', ';', '⸄', '¦', '׳', '״', '╚', '╟', '\x8c', '\x98', '۾', '۽', '€', '‒', '༄', '༅', '፣', '\ue314', '\ue315', '\ue310', '\ue309', '＠', '｣', '※', '＋', '△', '＞', '♫', '★', '＆', '｜', '☆', '￥', '🎼', '㎢', '％', '〰', '◎', '→', '＊', '㎞', '＜', '♥', '♪', '･', '\ue439', '\ue030', '\ue317', '〈', '〉', '\x9f', '∼', '\x87']
+
+    def wordEndCheck(string, index, symbols, direction):
+        if direction == 'right':
+            string = string[index:]
+        elif direction == 'left':
+            string = string[:index+1][::-1]
+        for symbol in string:
+            if any([s for s in symbols if symbol in s]):
+                continue
+            elif symbol.isspace():
+                return True
+            elif symbol.isalnum():
+                return False
+        return True
+
+    def addSpaces(shiftIndex, smbl, before, after, spaces):
+        if spaces == 2:
+            shiftIndex += 2
+            string = before + f' {smbl} ' + after
+        else:
+            shiftIndex += 1
+            if spaces == 'left':
+                string = before + f' {smbl}' + after
+            elif spaces == 'right':
+                string = before + f'{smbl} ' + after
+        return string, shiftIndex
+
+    noSpaceLanguages = ['Japanese', 'Chinese (Classical)', 'Chinese (Simplified)', 'Chinese (Traditional)', '(Hakkafa)', 'Khmer', 'Thai', 'Myanmar', 'Bunong']
 
     for symbol in symbols:
         if re.search(symbol, string):
@@ -280,25 +307,44 @@ def separatePunctuation(string):
                 itemStart = item.start() + shiftIndex
                 itemEnd = item.end() + shiftIndex
                 before = string[:itemStart]
-                smbl = string[itemStart:itemEnd]
+                smbl = string[itemStart:itemEnd]    
                 after = string[itemEnd:]
-                ###Check if the symbol is at the start or end of the line or next to a space
-                if itemStart != 0 and itemEnd != len(string) and ((string[itemStart-1].isalnum() and string[itemEnd].isalnum()) or (string[itemStart-1].isspace() and string[itemEnd].isspace())):
-                    continue
-                else:
-                    print(symbol, len(string), ':::', string)
-                    if itemStart != 0 and itemEnd != len(string) and not string[itemStart-1].isspace() and not string[itemEnd].isspace():
-                        shiftIndex += 2
-                        string = before + f' {smbl} ' + after
-                    else:
-                        if itemStart != 0 and not string[itemStart-1].isspace():
-                            shiftIndex += 1
-                            string = before + f' {smbl}' + after
-                        elif itemEnd != len(string) and not string[itemEnd].isspace():
-                            shiftIndex += 1
-                            string = before + f'{smbl} ' + after
+                if itemStart != 0:
+                    prevSymbol = string[itemStart-1]
+                if itemEnd != len(string):
+                    nextSymbol = string[itemEnd]
+                #Add a space to signs with one space
+                if itemStart != 0 and not prevSymbol.isspace() and (itemEnd == len(string) or nextSymbol.isspace()):
+                    #Skip apostrophes at the end of the word (bagi', nuyya)
+                    if smbl == "'":
+                        continue
+                    string, shiftIndex = addSpaces(shiftIndex, smbl, before, after, 'left')
+                elif itemEnd != len(string) and not nextSymbol.isspace() and (itemStart == 0 or prevSymbol.isspace()):
+                    #Skip apostrophes at the beginning of the word (bagi', nuyya)
+                    if smbl == "'":
+                        continue
+                    string, shiftIndex = addSpaces(shiftIndex, smbl, before, after, 'right')
+                #Add spaces around symbols in the middle of the word or skip        
+                elif itemStart != 0 and itemEnd != len(string):
+                    if not prevSymbol.isspace() and not nextSymbol.isspace():
+                        #Surround en dash and em dash with spaces if they are not
+                        if symbol in ['—', '–', '\u200c', '\u200b', '』', '『', '」', '「']:
+                            string, shiftIndex = addSpaces(shiftIndex, smbl, before, after, 2)
+                        elif prevSymbol.isdigit() and nextSymbol.isdigit():
+                            #Skip comma & dot between digits
+                            if ',' in symbol or '.' in symbol:
+                                continue
+                            #Add spaces around other symbols between digits (hyphens, colons, etc.)
+                            else:
+                                string, shiftIndex = addSpaces(shiftIndex, smbl, before, after, 2)
+                        elif wordEndCheck(string, itemStart, symbols, 'left') or wordEndCheck(string, itemStart, symbols, 'right'):
+                            string, shiftIndex = addSpaces(shiftIndex, smbl, before, after, 2) 
+                        #If one of the languages without spaces
+                        elif len([lang for lang in noSpaceLanguages if lang in language]) > 0:
+                            #Add spaces between all signs when no spaces around
+                            string, shiftIndex = addSpaces(shiftIndex, smbl, before, after, 2)
     return string
-
+    
 
 @functions.route('/wordlist/', methods=['GET', 'POST'])
 @functions.route('''/wordlist/<int:language_id>/<int:translation_id>/<searchItem>/<searchOption>/
@@ -356,12 +402,14 @@ def wordList(language_id=None, translation_id=None, searchItem=None, searchOptio
         fullText = Text.query.filter_by(translation_id=translation_id).with_entities(Text.text).all()
 
         searchItem = searchItem.replace('%2F', '/').replace('%2E', '.').replace('%23', '#').replace('%27', "’")
+        
+        language = db.engine.execute(f"SELECT language FROM languages WHERE id = {language_id}").fetchone().language
 
         verseList = []
 
         for verse in fullText:
             # verse = verse[0].replace('—', ' — ').split()
-            verse = separatePunctuation(verse[0]).split()
+            verse = separatePunctuation(verse[0], language).split()
             # strippedVerse = []
             # for word in verse:
                 ###TO DO: Add spaces for punctuation symbols, rather then strip them
@@ -517,9 +565,9 @@ def concordance(language_id=None, translation_id=None, searchItem=None, searchOp
             FROM texts a LEFT JOIN books b ON a.book_code = b.code WHERE \
             translation_id = {translation_id}'))
 
+        print(searchItem)###delete
         searchItem = searchItem.replace('%2F', '/').replace('%2E', '.').replace('%23', '#').replace('%27', "’")
         print(searchItem)###delete
-
         if searchItem == None: ###Edit
             searchItem = form.search.data
         ###Strip the search item to avoid searching just for whitespaces
@@ -562,95 +610,10 @@ def concordance(language_id=None, translation_id=None, searchItem=None, searchOp
 
         verseCounter = 1
 
-        # ###Add space between non-alphanumeric symbols and words
-        # symbols = ['\.', ',', '\?', '\)', '\(', '!', ':', '-', ';', '“', '”', '’', '‘', '\]', '\[', '—', "'", '–', '¿', '…', '¡', '»', '«', '\*', '/', '"', '―', '‹', '„', '›', '=', '‑', '#', '‐', '\|', '।', '>', '、', '،', '؟', '。', '<', '\+', '\}', '\{', '؛', '_', '）', '（', '！', '？', '：', '，', '；', '」', '「', '『', '』', '‚', '·', '］', '［', '\$', '%', '॰', '○', '&', '¶', '†', '၊', '〔', '〕', '។', '॥', '×', '《', '》', '။', '៖', '᙭', '‧', '•', '@', '᙮', '־', '၍', '၎', '၏', '၌', '．', '−', '‛', '៚', '៕', '፥', '።', '፤', '⌞', '⌟', '~', '׃', '།', '·', '＃', '・', '－', '፡', '༎', '՞', '՝', '։', '՛', '՜', '׆', '׀', '】', '【', '─', '§', '༌', '፦', '¬', '�', '۔', '՚', '་', '′', '‟', '±', '؞', '꤮', '‰', '£', '\\\\', '៘', '៙', '／', '～', '＝', '․', '⁄', '☽', '〚', '〛', '©', '⌃', '﴿', '﴾', '₦', '¢', '꤯', '‥', '༽', '༼', '‸', '᥄', '᥅', '∂', '¥', '⌊', '⌋', '๚', '྅', '႟', '⵰', '⧾', '⸃', '⸅', '⸀', '⸁', ';', '⟦', '⟧', '⸄', '⸂', '¦', '״', '׳', '╟', '╚', '۾', '۽', '€', '‒', '༄', '༅', '፣', '￥', '→', '♪', '＜', '〰', '｜', '＞', '※', '☆', '％', '＋', '＠', '㎞', '△', '🎼', '♥', '◎', '㎢', '＆', '★', '｣', '＊', '♫', '･', '〉', '〈', '∼']
-
-        # for verse in text:
-        #     verseText = verse[3]
-        #     for symbol in symbols:
-        #         if re.search(symbol, verseText):
-        #             shiftIndex = 0
-        #             for item in re.finditer(symbol, verseText):
-        #                 itemStart = item.start() + shiftIndex
-        #                 itemEnd = item.end() + shiftIndex
-        #                 before = verseText[:itemStart]
-        #                 smbl = verseText[itemStart:itemEnd]
-        #                 after = verseText[itemEnd:]
-        #                 ###Check if the symbol is at the start or end of the line or next to a space
-        #                 if itemStart != 0 and itemEnd != len(verseText) and ((verseText[itemStart-1].isalnum() and verseText[itemEnd].isalnum()) or (verseText[itemStart-1].isspace() and verseText[itemEnd].isspace())):
-        #                     continue
-        #                 else:
-        #                     shiftIndex += 1
-        #                     if itemStart != 0 and not verseText[itemStart-1].isspace():
-        #                         verseText = before + f' {smbl}' + after
-        #                     elif itemEnd != len(verseText) and not verseText[itemEnd].isspace():
-        #                         verseText = before + f'{smbl} ' + after
-
+        language = db.engine.execute(f"SELECT language FROM languages WHERE id = {language_id}").fetchone().language
         for verse in text:
-            verseText = separatePunctuation(verse[3])
+            verseText = separatePunctuation(verse[3], language)
             
-
-            ###
-        # leftSymbols = '(["“„<\'‘‛¿»«'
-        # rightSymbols = ',.)];:"”?!>\'’'
-        # middleSymbols = '—/\\+=_'   
-
-        # for verse in text:
-        #     verseText = verse[3]
-        #     ###Add space between non-alphanumeric symbols and words
-        #     for symbol in leftSymbols:
-        #         if symbol == '\'':
-        #             listRE = list(re.finditer(symbol, verseText))
-        #             counter = 0
-        #             for item in listRE:
-        #                 start = item.start() + counter
-        #                 end = item.end() + counter
-        #                 if start != 0 and end != len(verseText) and \
-        #                     verseText[start-1].isalpha() and verseText[end].isalpha():
-        #                     continue
-        #                 else:
-        #                     verseText = verseText[:start+1] + ' ' + verseText[start+1:]
-        #                     counter += 1
-        #         else:
-        #             verseText = verseText.replace(symbol, symbol + ' ')
-        #     for symbol in rightSymbols:
-        #         ###Skip adding spaces to numbers with ',', '.', and ':'. Skip adding spaces around apostrophe in the middle of a word
-        #         if symbol in ',.:\'':
-        #             for commaDot in (',', '\.', ':', '\''):
-        #                 if symbol == commaDot.strip('\\'):
-        #                     listRE = list(re.finditer(commaDot, verseText))
-        #                     counter = 0
-        #                     for item in listRE:
-        #                         start = item.start() + counter
-        #                         end = item.end() + counter
-        #                         if start != 0 and end != len(verseText):
-        #                             if symbol != '\'' and verseText[start-1].isnumeric() and verseText[end].isnumeric():
-        #                                 continue
-        #                             elif symbol == '\'' and verseText[start-1].isalpha() and verseText[end].isalpha():
-        #                                 continue
-        #                             else:
-        #                                 verseText = verseText[:start] + ' ' + verseText[start:]
-        #                                 counter += 1
-        #                         else:
-        #                             verseText = verseText[:start] + ' ' + verseText[start:]
-        #                             counter += 1
-        #         else:
-        #             verseText = verseText.replace(symbol, ' ' + symbol)
-        #         #################################################
-        #     for symbol in middleSymbols:
-        #         verseText = verseText.replace(symbol, ' ' + symbol + ' ')
-        #     ###insert a space into combinations like ':a', ';118:6', 'a‛'
-        #     if re.search(':\w', verseText):
-        #         for i in re.findall(':\w', verseText):
-        #             if not i[1].isnumeric():
-        #                 verseText = verseText.replace(i, f'{i[0]} {i[1]}')
-        #     if re.search(';\w', verseText):
-        #         for i in re.findall(';\w', verseText):
-        #             verseText = verseText.replace(i, f'{i[0]} {i[1]}')
-        #     if re.search('\w‛', verseText):
-        #         for i in re.findall('\w‛', verseText):
-        #             verseText = verseText.replace(i, f'{i[0]} {i[1]}')
-
             if case == 'False': #or form.caseSensitive.data == False:
                 found = list(re.finditer(searchRegex, verseText.lower()))
             else:
@@ -692,11 +655,11 @@ def concordance(language_id=None, translation_id=None, searchItem=None, searchOp
                 ###Grab the adjacent letters of the word that was found
                 if searchOption in ('cont', 'regex', 'end') or \
                     form.searchOptions.data in ('cont', 'regex', 'end'):
-                    while itemStart != 0 and not verseText[itemStart-1].isspace():
+                    while itemStart != 0 and not verseText[itemStart].isspace() and not verseText[itemStart-1].isspace():
                         itemStart -= 1
                 if searchOption in ('cont', 'regex', 'start') or \
                     form.searchOptions.data in ('cont', 'regex', 'start'):
-                    while itemEnd != len(verseText) and not verseText[itemEnd].isspace():
+                    while itemEnd != len(verseText) and not verseText[itemEnd-1].isspace() and not verseText[itemEnd].isspace():
                         itemEnd += 1
 
                 toAdd = [verse[0] + ' ' + verse[1] + ':' + str(verse[2]),
@@ -718,7 +681,6 @@ def concordance(language_id=None, translation_id=None, searchItem=None, searchOp
         ###Get the concordance length to display the 'Nothing found' message
         concLength = len(concordanceList)
 
-        print("concordance ready") ###delete
         if concLength == 0:
             return render_template('concordance.html',
                                     form=form,
@@ -772,13 +734,16 @@ def concordance(language_id=None, translation_id=None, searchItem=None, searchOp
 
 
 ###TO DO: Some verse numbers have letters (3a, 3b)
+###TO DO: Divehi: Genesis 2:4‏-5
 ###TO DO: Shitty verse numbering (21, 2, 3,.. 20, 22 in Afrikaans NLV)
 ###TO DO: Remove footnotes with # from some verses
-###TO DO: Separate punctuation from words for all languages (Adyghe)
-###TO DO: Cymreg: ' is part of words
 ###TO DO: Space between frequency and words in Wordlist
 ###TO DO: Change fonts
 ###TO DO: Genesis 21 instead of Genesis 1 in Afrikaans--Nuwe_Lewende_Vertaling_(NLV)_nlv!!!!!
-###TO DO: Jumping sorting form options in concordance
-###TO DO: Stretching of the form in concordance
-
+###TO DO: Stretching of the sidebar
+###TO DO: Add logo to the header in browser
+###TO DO: Front page
+###TO DO: Add spaces around punctuation signs in Asian scripts (Chinese, Khmer, Japanese)
+###TO DO: Flask app factory
+###TO DO: Change order of sorting options
+###TO DO: Alphabetize language order

@@ -64,7 +64,7 @@ class parallelVerseSearchForm(FlaskForm):
 
 class wordListForm(FieldsRequiredForm):
 
-    search = StringField('What are you looking for?', id="wordListSearch")
+    search = StringField('Search for:', id="wordListSearch")
     caseSensitive = BooleanField('Case sensitive')
 
     searchOptions = RadioField('Search options', choices=[('all', 'all'), ('start', 'starting with'),
@@ -80,7 +80,7 @@ class wordListForm(FieldsRequiredForm):
 
 class concordanceForm(FieldsRequiredForm):
 
-    search = StringField('What are you looking for?', validators=[DataRequired()])
+    search = StringField('Search for:', validators=[DataRequired()])
 
     searchOptions = RadioField('Search options', choices=[('word', 'whole word'),
          ('start', 'starting with'), ('end', 'ending with'), ('cont', 'containing'),

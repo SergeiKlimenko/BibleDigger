@@ -134,7 +134,6 @@ function render(aggreg, page, baseLink) {
         for (item of aggreg[page]) {
             var WORD = `${item[2].replace('/', '%252F').replace('.', '%2E').replace('#', '%23').replace("’", '%27')}`;
             var link = baseLink.replace('WORD', WORD);
-            console.log(WORD);
 
             wordListPage[`${aggreg[page].indexOf(item)}`] = `<div class="row">
                     <div class="col-1">
