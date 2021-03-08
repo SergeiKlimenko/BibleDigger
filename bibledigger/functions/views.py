@@ -565,9 +565,8 @@ def concordance(language_id=None, translation_id=None, searchItem=None, searchOp
             FROM texts a LEFT JOIN books b ON a.book_code = b.code WHERE \
             translation_id = {translation_id}'))
 
-        print(searchItem)###delete
         searchItem = searchItem.replace('%2F', '/').replace('%2E', '.').replace('%23', '#').replace('%27', "’")
-        print(searchItem)###delete
+        
         if searchItem == None: ###Edit
             searchItem = form.search.data
         ###Strip the search item to avoid searching just for whitespaces
