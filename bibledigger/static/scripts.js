@@ -259,12 +259,12 @@ function render(aggreg, page, baseLink) {
 function sortConc(conc, options, baseLink) {
 
     const colors = {
-        'option1': 'DeepPink',
-        'option2': 'Lime',
-        'option3': 'Turquoise',
-        'option4': 'Indigo',
-        'option5': 'Blue',
-        'option6': 'Gold'
+        'option1': 'Gold',
+        'option2': 'Blue',
+        'option3': 'OrangeRed',
+        'option4': 'Turquoise',
+        'option5': 'Lime',
+        'option6': 'DeepPink'
     };
     var concArray = [];
     const concPages = Object.keys(conc);

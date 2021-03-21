@@ -8,6 +8,8 @@ import re
 
 functions = Blueprint('functions', __name__)
 
+languageChoices = [(lang.id, lang.language) for lang in Language.query.all()]
+languageChoices.sort(key=lambda tup: tup[1])
 
 @functions.route('/browse/<int:parallelOrNot>/', methods=['GET', 'POST'])
 @functions.route('/browse/<int:parallelOrNot>/<int:language_id>/<int:translation_id>/<verseCode>', methods=['GET', 'POST'])
@@ -16,7 +18,7 @@ def browse(parallelOrNot, language_id=None, translation_id=None, verseCode=None)
     form = browseForm()
 
     ######delete
-    languageChoices = [(lang.id, lang.language) for lang in Language.query.all()]
+    # languageChoices = [(lang.id, lang.language) for lang in Language.query.all()]
 
     if form.validate_on_submit():
 
@@ -118,7 +120,7 @@ def verseSearch(parallelOrNot, verseList=None, input=None):
     elif parallelOrNot == 2:
         form = parallelVerseSearchForm()
 
-    languageChoices = [(lang.id, lang.language) for lang in Language.query.all()]
+    # languageChoices = [(lang.id, lang.language) for lang in Language.query.all()]
 
     #Convert string representation of verse list from route into list
     def processVerseList(verseList, fullProcess):
@@ -354,7 +356,7 @@ def wordList(language_id=None, translation_id=None, searchItem=None, searchOptio
 
     form = wordListForm()
 
-    languageChoices = [(lang.id, lang.language) for lang in Language.query.all()]
+    # languageChoices = [(lang.id, lang.language) for lang in Language.query.all()]
 
     if form.validate_on_submit():
 
@@ -533,7 +535,7 @@ def concordance(language_id=None, translation_id=None, searchItem=None, searchOp
 
     form = concordanceForm()
 
-    languageChoices = [(lang.id, lang.language) for lang in Language.query.all()]
+    # languageChoices = [(lang.id, lang.language) for lang in Language.query.all()]
     choices = [(None, 'none'), (0, 'verse'), (32, '3R'), (31, '2R'), (30, '1R'),
                 (2, 'KWIC'), (11, '1L'), (12, '2L'), (13, '3L')]
 
@@ -732,17 +734,8 @@ def concordance(language_id=None, translation_id=None, searchItem=None, searchOp
                                 case=case)
 
 
-###TO DO: Some verse numbers have letters (3a, 3b)
-###TO DO: Divehi: Genesis 2:4‏-5
-###TO DO: Shitty verse numbering (21, 2, 3,.. 20, 22 in Afrikaans NLV)
-###TO DO: Remove footnotes with # from some verses
-###TO DO: Space between frequency and words in Wordlist
-###TO DO: Change fonts
-###TO DO: Genesis 21 instead of Genesis 1 in Afrikaans--Nuwe_Lewende_Vertaling_(NLV)_nlv!!!!!
 ###TO DO: Stretching of the sidebar
-###TO DO: Add logo to the header in browser
 ###TO DO: Front page
 ###TO DO: Add spaces around punctuation signs in Asian scripts (Chinese, Khmer, Japanese)
 ###TO DO: Flask app factory
-###TO DO: Change order of sorting options
-###TO DO: Alphabetize language order
+###TO DO: Parallel texts with absent verses

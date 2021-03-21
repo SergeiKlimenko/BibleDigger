@@ -161,7 +161,7 @@
     sortSubmit.onclick = function() {
         let options = [];
         for (let i = 0; i < 6; i++) {
-            options.push(document.getElementById(`option${i+1}`).value);
+            options.push(document.getElementById(`option${6-i}`).value);
         };
         concProc = sortConc({{ conc|tojson }}, options, link);
     };
