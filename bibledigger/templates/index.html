@@ -1,14 +1,31 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="container mt-4 mb-3 text">
-  <h1>Welcome to Bible Digger!</h1>
-  <h3>This website contains 2000 Bible translations in 1500 languages and is designed to provide a convenient search options for linguists.</h3>
-  <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
-  <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
-  <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
-  <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
-  <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
-  <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
-  <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+  <h2>Welcome to Bible Digger!</h2>
+  <h4>This website contains {{ translationsNo }} Bible translations in {{ languagesNo }} languages and is designed to provide search options for anyone interested in working with Bible texts.</h4>
+  <p>The website contains 4 pages:</p>
+  <ul>
+    <li><b>Browse</b></li>
+    <p>Browse any single Bible translation here or browse parallel texts of two translations</p>
+    <li><b>Verse search</b></li>
+    <p>Search for specific verses here in one translation or parallel translations. Tick the 'Add another verse?' option if you wish to add more verses to your search.</p>
+    <li><b>Concordance</b></li>
+    <p>Build concordance for your search item in a specific translation with 5 search options: whole word, forms starting or ending with the search item, forms containing the search item, or forms matching a regular expression.</p>
+    <li><b>Word list</b></li>
+    <p>Build a word list for all forms in a specific translation or for your search item with 4 search options: forms starting or ending with the search item, forms containing the search item, or forms matching a regular expression. Minimum and maximum form frequency can be optionally set. Order the word list alphabetically or by frequency.</p>
+  </ul>
+
+  <div style="margin:20px">
+  <p>Word list and the whole word search in Concordance do not work well for translations written in scripts that do not conventionally separate words with spaces (Chinese, Japanese, Thai, etc.).</p>
+  <p>Some translations lump some verses together. Such stretches of verses lumped together are shown in the Browse view as the initial verse of the stretch, with the rest of the verses being empty. In the parallel translation views in Browse and Verse search, such empty verses are rendered as 'None'.</p>
+  <p>The website uses <a href="https://docs.python.org/3/library/re.html">the regular expression flavor implemented in Python</a>.</p>
+  </div>
+  <p> </p>
+  <p> </p>
+  <p> </p>
+  <div style="margin:35px">
+  <p>"And he said to them, “Go into all the world and proclaim the gospel to the whole creation. Whoever believes and is baptized will be saved, but whoever does not believe will be condemned. And these signs will accompany those who believe: in my name they will cast out demons; they will speak in new tongues" (ESV Mark 16:15-17)</p>
+  <p>"Judge not, that you be not judged. For with the judgment you pronounce you will be judged, and with the measure you use it will be measured to you. Why do you see the speck that is in your brother’s eye, but do not notice the log that is in your own eye?" (ESV Matthew 7:1-3)</p>
+  </div>
 </div>
 {% endblock %}
