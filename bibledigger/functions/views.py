@@ -736,6 +736,6 @@ def concordance(language_id=None, translation_id=None, searchItem=None, searchOp
 
 ###TO DO: Stretching of the sidebar
 ###TO DO: Front page
-###TO DO: Add spaces around punctuation signs in Asian scripts (Chinese, Khmer, Japanese)
+###TO DO: Change sorting colors
 ###TO DO: Flask app factory
 ###TO DO: Parallel texts with absent verses

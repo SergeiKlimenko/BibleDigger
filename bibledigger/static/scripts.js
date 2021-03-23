@@ -261,7 +261,7 @@ function sortConc(conc, options, baseLink) {
     const colors = {
         'option1': 'Gold',
         'option2': 'Blue',
-        'option3': 'OrangeRed',
+        'option3': 'Indigo',
         'option4': 'Turquoise',
         'option5': 'Lime',
         'option6': 'DeepPink'
