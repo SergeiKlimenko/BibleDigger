@@ -739,3 +739,4 @@ def concordance(language_id=None, translation_id=None, searchItem=None, searchOp
 ###TO DO: Change sorting colors
 ###TO DO: Flask app factory
 ###TO DO: Parallel texts with absent verses
+###TO DO: Remove spaces from wordlist
