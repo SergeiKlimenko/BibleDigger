@@ -17,9 +17,6 @@ def browse(parallelOrNot, language_id=None, translation_id=None, verseCode=None)
 
     form = browseForm()
 
-    ######delete
-    # languageChoices = [(lang.id, lang.language) for lang in Language.query.all()]
-
     if form.validate_on_submit():
 
         language1 = request.form['language1']

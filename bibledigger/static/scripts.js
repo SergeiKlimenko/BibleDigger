@@ -17,6 +17,7 @@ function populateList(list1, list2, list2Name, anchor = 1, input = 0, list3 = 0,
     var l2Name;
     if (list2Name.startsWith('translation')) {
         l2Name = list2Name.substr(0, list2Name.length - 1);
+        }
     } else {
         l2Name = list2Name;
     };
