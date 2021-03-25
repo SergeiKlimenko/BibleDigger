@@ -157,17 +157,17 @@
 
       {% if verseToRender is defined %}
           var inputList = {{ verseToRender|tojson }};
-
+        
           let anotherVerse = document.getElementById('anotherVerse');
           if (anotherVerse.hasAttribute('checked').toString() != "{{ anotherVerse }}".toLowerCase()) {
               anotherVerse.toggleAttribute('checked');
           };
 
-          $('#language1').selectpicker('val', inputList[0][3][1]);
-          populateList(lang_select, tran_select, 'translation1', lang_select.value, [inputList[0][4][1], inputList[0][0][1], inputList[0][1], inputList[0][2]]);
+          $('#language1').selectpicker('val', inputList[inputList.length - 1][3][1]);
+          populateList(lang_select, tran_select, 'translation1', lang_select.value, [inputList[inputList.length - 1][4][1], inputList[inputList.length - 1][0][1], inputList[inputList.length - 1][1], inputList[inputList.length - 1][2]]);
           if (lang_select2 !== null) {
-              $('#language2').selectpicker('val', inputList[0][5][1]);
-              populateList(lang_select2, tran_select2, 'translation2', lang_select2.value, [inputList[0][6][1]]);
+              $('#language2').selectpicker('val', inputList[inputList.length - 1][5][1]);
+              populateList(lang_select2, tran_select2, 'translation2', lang_select2.value, [inputList[inputList.length - 1][6][1]]);
           }
       {% else %}
           populateList(lang_select, tran_select, 'translation1', 143);
