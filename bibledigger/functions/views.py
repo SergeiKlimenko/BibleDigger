@@ -117,8 +117,6 @@ def verseSearch(parallelOrNot, verseList=None, input=None):
     elif parallelOrNot == 2:
         form = parallelVerseSearchForm()
 
-    # languageChoices = [(lang.id, lang.language) for lang in Language.query.all()]
-
     #Convert string representation of verse list from route into list
     def processVerseList(verseList, fullProcess):
         verseList = [verse.split(', ') for verse in verseList.strip('[]').replace("'", '').strip('[]').split('], [')]
@@ -353,8 +351,6 @@ def wordList(language_id=None, translation_id=None, searchItem=None, searchOptio
 
     form = wordListForm()
 
-    # languageChoices = [(lang.id, lang.language) for lang in Language.query.all()]
-
     if form.validate_on_submit():
 
         language_id = request.form['language1']
@@ -407,15 +403,7 @@ def wordList(language_id=None, translation_id=None, searchItem=None, searchOptio
         verseList = []
 
         for verse in fullText:
-            # verse = verse[0].replace('—', ' — ').split()
             verse = separatePunctuation(verse[0], language).split()
-            # strippedVerse = []
-            # for word in verse:
-                ###TO DO: Add spaces for punctuation symbols, rather then strip them
-                # strippedVerse.append(word.strip(',.()[];:""„“”?!—/\\-+=_<>¿»«').
-                    # strip(",.()[];:''‘’„‛“”?!—/\\-+=_<>"))
-
-            # verseList += strippedVerse
 
             verseList += verse
         from collections import Counter
@@ -532,7 +520,6 @@ def concordance(language_id=None, translation_id=None, searchItem=None, searchOp
 
     form = concordanceForm()
 
-    # languageChoices = [(lang.id, lang.language) for lang in Language.query.all()]
     choices = [(None, 'none'), (0, 'verse'), (32, '3R'), (31, '2R'), (30, '1R'),
                 (2, 'KWIC'), (11, '1L'), (12, '2L'), (13, '3L')]
 

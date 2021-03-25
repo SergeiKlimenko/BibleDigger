@@ -5,10 +5,6 @@ from wtforms.validators import DataRequired, optional
 from  ..models import Book, Language, Translation, Text
 
 
-
-#bookChoices = [(book.code, book.title) for book in Book.query.all()]
-
-
 class FieldsRequiredForm(FlaskForm):
     """Require all fields to have content. This works around the bug that WTForms radio
     fields don't honor the `DataRequired` or `InputRequired` validators.
@@ -22,23 +18,11 @@ class FieldsRequiredForm(FlaskForm):
 
 
 class browseForm(FlaskForm):
-    try:
-        languageChoices = [(lang.id, lang.language) for lang in Language.query.all()]
-    except:
-        languageChoices = []
 
-    language1 = SelectField('language', choices=languageChoices, coerce=int, validators=[DataRequired()])
     submit = SubmitField('OK')
 
 
 class verseSearchForm(FlaskForm):
-
-    # language1 = SelectField('language', choices=languageChoices, coerce=int, validators=[DataRequired()])
-    # translation1 = SelectField('translation', coerce=int, validators=[DataRequired()], validate_choice=False)
-
-    # book = SelectField('book', validators=[DataRequired()])
-    # chapter = SelectField('chapter', coerce=int, validate_choice=False)
-    # verse = SelectField('verse', coerce=int, validate_choice=False)
 
     anotherVerse = BooleanField('Add another verse?')
 
@@ -46,16 +30,6 @@ class verseSearchForm(FlaskForm):
 
 
 class parallelVerseSearchForm(FlaskForm):
-
-    # language1 = SelectField('language', choices=languageChoices, coerce=int, validators=[DataRequired()])
-    # translation1 = SelectField('translation', coerce=int, validators=[DataRequired()], validate_choice=False)
-
-    # language2 = SelectField('language', choices=languageChoices, coerce=int)
-    # translation2 = SelectField('translation', coerce=int, validate_choice=False)
-
-    # book = SelectField('book', validators=[DataRequired()])
-    # chapter = SelectField('chapter', coerce=int, validate_choice=False)
-    # verse = SelectField('verse', coerce=int, validate_choice=False)
 
     anotherVerse = BooleanField('Add another verse?')
 
