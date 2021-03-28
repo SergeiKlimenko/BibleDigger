@@ -5,6 +5,7 @@ from .forms import browseForm, verseSearchForm, parallelVerseSearchForm, \
 from bibledigger.models import Book, Language, Translation, Text
 import json
 import re
+import urllib
 
 functions = Blueprint('functions', __name__)
 
@@ -56,6 +57,7 @@ def browse(parallelOrNot, language_id=None, translation_id=None, verseCode=None)
                                     input=[language1, translation1, book, language2, translation2])
 
     if translation_id != None:
+        verseCode = urllib.parse.unquote(verseCode)
         book_code = Book.query.with_entities(Book.code).filter_by(title=' '.join(verseCode.split()[:-1])).first()[0]
         tran1Text = Text.query.filter_by(translation_id=translation_id,\
             book_code=book_code).join(Book).with_entities(Text.id, \
@@ -116,7 +118,8 @@ def verseSearch(parallelOrNot, verseList=None, input=None):
         form = verseSearchForm()
     elif parallelOrNot == 2:
         form = parallelVerseSearchForm()
-
+    if verseList != None:
+        verseList = urllib.parse.unquote(verseList)
     #Convert string representation of verse list from route into list
     def processVerseList(verseList, fullProcess):
         verseList = [verse.split(', ') for verse in verseList.strip('[]').replace("'", '').strip('[]').split('], [')]
@@ -166,7 +169,6 @@ def verseSearch(parallelOrNot, verseList=None, input=None):
         if anotherVerse == True:
             return redirect(url_for('functions.verseSearch',
                                     verseList=verseList,
-                                    languageChoices=languageChoices,
                                     parallelOrNot=parallelOrNot))
 
         else:
@@ -175,16 +177,17 @@ def verseSearch(parallelOrNot, verseList=None, input=None):
 
             return redirect(url_for('functions.verseSearch',
                                     verseList=verseList,
-                                    languageChoices=languageChoices,
                                     parallelOrNot=parallelOrNot))
 
     if verseList == None:
+
         return render_template('versesearch.html',
                                 form=form,
                                 languageChoices=languageChoices,
                                 parallelOrNot=parallelOrNot)
 
     else:
+
         if verseList.endswith("'delete']"):
 
             verseList = verseList.replace(", 'delete'", '')
@@ -231,6 +234,7 @@ def verseSearch(parallelOrNot, verseList=None, input=None):
                         str(verse.verse), item[0]), item[1], item[2], (language1, item[3]),
                         (translation1, item[4]), (language2, item[5]), (translation2, item[6]), verse.text2, verse.text1))
             
+            print(verseToRender)###delete
             return render_template('versesearch.html',
                                     form=form,
                                     languageChoices=languageChoices,
@@ -240,7 +244,7 @@ def verseSearch(parallelOrNot, verseList=None, input=None):
 
         else:
             verseList = processVerseList(verseList, True)
-            
+            print(verseList)###delete
             return render_template('versesearch.html',
                                     form=form,
                                     languageChoices=languageChoices,
@@ -344,8 +348,7 @@ def separatePunctuation(string, language):
     
 
 @functions.route('/wordlist/', methods=['GET', 'POST'])
-@functions.route('''/wordlist/<int:language_id>/<int:translation_id>/<searchItem>/<searchOption>/
-                     <case>/<int:freqMin>/<int:freqMax>/<order>''', methods=['GET', 'POST'])
+@functions.route('''/wordlist/<int:language_id>/<int:translation_id>/<searchItem>/<searchOption>/<int:freqMin>/<int:freqMax>/<order>/<case>''', methods=['GET', 'POST'])
 def wordList(language_id=None, translation_id=None, searchItem=None, searchOption=None, case=None,
               freqMin=None, freqMax=None, order=None):
 
@@ -356,6 +359,8 @@ def wordList(language_id=None, translation_id=None, searchItem=None, searchOptio
         language_id = request.form['language1']
         translation_id = request.form['translation1']
         searchItem=form.search.data.replace('/', '%2F').replace('.', '%2E').replace('#', '%23').replace("’", '%27')
+        # searchItem = urllib.parse.quote(form.search.data, safe='').replace('.', '%2E')
+
         searchOption=form.searchOptions.data
         if searchOption == 'all':
             searchItem = "None"
@@ -396,7 +401,7 @@ def wordList(language_id=None, translation_id=None, searchItem=None, searchOptio
 
         fullText = Text.query.filter_by(translation_id=translation_id).with_entities(Text.text).all()
 
-        searchItem = searchItem.replace('%2F', '/').replace('%2E', '.').replace('%23', '#').replace('%27', "’")
+        searchItem = urllib.parse.unquote(searchItem).replace('%2F', '/').replace('%2E', '.').replace('%23', '#').replace('%27', "’")
         
         language = db.engine.execute(f"SELECT language FROM languages WHERE id = {language_id}").fetchone().language
 
@@ -412,7 +417,7 @@ def wordList(language_id=None, translation_id=None, searchItem=None, searchOptio
         sortedWordList = []
 
         for k, v in wordList.items():
-            if k == '':
+            if k in ('', '\u200b', '\u200c'):
                 continue
             if freqMin != 0:
                 if v < freqMin:
@@ -421,13 +426,20 @@ def wordList(language_id=None, translation_id=None, searchItem=None, searchOptio
                 if v > freqMax:
                     continue
             sortedWordList.append((v, k))
-
+        
         if order == 'freq':
             sortedWordList.sort(key=lambda tup: tup[1])
             sortedWordList.sort(key=lambda tup: tup[0], reverse=True)
         elif order == 'word':
             sortedWordList.sort(key=lambda tup: tup[0], reverse=True)
             sortedWordList.sort(key=lambda tup: tup[1].lower())
+        
+        import unicodedata
+        for i in sortedWordList[:5]:
+            try:
+                print(i, unicodedata.name(i[1]))###delete
+            except:
+                print(i)
 
         words = []
 
@@ -527,16 +539,14 @@ def concordance(language_id=None, translation_id=None, searchItem=None, searchOp
     concordanceList = []
 
     if form.validate_on_submit() and form.submit.data:
-        # translation_id = form.translation1.data
         language_id = request.form['language1']
         translation_id = request.form['translation1']
         searchItem = form.search.data.replace('/', '%2F').replace('.', '%2E').replace('#', '%23').replace("’", '%27')
+        # searchItem = urllib.parse.quote(form.search.data, safe='').replace('.', '%2E')
         searchOption = form.searchOptions.data
         case = form.caseSensitive.data
 
         return redirect(url_for('functions.concordance', 
-                        languageChoices=languageChoices,
-                        choices=choices, 
                         language_id=language_id, 
                         translation_id=translation_id,
                         searchItem=searchItem, 
@@ -551,7 +561,7 @@ def concordance(language_id=None, translation_id=None, searchItem=None, searchOp
             FROM texts a LEFT JOIN books b ON a.book_code = b.code WHERE \
             translation_id = {translation_id}'))
 
-        searchItem = searchItem.replace('%2F', '/').replace('%2E', '.').replace('%23', '#').replace('%27', "’")
+        searchItem = urllib.parse.unquote(searchItem).replace('%2F', '/').replace('%2E', '.').replace('%23', '#').replace('%27', "’")
         
         if searchItem == None: ###Edit
             searchItem = form.search.data
@@ -721,4 +731,5 @@ def concordance(language_id=None, translation_id=None, searchItem=None, searchOp
 ###TO DO: Stretching of the sidebar
 ###TO DO: Change sorting colors
 ###TO DO: Parallel texts with absent verses
-###TO DO: Remove spaces from wordlist
+###TO DO: Scalable frontend
+###TO DO: Links for verses in Verse search
