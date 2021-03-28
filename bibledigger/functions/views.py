@@ -434,13 +434,6 @@ def wordList(language_id=None, translation_id=None, searchItem=None, searchOptio
             sortedWordList.sort(key=lambda tup: tup[0], reverse=True)
             sortedWordList.sort(key=lambda tup: tup[1].lower())
         
-        import unicodedata
-        for i in sortedWordList[:5]:
-            try:
-                print(i, unicodedata.name(i[1]))###delete
-            except:
-                print(i)
-
         words = []
 
         ###TO DO: test thoroughly. A lot of bugs!!!
@@ -466,7 +459,7 @@ def wordList(language_id=None, translation_id=None, searchItem=None, searchOptio
                         words.append(word)
                 elif searchOption == 'regex':
                     ###Catch incorrect regex
-                    searchRegex = catchIncorrectRegex(searchThis, case)
+                    searchRegex = catchIncorrectRegex(searchItem, case)
                     if searchRegex == False:
                         return render_template('wordlist.html', 
                                                 form=form,
@@ -732,4 +725,4 @@ def concordance(language_id=None, translation_id=None, searchItem=None, searchOp
 ###TO DO: Change sorting colors
 ###TO DO: Parallel texts with absent verses
 ###TO DO: Scalable frontend
-###TO DO: Links for verses in Verse search
+###TO DO: Put the Word list and Concordance logic into separate functions
