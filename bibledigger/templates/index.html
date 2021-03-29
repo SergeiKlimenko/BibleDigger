@@ -2,21 +2,21 @@
 {% block content %}
 <div class="container mt-4 mb-3 text">
   <h2>Welcome to Bible Digger!</h2>
-  <h4>This website contains {{ translationsNo }} Bible translations in {{ languagesNo }} languages and is designed to provide search options for anyone interested in working with Bible texts.</h4>
+  <h4>This website contains {{ translationsNo }} Bible translations in {{ languagesNo }} languages and is designed for anyone interested in working with Bible texts.</h4>
   <p>The website contains 4 pages:</p>
   <ul>
     <li><b>Browse</b></li>
-    <p>Browse any single Bible translation here or browse parallel texts of two translations</p>
+    <p>Browse any single Bible translation or parallel texts of two translations</p>
     <li><b>Verse search</b></li>
-    <p>Search for specific verses here in one translation or parallel translations. Tick the 'Add another verse?' option if you wish to add more verses to your search.</p>
+    <p>Search for specific verses in one translation or parallel translations. Tick the 'Add another verse?' option if you wish to add more verses to your search.</p>
     <li><b>Concordance</b></li>
-    <p>Build concordance for your search item in a specific translation with 5 search options: whole word, forms starting or ending with the search item, forms containing the search item, or forms matching a regular expression.</p>
+    <p>Build concordance for your search item in a specific translation with 5 search options: whole word, forms starting or ending with the search item, forms containing the search item, or forms matching a regular expression. The concordance can be sorted by the KWIC (key word in context), verse, and the first three items to the left or to the right.</p>
     <li><b>Word list</b></li>
-    <p>Build a word list for all forms in a specific translation or for your search item with 4 search options: forms starting or ending with the search item, forms containing the search item, or forms matching a regular expression. Minimum and maximum form frequency can be optionally set. Order the word list alphabetically or by frequency.</p>
+    <p>Build a word list for all forms or for your search item in a specific translation with 4 search options: forms starting or ending with the search item, forms containing the search item, or forms matching a regular expression. Minimum and maximum form frequency can be optionally set. Order the word list alphabetically or by frequency.</p>
   </ul>
 
   <div style="margin:20px">
-  <p>Word list and the whole word search in Concordance do not work well for translations written in scripts that do not conventionally separate words with spaces (Chinese, Japanese, Thai, etc.).</p>
+  <p>Word list and the whole word search in Concordance might not work well for translations written in scripts that do not conventionally separate words with spaces (Chinese, Japanese, Thai, etc.).</p>
   <p>Some translations lump some verses together. Such stretches of verses lumped together are shown in the Browse view as the initial verse of the stretch, with the rest of the verses being empty. In the parallel translation views in Browse and Verse search, such empty verses are rendered as 'None'.</p>
   <p>The website uses <a href="https://docs.python.org/3/library/re.html">the regular expression flavor implemented in Python</a>.</p>
   </div>

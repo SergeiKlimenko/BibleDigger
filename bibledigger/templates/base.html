@@ -40,12 +40,9 @@
 
   <body>
 
-    <nav class="navbar navbar-expand-lg navbar-dark sticky-top shadow text" style="background-color: #785837">
-      <a class="navbar-brand" href="{{url_for("core.index")}}">Bible Digger<span class="sr-only">(current)</span></a>
-      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+    <nav class="navbar navbar-expand-lg navbar-dark sticky-top shadow text justify-content-start" style="background-color: #785837">
+      <a class="navbar-brand" href="{{url_for('core.index')}}">Bible Digger<span class="sr-only">(current)</span></a>
+      <div class="navbar-expand">
         <div class="navbar-nav">
           <a class="nav-item nav-link text" id='browse' href="{{ url_for('functions.browse', parallelOrNot = 1) }}">browse</a>
           <a class="nav-item nav-link text" id='verseSearch' href="{{ url_for('functions.verseSearch', parallelOrNot = 1) }}">verse search</a>
@@ -58,7 +55,7 @@
     <div class="container-fluid">
       <div class="row">
 
-        <nav class="navbar col-md-3 col-lg-2 d-md-block sidebar collapse shadow text-light" style="height:100%; position:fixed; background-color: #967847" id="nav">
+        <nav class="navbar col-md-3 col-lg-2 d-md-block sidebar shadow text-light" style="height:100%; position:fixed; background-color: #967847" id="nav">
           <!-- #f3db93 -->
           <div class="sidebar-sticky pt-3">
             <ul class="nav flex-column">
