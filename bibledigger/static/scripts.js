@@ -117,7 +117,7 @@ function render(aggreg, page, baseLink) {
                 <div class="col">
                   <p style="text-align: right">${line[1]}</p>
                 </div>
-                <div class="col-sm-auto">
+                <div class="col-sm">
                   <p style="text-align: center">${line[2]}</p>
                 </div>
                 <div class="col">
