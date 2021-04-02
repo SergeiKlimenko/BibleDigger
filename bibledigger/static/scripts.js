@@ -117,7 +117,7 @@ function render(aggreg, page, baseLink) {
                 <div class="col">
                   <p style="text-align: right">${line[1]}</p>
                 </div>
-                <div class="col-sm">
+                <div class="col-auto" style="max-width: 25%">
                   <p style="text-align: center">${line[2]}</p>
                 </div>
                 <div class="col">
@@ -136,7 +136,7 @@ function render(aggreg, page, baseLink) {
             var link = baseLink.replace('WORD', WORD);
 
             wordListPage[`${aggreg[page].indexOf(item)}`] = `<div class="row">
-                    <div class="col-1">
+                    <div class="col-2">
                       <p>${item[0]}</p>
                     </div>
                     <div class="col-6">
@@ -150,7 +150,7 @@ function render(aggreg, page, baseLink) {
         };
 
         var header = `<div class="row">
-                      <div class="col-1">
+                      <div class="col-2">
                         <p><b>rank</b></p>
                       </div>
                       <div class="col-6">

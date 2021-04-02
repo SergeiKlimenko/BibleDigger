@@ -234,7 +234,6 @@ def verseSearch(parallelOrNot, verseList=None, input=None):
                         str(verse.verse), item[0]), item[1], item[2], (language1, item[3]),
                         (translation1, item[4]), (language2, item[5]), (translation2, item[6]), verse.text2, verse.text1))
             
-            print(verseToRender)###delete
             return render_template('versesearch.html',
                                     form=form,
                                     languageChoices=languageChoices,
@@ -244,7 +243,7 @@ def verseSearch(parallelOrNot, verseList=None, input=None):
 
         else:
             verseList = processVerseList(verseList, True)
-            print(verseList)###delete
+    
             return render_template('versesearch.html',
                                     form=form,
                                     languageChoices=languageChoices,
