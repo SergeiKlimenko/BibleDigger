@@ -322,7 +322,9 @@ def verseSearch(parallelOrNot, verseList=None, input=None):
                             verse2Text = ' '.join(letteredVerses.values())
                         if verse2Text == None:
                             verse2Text = 'None'
-
+                    else:
+                        verse2Text = verse2.text
+                        
                     bookTitle = Book.query.filter_by(code=item[0]).with_entities(Book.title).first()[0]                                
 
                     language2 = db.engine.execute(f"SELECT language FROM languages \
