@@ -28,7 +28,7 @@ def browse(parallelOrNot, language_id=None, translation_id=None, verseCode=None)
             tran1Text = Text.query.filter_by(translation_id=translation1,\
                 book_code=book).with_entities(Text.chapter, Text.verse, Text.text).all()
             bookTitle = Book.query.filter_by(code=book).with_entities(Book.title).first()[0]
-            print(bookTitle)
+    
             textLength = len(tran1Text)
             return render_template('browse.html',
                                     form=form,
@@ -58,7 +58,9 @@ def browse(parallelOrNot, language_id=None, translation_id=None, verseCode=None)
             tran2TextDictKeys = tran2TextDict.keys()
             alpha = False
             for k, v in tran1TextDict.items():
-                if k in tran2TextDict:
+                if tran2TextDict == {}:
+                    text2 = 'None'
+                elif k in tran2TextDict:
                     alpha = False
                     text2 = tran2TextDict[k]
                 elif not k[1].isnumeric() and alpha == False:
@@ -67,17 +69,12 @@ def browse(parallelOrNot, language_id=None, translation_id=None, verseCode=None)
                         text2 = tran2TextDict[(k[0], k[1][:-1])]
                 else:
                     letteredVerses = {}
-                    none = True
                     for key in tran2TextDictKeys:
                         kString = f'{k[0]}, {k[1]}'
                         keyString = f'{key[0]}, {key[1]}'
                         if kString in keyString and keyString[len(kString):].isalpha():
-                            none = False
                             letteredVerses[key] = tran2TextDict[key]
                     text2 = ' '.join(letteredVerses.values())
-                    print(k, v)
-                    if none == True:
-                        text2 = 'None'
                 joinedTexts.append((k[0], k[1], v, text2))
 
             # bothTranslations = list(db.engine.execute(f"SELECT a.chapter, \
@@ -292,7 +289,11 @@ def verseSearch(parallelOrNot, verseList=None, input=None):
                                                     AND chapter = '{item[1]}' \
                                                     AND verse = '{item[2]}'").fetchone()
                     if verse2 == None:
-                        if not item[2].isnumeric():
+                        tran2Text = Text.query.filter_by(translation_id=item[6], \
+                                book_code=item[0]).with_entities(Text.chapter, Text.verse, Text.text).all()
+                        if tran2Text == []:
+                            verse2Text = 'None'
+                        elif not item[2].isnumeric():
                             if item[2][-2:].isalpha():
                                 verseNo = item[2][:-2]
                             elif item[2][-1:].isalpha():
@@ -303,11 +304,12 @@ def verseSearch(parallelOrNot, verseList=None, input=None):
                                                     AND book_code = '{item[0]}' \
                                                     AND chapter = '{item[1]}' \
                                                     AND verse = '{verseNo}'").fetchone()
-                            verse2Text = verse2.text
+                            if verse2 != None:
+                                verse2Text = verse2.text
+                            else:
+                                verse2Text = None
                         else:
                             letteredVerses = {}
-                            tran2Text = Text.query.filter_by(translation_id=item[6], \
-                                book_code=item[0]).with_entities(Text.chapter, Text.verse, Text.text).all()
                             tran2TextDict = {}
                             for verse in tran2Text:
                                 tran2TextDict[(verse[0], str(verse[1]))] = verse[2]
@@ -318,7 +320,6 @@ def verseSearch(parallelOrNot, verseList=None, input=None):
                                 if kString in keyString and keyString[len(kString):].isalpha():
                                     letteredVerses[key] = tran2TextDict[key]
                             verse2Text = ' '.join(letteredVerses.values())
-
                         if verse2Text == None:
                             verse2Text = 'None'
 
