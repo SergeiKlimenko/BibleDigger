@@ -159,10 +159,10 @@
   <div class="row">
     {% if parallelOrNot == 1 %}
       <div class="col-2">
-        {% if verse.title + " " + verse.chapter + ":" + verse.verse|string == verseCode %}
-          <p><span id='here'>{{ verse.title + " " + verse.chapter + ":" + verse.verse|string }}</span></p>
+        {% if bookTitle + " " + verse.chapter + ":" + verse.verse|string == verseCode %}
+          <p><span id='here'>{{ bookTitle + " " + verse.chapter + ":" + verse.verse|string }}</span></p>
         {% else %}
-          <p>{{ verse.title + " " + verse.chapter + ":" + verse.verse|string }}</p>
+          <p>{{ bookTitle + " " + verse.chapter + ":" + verse.verse|string }}</p>
         {% endif %}
       </div>
       <div class="col">
@@ -170,13 +170,13 @@
       </div>
     {% elif parallelOrNot == 2 %}
       <div class="col-2">
-        <p>{{verse[1] + " " + verse[2] + ":" + verse[3]|string}}</p>
+        <p>{{ bookTitle + " " + verse[0] + ":" + verse[1]|string }}</p>
       </div>
       <div class="col">
-        <p>{{verse[4]}}</p>
+        <p>{{ verse[2] }}</p>
       </div>
       <div class="col">
-        <p>{{verse[5]}}</p>
+        <p>{{verse[3]}}</p>
       </div>
     {% endif %}
   </div>

@@ -26,12 +26,14 @@ def browse(parallelOrNot, language_id=None, translation_id=None, verseCode=None)
 
         if parallelOrNot == 1:
             tran1Text = Text.query.filter_by(translation_id=translation1,\
-                book_code=book).join(Book).with_entities(Text.id, \
-                Book.title, Text.chapter, Text.verse, Text.text).all()
+                book_code=book).with_entities(Text.chapter, Text.verse, Text.text).all()
+            bookTitle = Book.query.filter_by(code=book).with_entities(Book.title).first()[0]
+            print(bookTitle)
             textLength = len(tran1Text)
             return render_template('browse.html',
                                     form=form,
                                     texts=tran1Text,
+                                    bookTitle=bookTitle,
                                     textLength=textLength,
                                     parallelOrNot=parallelOrNot,
                                     languageChoices=languageChoices,
@@ -40,17 +42,59 @@ def browse(parallelOrNot, language_id=None, translation_id=None, verseCode=None)
         elif parallelOrNot == 2:
             language2 = request.form['language2']   
             translation2 = request.form['translation2']
-            bothTranslations = list(db.engine.execute(f"SELECT a.id, d.title, a.chapter, \
-                a.verse, a.text, b.text FROM ((SELECT * FROM texts \
-                WHERE translation_id = {translation1} and book_code = \
-                '{book}') a LEFT JOIN (SELECT * FROM texts \
-                WHERE translation_id = {translation2}) b ON \
-                a.book_code = b.book_code AND a.chapter = b.chapter \
-                AND a.verse = b.verse) c LEFT JOIN books d ON c.book_code = d.code"))
-            textLength = len(list(bothTranslations))
+
+            #########
+            tran1Text = Text.query.filter_by(translation_id=translation1,\
+                book_code=book).with_entities(Text.chapter, Text.verse, Text.text).all()
+            tran2Text = Text.query.filter_by(translation_id=translation2, \
+                book_code=book).with_entities(Text.chapter, Text.verse, Text.text).all()
+            tran1TextDict = {}
+            tran2TextDict = {}
+            for verse in tran1Text:
+                tran1TextDict[(verse[0], str(verse[1]))] = verse[2]
+            for verse in tran2Text:
+                tran2TextDict[(verse[0], str(verse[1]))] = verse[2]
+            joinedTexts = []
+            tran2TextDictKeys = tran2TextDict.keys()
+            alpha = False
+            for k, v in tran1TextDict.items():
+                if k in tran2TextDict:
+                    alpha = False
+                    text2 = tran2TextDict[k]
+                elif not k[1].isnumeric() and alpha == False:
+                    alpha = True
+                    if (k[0], k[1][:-1]) in tran2TextDict:
+                        text2 = tran2TextDict[(k[0], k[1][:-1])]
+                else:
+                    letteredVerses = {}
+                    none = True
+                    for key in tran2TextDictKeys:
+                        kString = f'{k[0]}, {k[1]}'
+                        keyString = f'{key[0]}, {key[1]}'
+                        if kString in keyString and keyString[len(kString):].isalpha():
+                            none = False
+                            letteredVerses[key] = tran2TextDict[key]
+                    text2 = ' '.join(letteredVerses.values())
+                    print(k, v)
+                    if none == True:
+                        text2 = 'None'
+                joinedTexts.append((k[0], k[1], v, text2))
+
+            # bothTranslations = list(db.engine.execute(f"SELECT a.chapter, \
+            #     a.verse, a.text, b.text FROM (SELECT * FROM texts \
+            #     WHERE translation_id = {translation1} and book_code = \
+            #     '{book}') a LEFT JOIN (SELECT * FROM texts \
+            #     WHERE translation_id = {translation2} and book_code = '{book}') b ON \
+            #     a.book_code = b.book_code AND a.chapter = b.chapter \
+            #     AND a.verse = b.verse"))
+            bookTitle = Book.query.filter_by(code=book).with_entities(Book.title).first()[0]
+
+            # textLength = len(list(bothTranslations))
+            textLength = len(joinedTexts)
             return render_template('browse.html',
                                     form=form,
-                                    texts=bothTranslations,
+                                    texts=joinedTexts,
+                                    bookTitle=bookTitle,
                                     textLength=textLength,
                                     parallelOrNot=parallelOrNot,
                                     languageChoices=languageChoices,
@@ -60,13 +104,14 @@ def browse(parallelOrNot, language_id=None, translation_id=None, verseCode=None)
         verseCode = urllib.parse.unquote(verseCode)
         book_code = Book.query.with_entities(Book.code).filter_by(title=' '.join(verseCode.split()[:-1])).first()[0]
         tran1Text = Text.query.filter_by(translation_id=translation_id,\
-            book_code=book_code).join(Book).with_entities(Text.id, \
-            Book.title, Text.chapter, Text.verse, Text.text).all()
+            book_code=book_code).with_entities(Text.id, Text.chapter, Text.verse, Text.text).all()
+        bookTitle = Book.query.filter_by(code=book_code).with_entities(Book.title).first()[0]
         textLength = len(tran1Text)
 
         return render_template('browse.html',
                                 form=form,
                                 texts=tran1Text,
+                                bookTitle=bookTitle,
                                 textLength=textLength,
                                 parallelOrNot=parallelOrNot,
                                 verseCode=verseCode,
@@ -204,35 +249,89 @@ def verseSearch(parallelOrNot, verseList=None, input=None):
 
                 if parallelOrNot == 1:
 
-                    verse = db.engine.execute(f"SELECT a.id AS id, b.title AS title, \
-                        a.chapter AS chapter, a.verse AS verse, a.text AS text1 \
-                        FROM texts a LEFT JOIN books b ON a.book_code = b.code \
-                        WHERE a.translation_id = {item[4]} and \
-                        a.book_code = '{item[0]}' and a.chapter = '{item[1]}' and \
-                        a.verse = '{item[2]}'").fetchone()
+                    # verse = db.engine.execute(f"SELECT a.id AS id, b.title AS title, \
+                    #     a.chapter AS chapter, a.verse AS verse, a.text AS text1 \
+                    #     FROM texts a LEFT JOIN books b ON a.book_code = b.code \
+                    #     WHERE a.translation_id = {item[4]} and \
+                    #     a.book_code = '{item[0]}' and a.chapter = '{item[1]}' and \
+                    #     a.verse = '{item[2]}'").fetchone()
 
-                    verseToRender.append(((verse.title + " " + verse.chapter + ":" +
-                        str(verse.verse), item[0]), item[1], item[2], (language1, item[3]), (translation1, item[4]), verse.text1))
+                    verse = db.engine.execute(f"SELECT chapter, verse, text \
+                                                FROM texts \
+                                                WHERE translation_id = {item[4]} \
+                                                AND book_code = '{item[0]}' \
+                                                AND chapter = '{item[1]}' \
+                                                AND verse = '{item[2]}'").fetchone()
+                    bookTitle = Book.query.filter_by(code=item[0]).with_entities(Book.title).first()[0]
+
+                    verseToRender.append(((bookTitle + " " + verse.chapter + ":" +
+                        str(verse.verse), item[0]), item[1], item[2], (language1, item[3]), (translation1, item[4]), verse.text))
 
                 elif parallelOrNot == 2:
 
-                    verse = db.engine.execute(f"SELECT a.id AS id, d.title AS title, \
-                        a.chapter AS chapter, a.verse AS verse, a.text AS text1, \
-                        b.text AS text2 FROM ((SELECT * FROM texts \
-                        WHERE translation_id = {item[4]} and book_code = \
-                        '{item[0]}' and chapter = '{item[1]}' and \
-                        verse = '{item[2]}') a LEFT JOIN (SELECT * FROM texts \
-                        WHERE translation_id = {item[6]}) b ON \
-                        a.book_code = b.book_code AND a.chapter = b.chapter \
-                        AND a.verse = b.verse) c LEFT JOIN books d ON c.book_code = d.code").fetchone()
+                    # verse = db.engine.execute(f"SELECT a.id AS id, d.title AS title, \
+                    #     a.chapter AS chapter, a.verse AS verse, a.text AS text1, \
+                    #     b.text AS text2 FROM ((SELECT * FROM texts \
+                    #     WHERE translation_id = {item[4]} and book_code = \
+                    #     '{item[0]}' and chapter = '{item[1]}' and \
+                    #     verse = '{item[2]}') a LEFT JOIN (SELECT * FROM texts \
+                    #     WHERE translation_id = {item[6]}) b ON \
+                    #     a.book_code = b.book_code AND a.chapter = b.chapter \
+                    #     AND a.verse = b.verse) c LEFT JOIN books d ON c.book_code = d.code").fetchone()
+
+                    verse1 = db.engine.execute(f"SELECT chapter, verse, text \
+                                                FROM texts \
+                                                WHERE translation_id = {item[4]} \
+                                                    AND book_code = '{item[0]}' \
+                                                    AND chapter = '{item[1]}' \
+                                                    AND verse = '{item[2]}'").fetchone()
+                    verse2 = db.engine.execute(f"SELECT text \
+                                                FROM texts \
+                                                WHERE translation_id = {item[6]} \
+                                                    AND book_code = '{item[0]}' \
+                                                    AND chapter = '{item[1]}' \
+                                                    AND verse = '{item[2]}'").fetchone()
+                    if verse2 == None:
+                        if not item[2].isnumeric():
+                            if item[2][-2:].isalpha():
+                                verseNo = item[2][:-2]
+                            elif item[2][-1:].isalpha():
+                                verseNo = item[2][:-1]
+                            verse2 = db.engine.execute(f"SELECT text \
+                                                FROM texts \
+                                                WHERE translation_id = {item[6]} \
+                                                    AND book_code = '{item[0]}' \
+                                                    AND chapter = '{item[1]}' \
+                                                    AND verse = '{verseNo}'").fetchone()
+                            verse2Text = verse2.text
+                        else:
+                            letteredVerses = {}
+                            tran2Text = Text.query.filter_by(translation_id=item[6], \
+                                book_code=item[0]).with_entities(Text.chapter, Text.verse, Text.text).all()
+                            tran2TextDict = {}
+                            for verse in tran2Text:
+                                tran2TextDict[(verse[0], str(verse[1]))] = verse[2]
+                            tran2TextDictKeys = tran2TextDict.keys()
+                            for key in tran2TextDictKeys:
+                                kString = f'{item[1]}, {item[2]}'
+                                keyString = f'{key[0]}, {key[1]}'
+                                if kString in keyString and keyString[len(kString):].isalpha():
+                                    letteredVerses[key] = tran2TextDict[key]
+                            verse2Text = ' '.join(letteredVerses.values())
+
+                        if verse2Text == None:
+                            verse2Text = 'None'
+
+                    bookTitle = Book.query.filter_by(code=item[0]).with_entities(Book.title).first()[0]                                
+
                     language2 = db.engine.execute(f"SELECT language FROM languages \
                             WHERE id = {item[5]}").fetchone().language
                     translation2 = db.engine.execute(f"SELECT translation FROM \
                         translations WHERE id = {item[6]}").fetchone().translation
 
-                    verseToRender.append(((verse.title + " " + verse.chapter + ":" +
-                        str(verse.verse), item[0]), item[1], item[2], (language1, item[3]),
-                        (translation1, item[4]), (language2, item[5]), (translation2, item[6]), verse.text2, verse.text1))
+                    verseToRender.append(((bookTitle + " " + verse1.chapter + ":" +
+                        str(verse1.verse), item[0]), item[1], item[2], (language1, item[3]),
+                        (translation1, item[4]), (language2, item[5]), (translation2, item[6]), verse2Text, verse1.text))
             
             return render_template('versesearch.html',
                                     form=form,
@@ -553,7 +652,7 @@ def concordance(language_id=None, translation_id=None, searchItem=None, searchOp
         text = list(db.engine.execute(f'SELECT b.title, a.chapter, a.verse, a.text \
             FROM texts a LEFT JOIN books b ON a.book_code = b.code WHERE \
             translation_id = {translation_id}'))
-
+        
         searchItem = urllib.parse.unquote(searchItem).replace('%2F', '/').replace('%2E', '.').replace('%23', '#').replace('%27', "’")
         
         if searchItem == None: ###Edit
@@ -723,6 +822,5 @@ def concordance(language_id=None, translation_id=None, searchItem=None, searchOp
 
 ###TO DO: Stretching of the sidebar
 ###TO DO: Change sorting colors
-###TO DO: Parallel texts with absent verses
 ###TO DO: Scalable frontend
 ###TO DO: Put the Word list and Concordance logic into separate functions
