@@ -1,6 +1,9 @@
 # BibleDigger
-A web app containing Bible translations in over 1,500 languages with convenient single- or parallel-text browsing, 
-verse search, concordance, and word list tools for linguists working with bible translations.
+A web app containing bible translations in over 1,500 languages with convenient tools for linguists working with bible translations:
+* single- or parallel-text browsing,
+* verse search in single or parallel texts
+* concordance
+* word list
 
 What I learned:
 * web scraping with requests/urllib and Beautiful Soup
