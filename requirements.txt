@@ -80,7 +80,7 @@ python-docx==0.8.10
 python-dotenv==0.15.0
 python-editor==1.0.4
 pytz==2019.3
-pywin32==227
+pywin32==301
 pywin32-ctypes==0.2.0
 PyYAML==5.2
 regex==2020.6.8
